@@ -1,10 +1,14 @@
 import {createServer} from "http";
-import express from "express";
 import { WebSocketServer } from "ws";
+import express from "express";
 
 const server = createServer();
 
+const app = express(server);
 
+app.on("/", (req, res) => {
+  res.sendFile(pat)
+})
 
 // server always function
 // step 1: ping pong

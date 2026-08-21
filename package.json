@@ -19,6 +19,9 @@
   },
   "homepage": "https://github.com/Subset-UCSD/game-that-we-will-abandon-in-a-week#readme",
   "devDependencies": {
+    "@types/express": "^5.0.6",
+    "@types/node": "^26.2.0",
+    "@types/ws": "^8.18.1",
     "esbuild": "^0.28.2",
     "nodemon": "^3.1.14",
     "npm-run-all2": "^9.0.3"
