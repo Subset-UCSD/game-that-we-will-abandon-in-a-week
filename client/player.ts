@@ -7,30 +7,39 @@ class Player {
   x_acc: number = 0;
   y_acc: number = 0;
 
-  private max_speed: number = 5;
+  private max_speed: number = 1;
   private sheepImage: any = null;
-  
 
-  accelerate = (event: KeyboardEvent): void => {
+
+   accelerate = (event: KeyboardEvent): void => {
     const keyName = event.key;
-    if (keyName == "KeyA") {
-        this.x_acc = -1
+    console.log(keyName, this, this.x, this.x_vel, this.y, this.y_vel)
+    if (keyName == "a") {
+        this.x_acc = -1;
     }
-    else if (keyName == "KeyD") {
-        this.x_acc = 1
+    else if (keyName == "d") {
+        this.x_acc = 1;
+    } else {
+      this.x_acc = 0;
     }
-    if (keyName == "KeyW") {
+
+    if (keyName == "w") {
         this.y_acc = 1
-    }
-    else if (keyName == "KeyS") {
+    } else if (keyName == "s") {
         this.y_acc = -1
+    } else {
+      this.y_acc = 0;
     }
   }
-
+  
   constructor(is_you: boolean) {
+    document.addEventListener("keydown", this.accelerate);
+
     this.is_you = is_you;
     this.getAssets();
   }
+
+ 
 
   async getAssets(): Promise<void> {
     this.sheepImage = await createImageBitmap(

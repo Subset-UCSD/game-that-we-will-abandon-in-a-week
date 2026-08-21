@@ -1,14 +1,14 @@
 import { render } from "./render";
 import { Player } from "./player";
+import { ws } from "./ws";
+import { Canvas} from './canvas'
 
-const canvas = document.getElementById('canvas')
-if (!(canvas instanceof HTMLCanvasElement)) {
-	throw new Error('Expected a canvas #canvas')
-}
-const c = canvas.getContext('2d')
-if (!c) {
-	throw new Error('where is the context...')
-}
+void ws;
+
+using canvas = new Canvas()
+const c = canvas.context
+document.body.append(canvas.canvas)
+
 
 //temp
 

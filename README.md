@@ -9,7 +9,7 @@ npm install
 npm run dev
 ```
 
-Open this in your browser: http://localhost:8081/
+Open this in your browser: http://localhost:6767/
 
 # High Level Overview
 
