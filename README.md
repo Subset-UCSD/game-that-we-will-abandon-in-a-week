@@ -1,5 +1,7 @@
 # game-that-we-will-abandon-in-a-week
 
+<img src="docs/sheep.png" alt="sheep" height="300">
+
 High level idea: we make a box and we hit people in the box
 
 ## Devloper

@@ -4,6 +4,7 @@ import express from "express";
 import {join} from "path";
 
 import { handle, handle as handleNewConnection } from "@server/messenger";
+import { WholeGameStateMessage } from "@common/messages";
 
 const server = createServer();
 const app = express();
@@ -39,14 +40,24 @@ function broadcast(data: unknown) {
   }
 }
 
-wss.on("connection", (socket) => handleNewConnection)
+wss.on("connection", (socket) => {
+  let id = count++;
+  players.set(socket, { id, x: 0, y: 0 });
+  socket.on("message", handle);
+
+  socket.on("close", () => {
+    console.log("Client disconnected");
+    players.delete(socket);
+  });
+})
 
 // socket send location info every frame (1/60th of a second)
 setInterval(() => {
-  broadcast({
-    type: "players",
-    players: [...players.values()],
-  });
+  const gamestate : WholeGameStateMessage = {
+	type: "game-state",
+    value: {players: [...players.values()]},
+  }
+  broadcast(gamestate);
 }, 1000/60); // 1000 ms over 60 times
 
 server.listen({port:6767}, () => {

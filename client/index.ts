@@ -1,6 +1,6 @@
 import { render } from "./render";
 import { Player } from "./player";
-import { ws, msg } from "./ws";
+import { ws, msg, setRoom } from "./ws";
 import { Canvas} from './canvas'
 import { Arena } from "./rooms/arena";
 import { Room } from "./rooms/room";
@@ -8,19 +8,31 @@ import { defaultInputs, keymap } from "@common/input";
 import { InputListener} from "./input-listener";
 import { SERVER_GAME_TICK } from "@common/index";
 
+// temp to get it to link
 void ws;
 
 using canvas = new Canvas()
 const c = canvas.context
 document.body.append(canvas.canvas)
 
-
 //temp
+
+
+// const game = new Game();
+
+// function handleIncomingMessage(msg: ) {
+// 	switch(type) {
+// 		case "myupdate":
+
+
+// 	}
+// }
 
 const player = new Player(true)
 const arena = new Arena(1200, 720); // small room
 const objects = [arena, player];
 const room = new Room(); // render players
+setRoom(room);
 
 const inputListener = new InputListener({
 	default: defaultInputs,

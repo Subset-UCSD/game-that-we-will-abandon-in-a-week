@@ -17,7 +17,7 @@ class Room implements RenderableObject {
         // add current player into the map, don't know the current player's id tho 
     }
 
-    updatePlayer(server_players: Server_Player[]) {
+    updatePlayers(server_players: Server_Player[]) {
         for (const server_player of server_players) {
             if (!this.players.has(server_player.id)) {
                 this.players.set(server_player.id, new Player(false));

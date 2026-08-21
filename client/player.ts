@@ -32,6 +32,13 @@ const [frames,framesWalking, framesThought] = await Promise.all([
       )),
     ])
 
+// pew pew
+type Projectile = {
+  x: number;
+  y: number;
+  
+}
+
 class Player implements RenderableObject {
   is_you: boolean;
   x: number = 0;
