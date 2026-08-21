@@ -1,6 +1,6 @@
-import { WholeGameState } from "@common/game-objects";
+import { WholeFkingGameState } from "@common/game-objects";
 import { Room } from "./rooms/room";
-import { WholeGameStateMessage } from "@common/messages";
+import { WholeFkingGameStateMessage } from "@common/messages";
 
 const url = window.location.origin.replace(/^http/, "ws")
 export const ws = new WebSocket(url);
@@ -13,8 +13,8 @@ ws.onopen = () => {
 ws.onmessage = (msg) => {
 	// console.log(msg);
     if (msg.type == "game-state") {
-        const gamestateMsg: WholeGameStateMessage = JSON.parse(msg.data);
-        const gamestate: WholeGameState = gamestateMsg.value;
+        const gamestateMsg: WholeFkingGameStateMessage = JSON.parse(msg.data);
+        const gamestate: WholeFkingGameState = gamestateMsg.value;
         // update other player's location
         if (room) room.updatePlayers(gamestate.players);
     } else if (msg.type == "connect") {

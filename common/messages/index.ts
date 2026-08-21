@@ -1,5 +1,5 @@
 import { Inputs } from "@common/input";
-import { WholeGameState } from "@common/game-objects";
+import { WholeFkingGameState } from "@common/game-objects";
 
 export interface InputMessage {
 	type: "input",
@@ -23,13 +23,13 @@ export interface PlayerPositionMessage {
 	}
 }
 
-export interface WholeGameStateMessage {
+export interface WholeFkingGameStateMessage {
 	type: "game-state",
-	value: WholeGameState
+	value: WholeFkingGameState
 }
 
 export type ClientMessage = InputMessage | PingMessage | PlayerPositionMessage;
 
-export type ServerMessage = PongMessage | WholeGameStateMessage;
+export type ServerMessage = PongMessage | WholeFkingGameStateMessage;
 
 export type Message = ServerMessage | ClientMessage;

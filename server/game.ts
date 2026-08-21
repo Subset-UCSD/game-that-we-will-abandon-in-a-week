@@ -19,11 +19,15 @@ export class Game {
 	}
 
 
-	handleConnection(socket: WebSocket) {
-		
-	}
-
 	getWorldState() {
 
+	}
+
+	handleConnection = () => {
+		// ???
+	}
+
+	run () {
+		// ???
 	}
 };

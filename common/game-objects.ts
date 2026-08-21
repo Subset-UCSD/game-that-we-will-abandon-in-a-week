@@ -4,7 +4,7 @@ type Player = {
   y: number;
 };
 
-export type WholeGameState = {
+export type WholeFkingGameState = {
 	// todo
 	players: Player[]
 }
