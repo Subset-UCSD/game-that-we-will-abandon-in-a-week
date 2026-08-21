@@ -1,7 +1,38 @@
-import type { Canvas} from './canvas'
+import type { Canvas } from './canvas'
+import { RenderableObject } from './render'
 import { Inputs } from "@common/input";
 
-class Player {
+const [frames,framesWalking, framesThought] = await Promise.all([
+      // standing
+      Promise.all([
+        "./assets/sheep.png",
+        "./assets/sheep2.png"
+        ].map(async url =>
+          await createImageBitmap(
+            await fetch(url).then((r) => r.blob()),
+          )
+      )),
+      // walking
+      Promise.all([
+        "./assets/sheep-walk1.png",
+        "./assets/sheep-walk2.png"
+        ].map(async url =>
+          await createImageBitmap(
+            await fetch(url).then((r) => r.blob()),
+          )
+      )),
+      // thought bubble
+      Promise.all([
+        "./assets/think1.png",
+        "./assets/think2.png"
+        ].map(async url =>
+          await createImageBitmap(
+            await fetch(url).then((r) => r.blob()),
+          )
+      )),
+    ])
+
+class Player implements RenderableObject {
   is_you: boolean;
   x: number = 0;
   y: number = 0;
@@ -11,11 +42,10 @@ class Player {
   // y_acc: number = 0;
 
 
-  private max_speed: number = 1;
+  private max_speed: number = 2;
   private friction: number = 0.1;
-  private frames: ImageBitmap[] = [];
-  private framesWalking: ImageBitmap[] = [];
   private shouldFlipX: boolean = false;
+  private thought: string = ''
 
   //NICK DON'T CHANGE THIS TO A FUNCTION 
   // but what if i did anyways....
@@ -41,46 +71,28 @@ class Player {
   
   constructor(is_you: boolean) {
     this.is_you = is_you;
-    this.getAssets();
   }
 
  
 
-  async getAssets(): Promise<void> {
-    [this.frames,this.framesWalking] = await Promise.all([
-      // standing
-      Promise.all([
-        "./assets/sheep.png",
-        "./assets/sheep2.png"
-        ].map(async url =>
-          await createImageBitmap(
-            await fetch(url).then((r) => r.blob()),
-          )
-      )),
-      // walking
-      Promise.all([
-        "./assets/sheep-walk1.png",
-        "./assets/sheep-walk2.png"
-        ].map(async url =>
-          await createImageBitmap(
-            await fetch(url).then((r) => r.blob()),
-          )
-      )),
-    ])
-  }
 
   render({c,width}: Canvas): void {
     this.movement() 
     /** in milliseconds */
     const isMoving = Math.hypot(this.x_vel, this.y_vel) > 0.1
     const TIME_PER_FRAME = isMoving ? 50 : 500
-    const framesList =isMoving ? this.framesWalking: this.frames
+    const framesList =isMoving ? framesWalking: frames
     const frame = framesList[Math.floor(Date.now() / TIME_PER_FRAME) % framesList.length]
     // changed to be in handleInput, so we keep old direction if we stop moving
     // const shouldFlipX = this.x_vel < 0
 
-    const SHEEP_WIDTH = 50
-    if (frame) {
+
+    const TIME_PER_FRAME_THOUGHT = 600
+    const frameThought = framesThought[Math.floor(Date.now() / TIME_PER_FRAME_THOUGHT) % framesThought.length]
+
+    const SHEEP_WIDTH = 60
+    const THOUGHT_WIDTH = 60
+    const THOUGHT_HEIGHT = 50
       if (this.shouldFlipX) {
         c.save()
         c.scale(-1, 1)
@@ -89,50 +101,56 @@ class Player {
 
       } else {
         c.drawImage(frame, this.x - SHEEP_WIDTH/2, this.y, SHEEP_WIDTH, 50);
+
       }
-    }
+      if (this.thought) {
+        c.drawImage(frameThought, this.x + SHEEP_WIDTH/2, this.y-THOUGHT_HEIGHT, THOUGHT_WIDTH, THOUGHT_HEIGHT);
+        c.fillText(this.thought, this.x + SHEEP_WIDTH/2 + 20, this.y - 25)
+      }
+    
+
+    
   }
 
   handleInput(inputs: Inputs) {
-    console.log(this.x,  this.y, this.x_vel, this.y_vel)
     if (inputs.up) {
-      this.y_vel = -1
+      this.y_vel = -this.max_speed
     }
     else if (inputs.down) {
-      this.y_vel = 1
+      this.y_vel = this.max_speed
     } else {
       this.y_vel = 0
     }
 
     if (inputs.left) {
-      this.x_vel = -1
+      this.x_vel = -this.max_speed
       this.shouldFlipX = true;
     }
     else if (inputs.right) {
-      this.x_vel = 1
+      this.x_vel = this.max_speed
        this.shouldFlipX = false;
     } else {
       this.x_vel = 0
     }
 
 
+    if (inputs.baa) {
+      if (!this.thought) {
+        const thoughts = ['baa','hungy','beh']
+        this.thought = thoughts[Math.floor(Math.random() * thoughts.length)]
+      }
+    } else {
+      this.thought = ''
+    }
   }
 
   movement() {
     if (this.is_you) {
-        this.x += this.x_vel * Math.hypot(this.x_vel, this.y_vel)
-        // this.x_vel += this.x_acc 
-        // this.x_vel -= Math.sign(this.x_vel) * this.friction
-        // this.x_vel = Math.max(Math.min(this.x_vel, this.max_speed), -this.max_speed)
-        
+        if (this.x_vel != 0)
+          this.x += this.x_vel / Math.hypot(this.x_vel, this.y_vel)
 
-        this.y += this.y_vel * Math.hypot(this.x_vel, this.y_vel)
-        // this.y_vel += this.y_acc
-        // this.y_vel -= Math.sign(this.y_vel) * this.friction
-        // this.y_vel = Math.max(Math.min(this.y_vel, this.max_speed), -this.max_speed)
-        
-        // this.x_acc = 0
-        // this.y_acc = 0
+        if (this.y_vel != 0)
+          this.y += this.y_vel / Math.hypot(this.x_vel, this.y_vel)
     }
   } 
 

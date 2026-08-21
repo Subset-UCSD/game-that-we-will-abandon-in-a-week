@@ -1,21 +1,21 @@
+// logic for rendering "rooms", or segments of the map
+import type { Canvas } from '../canvas'
+
 export class Arena {
     public readonly width: number;
     public readonly  height: number;
 
-    private readonly context: CanvasRenderingContext2D;
-
-    constructor(width: number, height: number, context: CanvasRenderingContext2D) {
-        this.context = context;
+    constructor(width: number, height: number) {
         this.width = width;
         this.height = height;
     }
 
-    render(): void {
-        this.context.save();
+    render({context, width}: Canvas): void {
+        context.save();
 
-        this.context.fillStyle = "#466b3a";
-        this.context.fillRect(0, 0, this.width, this.height);
+        context.fillStyle = "#466b3a";
+        context.fillRect(0, 0, this.width, this.height);
 
-        this.context.restore();
+        context.restore();
     }
 }

@@ -1,5 +1,8 @@
+import type { Canvas } from './canvas'
+
+
 interface RenderableObject {
-  render: () => void;
+  render: ({c,width}: Canvas) => void;
 }
 
 /**
@@ -10,8 +13,10 @@ interface RenderableObject {
  * as you want and the gameplay should be unaffected.
  *
  */
-export async function render(objects: RenderableObject[]) {
+export async function render(canvas: Canvas, objects: RenderableObject[]) {
   for (const object of objects) {
-    object.render();
+    object.render(canvas);
   }
 }
+
+export {RenderableObject};

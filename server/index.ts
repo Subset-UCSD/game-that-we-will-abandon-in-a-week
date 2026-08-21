@@ -3,6 +3,8 @@ import { WebSocketServer } from "ws";
 import express from "express";
 import {join} from "path";
 
+import { handle, handle as handleNewConnection } from "@server/messenger";
+
 const server = createServer();
 const app = express();
 
@@ -37,32 +39,7 @@ function broadcast(data: unknown) {
   }
 }
 
-
-wss.on("connection", (socket) => {
-  let id = count++;
-  players.set(socket, { id, x: 0, y: 0 });
-  socket.on("message", (raw) => {
-    const message = JSON.parse(raw.toString());
-
-    if (message.type === "ping") {
-      socket.send(JSON.stringify({
-        type: "pong",
-        sentAt: message.sentAt,
-      }));
-    } else if (message.type == "player") {
-      const player = players.get(socket);
-      if (!player) return;
-      player.x = message.location.x
-      player.y = message.location.y
-    }
-  });
-
-  socket.on("close", () => {
-    console.log("Client disconnected");
-    players.delete(socket);
-  });
-
-})
+wss.on("connection", (socket) => handleNewConnection)
 
 // socket send location info every frame (1/60th of a second)
 setInterval(() => {

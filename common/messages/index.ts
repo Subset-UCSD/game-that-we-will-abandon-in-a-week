@@ -1,4 +1,5 @@
 import { Inputs } from "@common/input";
+import {WholeGameState} from "@common"
 
 interface InputMessage {
 	type: "input",
@@ -13,7 +14,21 @@ interface PongMessage {
 	type: "pong"
 }
 
-export type ClientMessage = InputMessage | PingMessage;
+// Temporary
+interface PlayerPositionMessage {
+	type: "position"
+	value: {
+		x: number;
+		y: number;
+	}
+}
+
+interface WholeGameStateMessage {
+	type: "game-state",
+	value: WholeGameState
+}
+
+export type ClientMessage = InputMessage | PingMessage | PlayerPositionMessage;
 
 export type ServerMessage = PongMessage
 

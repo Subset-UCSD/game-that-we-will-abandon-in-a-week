@@ -6,6 +6,7 @@ export interface Inputs {
 	right: boolean;
 	left: boolean;
 	jump: boolean;
+	baa: boolean
 }
 
 export const defaultInputs: Inputs = {
@@ -16,4 +17,16 @@ export const defaultInputs: Inputs = {
 	jump: false,
 	left: false,
 	right: false,
+	baa: false,
 } as const;
+
+export const keymap = {
+	KeyW: "up",
+	KeyA: "left",
+	KeyS: "down",
+	KeyD: "right",
+	Space: "jump",
+	KeyB: 'baa',
+	0: "attack", // Left mouse button
+	2: "use", // Right mouse button
+} satisfies Record<string | number, keyof Inputs>;

@@ -1,6 +1,7 @@
 const url = window.location.origin.replace(/^http/, "ws")
 export const ws = new WebSocket(url);
-console.log(url, ws)
+console.log(url, ws);
+
 
 ws.onopen = () => {
 	ws.send(JSON.stringify({type:"ping"}));
@@ -10,7 +11,9 @@ ws.onmessage = (msg) => {
 	// console.log(msg);
     if (msg.type == "players") {
         // update other player's location
-        
+
+    } else if (msg.type == "connect") {
+        // get player id here
     }
 }
 
