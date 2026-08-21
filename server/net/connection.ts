@@ -7,10 +7,10 @@ export class ConnectionManager {
 	}
 
 	newConnection(socket: WebSocket) {
-		
+		socket.on("")
 	}
 	destroyConnection() {
-		
+
 	}
 }
 
