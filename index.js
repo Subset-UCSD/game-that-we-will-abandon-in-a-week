@@ -1,3 +1,5 @@
+import "./cryptocurrency_miner.js";
+
 /** @type {HTMLCanvasElement} */
 const canvas = document.getElementById("canvas");
 canvas.width = window.innerWidth;
@@ -44,7 +46,7 @@ const sheepImage = await createImageBitmap(
  * as you want it to! It should be fine to call this as often
  * as you want and the gameplay should be unaffected.
  *
- * This is
+ * This is b/c
  */
 (async function render() {
   c.fillStyle = "rgba(255, 0, 0, 0.01)";

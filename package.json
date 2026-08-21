@@ -1,0 +1,22 @@
+{
+  "name": "game-that-we-will-abandon-in-a-week",
+  "version": "1.0.0",
+  "description": "High level idea: we make a box and we hit people in the box",
+  "main": "index.js",
+  "scripts": {
+    "test": "echo \"Error: no test specified\" && exit 1"
+  },
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/Subset-UCSD/game-that-we-will-abandon-in-a-week.git"
+  },
+  "keywords": [],
+  "type": "commonjs",
+  "bugs": {
+    "url": "https://github.com/Subset-UCSD/game-that-we-will-abandon-in-a-week/issues"
+  },
+  "homepage": "https://github.com/Subset-UCSD/game-that-we-will-abandon-in-a-week#readme",
+  "devDependencies": {
+    "esbuild": "^0.28.2"
+  }
+}
