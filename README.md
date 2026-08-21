@@ -11,11 +11,12 @@ Open this in your browser: http://localhost:8080/
 ```javascript
 /groot
 |- index.js
+|- assets
 |- src
-    |- render.js
+    |- render.ts
+    |- objects.ts
     |- rooms
-        |- room.js
-        |- arena.js
-    |- player.js
-|
+        |- room.ts
+        |- arena.ts
+    |- player.ts
 ```

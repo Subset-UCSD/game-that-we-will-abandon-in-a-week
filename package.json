@@ -11,12 +11,15 @@
     "url": "git+https://github.com/Subset-UCSD/game-that-we-will-abandon-in-a-week.git"
   },
   "keywords": [],
-  "type": "commonjs",
+  "type": "module",
   "bugs": {
     "url": "https://github.com/Subset-UCSD/game-that-we-will-abandon-in-a-week/issues"
   },
   "homepage": "https://github.com/Subset-UCSD/game-that-we-will-abandon-in-a-week#readme",
   "devDependencies": {
     "esbuild": "^0.28.2"
+  },
+  "allowScripts": {
+    "esbuild@0.28.2": true
   }
 }

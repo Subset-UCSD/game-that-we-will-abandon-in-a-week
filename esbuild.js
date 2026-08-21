@@ -1,10 +1,15 @@
+import esbuild from "esbuild";
 const config = {
   bundle: true,
-  outfile: "dist/public/client.js",
+  outfile: "dist/client.js",
   platform: "browser",
   minify: false,
   sourcemap: true,
   format: "esm",
-  entryPoints: ["index.ts"],
+  entryPoints: ["src/index.ts"],
 };
-await build(serverConfig);
+const ctx = await esbuild.context(config);
+const what = await ctx.serve();
+for (const host of what.hosts) {
+  console.log(`http://${host}:${what.port}`);
+}

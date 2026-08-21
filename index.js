@@ -39,6 +39,8 @@ const sheepImage = await createImageBitmap(
   await fetch("./assets/sheep.png").then((r) => r.blob()),
 );
 
+// document.addEventListener('key')
+
 /**
  * I'm the renderer
  * I'm the one who renders
