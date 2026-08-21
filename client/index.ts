@@ -3,7 +3,8 @@ import { Player } from "./player";
 import { ws, msg } from "./ws";
 import { Canvas} from './canvas'
 import { Arena } from "./rooms/arena";
-import { InputListener, defaultInputs } from "./input-listener";
+import { defaultInputs } from "@common/input";
+import { InputListener} from "./input-listener";
 import { SERVER_GAME_TICK } from "@common/index";
 
 void ws;
@@ -18,14 +19,14 @@ document.body.append(canvas.canvas)
 const player = new Player(true)
 const arena = new Arena(1200, 720, c);
 const objects = [arena, player];
-
+const room = new Room();
 
 const inputListener = new InputListener({
 	default: defaultInputs,
 	keymap: {
 		KeyW: "up",
 		KeyA: "left",
-		KeyS: "back",
+		KeyS: "down",
 		KeyD: "right",
 		Space: "jump",
 		0: "attack", // Left mouse button
@@ -36,11 +37,12 @@ const inputListener = new InputListener({
 	},
 	period: SERVER_GAME_TICK,
 });
+inputListener.listen();
 
 // Game loop
 while (true) {
 	// TEMP: just for demo purposes, please ignore
-	c.fillStyle = 'rgba(40, 150, 50, 0.01)'
+	c.fillStyle = 'rgba(40, 150, 50, 1)'
 	c.fillRect(0, 0, canvas.width, canvas.height)
 
 	c.fillStyle = 'black'
@@ -52,9 +54,8 @@ while (true) {
 	// send this player info to server
 	msg({location: {x:player.x, y:player.y}});
 
-	// receive other player info
-
 	// render other players
+	
 
 	// Wait for one frame (1/60 of a second on a 60 Hz, but can be shorter for high refresh displays)
 	await new Promise(window.requestAnimationFrame)

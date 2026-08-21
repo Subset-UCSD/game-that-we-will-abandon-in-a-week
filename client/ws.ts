@@ -7,7 +7,11 @@ ws.onopen = () => {
 }
 
 ws.onmessage = (msg) => {
-		// console.log(msg);
+	// console.log(msg);
+    if (msg.type == "players") {
+        // update other player's location
+        
+    }
 }
 
 export const msg = (message: any) => {

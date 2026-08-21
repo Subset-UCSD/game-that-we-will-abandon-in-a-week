@@ -1,14 +1,20 @@
-
+import { Inputs } from "@common/input";
 
 interface InputMessage {
 	type: "input",
-	value: {
-
-	}
+	value: Inputs
 }
 
-export type ClientMessage = InputMessage;
+interface PingMessage {
+	type: "ping"
+}
 
-export type ServerMessage = {}
+interface PongMessage {
+	type: "pong"
+}
+
+export type ClientMessage = InputMessage | PingMessage;
+
+export type ServerMessage = PongMessage
 
 export type Message = ServerMessage | ClientMessage;
