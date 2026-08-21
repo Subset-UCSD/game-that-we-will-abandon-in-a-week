@@ -1,8 +1,18 @@
-// server always function
-// step 1: ping pong
+import {createServer} from "http";
+import express from "express";
 import { WebSocketServer } from "ws";
 
-const wss = new WebSocketServer({ port: 8081 });
+const server = createServer();
+
+
+
+// server always function
+// step 1: ping pong
+
+
+const wss = new WebSocketServer({ 
+  server: server
+});
 
 wss.on("connection", (socket) => {
     socket.on("message", (raw) => {

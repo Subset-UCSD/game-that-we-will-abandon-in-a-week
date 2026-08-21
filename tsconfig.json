@@ -1,0 +1,14 @@
+{
+	"compilerOptions": {
+		"jsx": "preserve",
+		"types": ["node"],
+		"allowSyntheticDefaultImports": true,
+		"esModuleInterop": true,
+		"paths": {
+			"@client/*": ["./client/*"],
+			"@server/*": ["./server/*"],
+			"@common/*": ["./common/*"],
+		},
+  	"noEmit": true
+	}
+}
