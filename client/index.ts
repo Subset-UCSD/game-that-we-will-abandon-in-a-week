@@ -12,7 +12,7 @@ if (!c) {
 
 //temp
 
-
+const player = new Player(true)
 
 // Game loop
 while (true) {
@@ -24,7 +24,7 @@ while (true) {
 	c.fillStyle = 'black'
 	c.fillText('fuck', 50, 50)
 
-
+	player.render(c)
 	
 
 	// Wait for one frame (1/60 of a second on a 60 Hz, but can be shorter for high refresh displays)
