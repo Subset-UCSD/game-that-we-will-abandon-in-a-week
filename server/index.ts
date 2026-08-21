@@ -17,6 +17,8 @@ const wss = new WebSocketServer({
   server: server
 });
 
+// map player id (message.sendAt) to player info (location so far)
+
 wss.on("connection", (socket) => {
   socket.on("message", (raw) => {
     const message = JSON.parse(raw.toString());
@@ -26,10 +28,16 @@ wss.on("connection", (socket) => {
         type: "pong",
         sentAt: message.sentAt,
       }));
+    } else if (message.type == "player") {
+        // store player info in a map or smth
+        // considering how to handle stale player (user refresh the page)
+
     }
   });
 
   socket.on("close", () => console.log("Client disconnected"));
+
+  // socket send location info every frame (1/60th of a second)
 })
 
 server.listen({port:6767}, () => {

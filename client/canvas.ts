@@ -14,6 +14,8 @@ export class Canvas {
         }
         return context
     })(this.canvas.getContext('2d'))
+    /** alias for `context` */
+    get c () { return this.context}
     width = 0
     height = 0
 
@@ -31,7 +33,7 @@ export class Canvas {
         this.canvas.remove()
     }
     
-    private resize: ResizeObserverCallback = ([{
+    #resize: ResizeObserverCallback = ([{
         contentBoxSize:[size],
         devicePixelContentBoxSize:[physicalSize]
     }]) => {
@@ -47,5 +49,5 @@ export class Canvas {
         )
     }
     // This obsers resizing so that the window resizes CLEANLY
-    #observer = new ResizeObserver(this.resize)
+    #observer = new ResizeObserver(this.#resize)
 }

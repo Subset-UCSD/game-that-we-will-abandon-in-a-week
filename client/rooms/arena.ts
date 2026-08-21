@@ -10,5 +10,12 @@ export class Arena {
         this.height = height;
     }
 
+    render(): void {
+        this.context.save();
 
+        this.context.fillStyle = "#466b3a";
+        this.context.fillRect(0, 0, this.width, this.height);
+
+        this.context.restore();
+    }
 }

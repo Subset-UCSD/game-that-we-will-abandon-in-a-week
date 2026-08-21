@@ -1,0 +1,103 @@
+
+
+const SERVER_GAME_TICK = 20;
+
+const inputListener = new InputListener({
+	default: {
+		attack: false,
+		use: false,
+	},
+	keymap: {
+		KeyW: "forward",
+		KeyA: "left",
+		KeyS: "backward",
+		KeyD: "right",
+		Space: "jump",
+		0: "attack", // Left mouse button
+		2: "use", // Right mouse button
+	},
+	handleInputs: (inputs) => {
+			connection.send({
+				type: "client-input",
+				...inputs,
+			});
+		},
+	period: SERVER_GAME_TICK,
+});
+
+
+export type InputListenerOptions<Inputs extends string> = {
+	default: Record<Inputs, boolean>;
+	keymap: Record<string | number, Inputs>;
+	handleInputs: (inputs: Record<Inputs, boolean>) => void;
+	/**
+	 * To make the listener fire at a set frequency in addition to after every
+	 * key press/release, set this number (in ms). If undefined or 0 then the
+	 * listener will only fire after key events.
+	 */
+	period?: number;
+};
+
+export class InputListener<Inputs extends string> {
+	options: InputListenerOptions<Inputs>;
+	#inputs: Record<Inputs, boolean>;
+	#intervalID: number = 0;
+	enabled = true;
+
+	constructor(options: InputListenerOptions<Inputs>) {
+		this.options = options;
+		this.#inputs = { ...options.default };
+	}
+
+	handleInput(key: Inputs | null, pressed: boolean): void {
+		if (pressed && !this.enabled) {
+			return;
+		}
+		// Don't send anything if inputs don't change (e.g. if keydown is fired
+		// multiple times while repeating a key)
+		if (!key || this.#inputs[key] === pressed) {
+			return;
+		}
+		this.#inputs[key] = pressed;
+		this.options.handleInputs(this.#inputs);
+	}
+
+	#handleKeydown = (e: KeyboardEvent) => this.handleInput(this.options.keymap[e.code], true);
+	#handleKeyup = (e: KeyboardEvent) => this.handleInput(this.options.keymap[e.code], false);
+	#handleMousedown = (e: MouseEvent) => this.handleInput(this.options.keymap[e.button], true);
+	#handleMouseup = (e: MouseEvent) => this.handleInput(this.options.keymap[e.button], false);
+
+	/** When the user leaves the page, unpress all keys  */
+	#handleBlur = () => {
+		this.#inputs = { ...this.options.default };
+		this.options.handleInputs(this.#inputs);
+	};
+
+	listen() {
+		addEventListener("keydown", this.#handleKeydown);
+		addEventListener("keyup", this.#handleKeyup);
+		addEventListener("mousedown", this.#handleMousedown);
+		addEventListener("mouseup", this.#handleMouseup);
+		addEventListener("blur", this.#handleBlur);
+
+		if (this.options.period) {
+			this.#intervalID = setInterval(
+				() => this.options.handleInputs(this.#inputs), 
+			  this.options.period
+			);
+		}
+	}
+
+	disconnect() {
+		removeEventListener("keydown", this.#handleKeydown);
+		removeEventListener("keyup", this.#handleKeyup);
+		removeEventListener("mousedown", this.#handleMousedown);
+		removeEventListener("mouseup", this.#handleMouseup);
+		removeEventListener("blur", this.#handleBlur);
+
+		if (this.#intervalID !== 0) {
+			window.clearInterval(this.#intervalID);
+			this.#intervalID = 0;
+		}
+	}
+}
