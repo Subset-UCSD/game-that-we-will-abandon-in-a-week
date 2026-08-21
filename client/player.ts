@@ -8,10 +8,6 @@ class Player {
   y_acc: number = 0;
   sheepImage: any = null;
 
-  accelerate = (event: KeyboardEvent): void => {
-    const keyName = event.key;
-  }
-
   constructor(is_you: boolean) {
     this.is_you = is_you;
     this.getAssets();
@@ -28,8 +24,6 @@ class Player {
     c.drawImage(this.sheepImage, this.x, this.y);
   }
 
-  
-
   movement() {
     if (this.is_you) {
         this.x += this.x_vel
@@ -38,9 +32,8 @@ class Player {
         this.y += this.y_vel
         this.y_vel += this.y_acc
     }
-  } 
+  }
+
+  static 
 }
-
-
-KeyboardEvent
 

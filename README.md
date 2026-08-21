@@ -6,7 +6,7 @@ High level idea: we make a box and we hit people in the box
 
 ```sh
 npm install
-npm run serve
+npm run dev
 ```
 
 Open this in your browser: http://localhost:8000/
