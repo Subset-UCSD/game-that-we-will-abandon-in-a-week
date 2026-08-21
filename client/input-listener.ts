@@ -1,7 +1,21 @@
-export type InputListenerOptions<Inputs extends string> = {
-	default: Record<Inputs, boolean>;
-	keymap: Record<string | number, Inputs>;
-	handleInputs: (inputs: Record<Inputs, boolean>) => void;
+
+export const defaultInputs = {
+	attack: false,
+	use: false,
+	back: false,
+	up: false,
+	jump: false,
+	left: false,
+	right: false,
+} as const;
+
+export type Inputs = keyof typeof defaultInputs;
+
+
+export type InputListenerOptions<T extends string> = {
+	default: Record<T, boolean>;
+	keymap: Record<string | number, T>;
+	handleInputs: (inputs: Record<T, boolean>) => void;
 	/**
 	 * To make the listener fire at a set frequency in addition to after every
 	 * key press/release, set this number (in ms). If undefined or 0 then the
@@ -10,18 +24,18 @@ export type InputListenerOptions<Inputs extends string> = {
 	period?: number;
 };
 
-export class InputListener<Inputs extends string> {
-	options: InputListenerOptions<Inputs>;
-	#inputs: Record<Inputs, boolean>;
+export class InputListener<T extends string> {
+	options: InputListenerOptions<T>;
+	#inputs: Record<T, boolean>;
 	#intervalID?: ReturnType<typeof setInterval>
 	enabled = true;
 
-	constructor(options: InputListenerOptions<Inputs>) {
+	constructor(options: InputListenerOptions<T>) {
 		this.options = options;
 		this.#inputs = { ...options.default };
 	}
 
-	handleInput(key: Inputs | null, pressed: boolean): void {
+	handleInput(key: T | null, pressed: boolean): void {
 		if (pressed && !this.enabled) {
 			return;
 		}

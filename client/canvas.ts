@@ -1,5 +1,12 @@
 
 /**
+ * The `Canvas` wrapper class handles three things:
+ * - Obtains a canvas and its context
+ * - Resizes the canvas when you resize the window
+ * - Keeps the canvas crisp even on high resolution displays
+ *   (e.g. phone screens, Mac retina display)
+ * 
+ * 
  * @example
  * using canvas = new Canvas()
  * document.body.append(canvas.canvas)
@@ -16,7 +23,9 @@ export class Canvas {
     })(this.canvas.getContext('2d'))
     /** alias for `context` */
     get c () { return this.context}
+    /** width of canvas, in pixels */
     width = 0
+    /** height of canvas, in pixels */
     height = 0
 
     constructor () {

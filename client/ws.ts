@@ -7,3 +7,7 @@ ws.onopen = () => {
 ws.onmessage = (msg) => {
 		console.log(msg);
 }
+
+export const msg = (message) => {
+    ws.send(JSON.stringify(message));
+}

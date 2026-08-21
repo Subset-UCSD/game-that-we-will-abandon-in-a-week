@@ -27,6 +27,17 @@ type Player = {
 };
 const players = new Map<WebSocket, Player>();
 
+function broadcast(data: unknown) {
+  const message = JSON.stringify(data);
+
+  for (const client of wss.clients) {
+    if (client.readyState === WebSocket.OPEN) {
+      client.send(message);
+    }
+  }
+}
+
+
 wss.on("connection", (socket) => {
   let id = count++;
   players.set(socket, { id, x: 0, y: 0 });
@@ -39,9 +50,10 @@ wss.on("connection", (socket) => {
         sentAt: message.sentAt,
       }));
     } else if (message.type == "player") {
-        // store player info in a map or smth
-        // considering how to handle stale player (user refresh the page)
-
+      const player = players.get(socket);
+      if (!player) return;
+      player.x = message.location.x
+      player.y = message.location.y
     }
   });
 
@@ -50,8 +62,15 @@ wss.on("connection", (socket) => {
     players.delete(socket);
   });
 
-  // socket send location info every frame (1/60th of a second)
 })
+
+// socket send location info every frame (1/60th of a second)
+setInterval(() => {
+  broadcast({
+    type: "players",
+    players: [...players.values()],
+  });
+}, 1000/60); // 1000 ms over 60 times
 
 server.listen({port:6767}, () => {
   console.log("the server is at http://localhost:6767");

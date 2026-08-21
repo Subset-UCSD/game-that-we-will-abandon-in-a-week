@@ -1,4 +1,5 @@
 import type { Canvas} from './canvas'
+import {Inputs} from './input-listener'
 
 class Player {
   is_you: boolean;
@@ -15,25 +16,26 @@ class Player {
   private frames: any[] = [];
 
   //NICK DON'T CHANGE THIS TO A FUNCTION 
-  accelerate = (event: KeyboardEvent): void => {
-    const keyName = event.key;
-    if (keyName == "a") {
-        this.x_acc = -1;
-    }
-    else if (keyName == "d") {
-        this.x_acc = 1;
-    } else {
-      this.x_acc = 0;
-    }
+  // but what if i did anyways....
+  // accelerate = (event: KeyboardEvent): void => {
+  //   const keyName = event.key;
+  //   if (keyName == "a") {
+  //       this.x_acc = -1;
+  //   }
+  //   else if (keyName == "d") {
+  //       this.x_acc = 1;
+  //   } else {
+  //     this.x_acc = 0;
+  //   }
 
-    if (keyName == "w") {
-        this.y_acc = -1
-    } else if (keyName == "s") {
-        this.y_acc = 1
-    } else {
-      this.y_acc = 0;
-    }
-  }
+  //   if (keyName == "w") {
+  //       this.y_acc = -1
+  //   } else if (keyName == "s") {
+  //       this.y_acc = 1
+  //   } else {
+  //     this.y_acc = 0;
+  //   }
+  // }
   
   constructor(is_you: boolean) {
     document.addEventListener("keydown", this.accelerate);
@@ -62,14 +64,35 @@ class Player {
     /** in milliseconds */
     const TIME_PER_FRAME = 500
     const frame = this.frames[Math.floor(Date.now() / TIME_PER_FRAME) % this.frames.length]
+    const shouldFlipX = this.x_vel < 0
+    const SHEEP_WIDTH = 50
     if (frame) {
-      // c.save()
-      // c.translate(width, 0)
-      // c.scale(-1, 1)
-      c.drawImage(frame, this.x, this.y, 50, 50);
-      // c.restore()
+      if (shouldFlipX) {
+        c.save()
+        c.scale(-1, 1)
+        c.drawImage(frame, -(this.x )- SHEEP_WIDTH/2, this.y, SHEEP_WIDTH, 50);
+        c.restore()
+
+      } else {
+        c.drawImage(frame, this.x - SHEEP_WIDTH/2, this.y, SHEEP_WIDTH, 50);
+      }
     }
   }
+
+  handleInput(inputs: Record<Inputs, boolean>) {
+      if (inputs.up) {
+        this.x_vel = -1
+      }
+      else if (inputs.back) {
+        this.x_vel = 1
+      } else {}
+  }
+
+  KeyW: "up",
+		KeyA: "left",
+		KeyS: "back",
+		KeyD: "right",
+		Space: "jump",
 
   movement() {
     if (this.is_you) {
