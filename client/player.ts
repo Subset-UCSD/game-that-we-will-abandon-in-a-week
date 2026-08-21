@@ -33,7 +33,8 @@ class Player {
         this.y_vel += this.y_acc
     }
   }
-
-  static 
 }
 
+
+
+export {Player};

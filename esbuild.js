@@ -23,6 +23,6 @@ const clientConfig = {
 };
 
 (async () => {
-	await build(serverConfig);
-	await build(clientConfig);
+	await esbuild.build(serverConfig);
+	await esbuild.build(clientConfig);
 })();

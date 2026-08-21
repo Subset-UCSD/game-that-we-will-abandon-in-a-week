@@ -6,7 +6,7 @@
   "scripts": {
     "start": "node dist/server.js",
     "build": "node ./esbuild.js",
-    "dev": "nodemon --watch . --ext * --ignore dist --exec run-s build start"
+    "dev": "nodemon --watch . --ext '*.ts' --ignore dist --ignore public/dist --exec run-s build start"
   },
   "repository": {
     "type": "git",

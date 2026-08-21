@@ -1,0 +1,7 @@
+{
+  "version": 3,
+  "sources": ["../server/index.ts"],
+  "sourcesContent": ["// server always function\n// step 1: ping pong\nimport { WebSocketServer } from \"ws\";\n\nconst wss = new WebSocketServer({ port: 8081 });\n\nwss.on(\"connection\", (socket) => {\n    socket.on(\"message\", (raw) => {\n    const message = JSON.parse(raw.toString());\n\n    if (message.type === \"ping\") {\n      socket.send(JSON.stringify({\n        type: \"pong\",\n        sentAt: message.sentAt,\n      }));\n    }\n  });\n\n  socket.on(\"close\", () => console.log(\"Client disconnected\"));\n})\n\nconsole.log(\"WebSocket server running at ws://localhost:8081\");"],
+  "mappings": ";AAEA,SAAS,uBAAuB;AAEhC,IAAM,MAAM,IAAI,gBAAgB,EAAE,MAAM,KAAK,CAAC;AAE9C,IAAI,GAAG,cAAc,CAAC,WAAW;AAC7B,SAAO,GAAG,WAAW,CAAC,QAAQ;AAC9B,UAAM,UAAU,KAAK,MAAM,IAAI,SAAS,CAAC;AAEzC,QAAI,QAAQ,SAAS,QAAQ;AAC3B,aAAO,KAAK,KAAK,UAAU;AAAA,QACzB,MAAM;AAAA,QACN,QAAQ,QAAQ;AAAA,MAClB,CAAC,CAAC;AAAA,IACJ;AAAA,EACF,CAAC;AAED,SAAO,GAAG,SAAS,MAAM,QAAQ,IAAI,qBAAqB,CAAC;AAC7D,CAAC;AAED,QAAQ,IAAI,iDAAiD;",
+  "names": []
+}
