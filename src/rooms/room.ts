@@ -1,5 +1,1 @@
-
-
-class Room() {
-
-}
+class Room {}
