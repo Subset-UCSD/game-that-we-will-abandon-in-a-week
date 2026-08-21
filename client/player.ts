@@ -36,7 +36,9 @@ const [frames,framesWalking, framesThought] = await Promise.all([
 type Projectile = {
   x: number;
   y: number;
-  
+  xVelocity: number;
+  yVelocity: number;
+  remainingFrames: number;
 }
 
 class Player implements RenderableObject {
@@ -53,6 +55,7 @@ class Player implements RenderableObject {
   private friction: number = 0.1;
   private shouldFlipX: boolean = false;
   private thought: string = ''
+  private projectiles: Projectile[] = [];
 
   //NICK DON'T CHANGE THIS TO A FUNCTION 
   // but what if i did anyways....
@@ -81,7 +84,65 @@ class Player implements RenderableObject {
   }
 
  
+  fireAt(targetX: number, targetY: number): void {
+    const startX = this.x;
 
+    const startY = this.y + 50;
+
+    const deltaX = targetX - startX;
+    const deltaY = targetY - startY;
+    const distance = Math.hypot(deltaX, deltaY);
+
+    if (distance ===0 ){
+      return;
+    }
+
+    const projectileSpeed = 0;
+
+    // push projectile object
+    this.projectiles.push(
+      {
+        x: startX,
+        y: startY,
+
+        // normalizing by distance so diagonal shots move at same speed as horiz/vert
+        xVelocity:deltaX / distance * projectileSpeed,
+        yVelocity: deltaY / distance * projectileSpeed,
+        remainingFrames: 180,
+      }
+    )
+  }
+
+    // 
+  private updateRenderProjectiles(context: CanvasRenderingContext2D): void{
+    context.save();
+    context.fillStyle = "#f5d442"; //yelo
+
+    for (let index = this.projectiles.length - 1; index >= 0; index--){
+      const projectile = this.projectiles[index];
+
+      projectile.x += projectile.xVelocity;
+      projectile.y += projectile.yVelocity;
+      projectile.remainingFrames--;
+
+      if (projectile.remainingFrames <= 0) {
+        this.projectiles.splice(index, 1);
+        continue;
+      }
+
+      context.beginPath();
+      context.arc(
+        projectile.x,
+        projectile.y,
+        5,
+        0,
+        Math.PI * 2,
+      );
+      context.fill();
+    }
+
+    context.restore();
+  }
 
   render({c,width}: Canvas): void {
     this.movement() 
@@ -113,10 +174,7 @@ class Player implements RenderableObject {
       if (this.thought) {
         c.drawImage(frameThought, this.x + SHEEP_WIDTH/2, this.y-THOUGHT_HEIGHT, THOUGHT_WIDTH, THOUGHT_HEIGHT);
         c.fillText(this.thought, this.x + SHEEP_WIDTH/2 + 20, this.y - 25)
-      }
-    
-
-    
+      }    
   }
 
   handleInput(inputs: Inputs) {
@@ -160,6 +218,9 @@ class Player implements RenderableObject {
           this.y += this.y_vel / Math.hypot(this.x_vel, this.y_vel)
     }
   } 
+
+  // render projectile prob move this later
+  // this.updateRenderProjectiles(c);
 
   // for other player
   setLocation(x:number, y:number) {
