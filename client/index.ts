@@ -23,6 +23,7 @@ while (true) {
 
 	c.fillStyle = 'black'
 	c.fillText('fuck', 50, 50)
+	c.fillText('press A D S W to move', 50, 100)
 
 	player.render(c)
 	

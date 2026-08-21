@@ -10,10 +10,10 @@ class Player {
   private max_speed: number = 1;
   private sheepImage: any = null;
 
-
-   accelerate = (event: KeyboardEvent): void => {
+  //NICK DON'T CHANGE THIS TO A FUNCTION 
+  accelerate = (event: KeyboardEvent): void => {
     const keyName = event.key;
-    console.log(keyName, this, this.x, this.x_vel, this.y, this.y_vel)
+    console.log(keyName, this.x, this.x_vel, this.y, this.y_vel)
     if (keyName == "a") {
         this.x_acc = -1;
     }
@@ -24,9 +24,9 @@ class Player {
     }
 
     if (keyName == "w") {
-        this.y_acc = 1
-    } else if (keyName == "s") {
         this.y_acc = -1
+    } else if (keyName == "s") {
+        this.y_acc = 1
     } else {
       this.y_acc = 0;
     }
@@ -56,11 +56,11 @@ class Player {
     if (this.is_you) {
         this.x += this.x_vel
         this.x_vel += this.x_acc
-        this.x_vel = Math.min(Math.abs(this.x_vel), this.max_speed)
+        this.x_vel = Math.max(Math.min(this.x_vel, this.max_speed), -this.max_speed)
 
         this.y += this.y_vel
         this.y_vel += this.y_acc
-        this.y_vel = Math.min(Math.abs(this.y_vel), this.max_speed)
+        this.y_vel = Math.max(Math.min(this.y_vel, this.max_speed), -this.max_speed)
     }
   } 
 }

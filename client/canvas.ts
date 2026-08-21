@@ -1,4 +1,10 @@
 
+/**
+ * @example
+ * using canvas = new Canvas()
+ * document.body.append(canvas.canvas)
+ * THis canvas has properties, that youc an acess
+ */
 export class Canvas {
     canvas = document.createElement('canvas')
     context = ((context: CanvasRenderingContext2D|null) => {
@@ -15,15 +21,22 @@ export class Canvas {
         this.#observer.observe(this.canvas)
     }
 
+/**
+ * clean up everything when the canvas is DISPOSED
+ * 🗑️ <- dispose
+ * absolutely disposed
+ */
     [Symbol.dispose] () {
         this.#observer.disconnect()
         this.canvas.remove()
     }
     
-    #resize:ResizeObserverCallback = ([{
+    private resize: ResizeObserverCallback = ([{
         contentBoxSize:[size],
         devicePixelContentBoxSize:[physicalSize]
     }]) => {
+        // what the fuck is this
+        // this handles high resolution displays (e.g. MacOS retina)
         this.canvas.width = physicalSize.inlineSize
         this.canvas.height = physicalSize.blockSize
         this.width = size.inlineSize
@@ -33,5 +46,6 @@ export class Canvas {
             physicalSize.blockSize/size.blockSize,
         )
     }
-    #observer = new ResizeObserver(this.#resize)
+    // This obsers resizing so that the window resizes CLEANLY
+    #observer = new ResizeObserver(this.resize)
 }
