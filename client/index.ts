@@ -55,6 +55,7 @@ while (true) {
 	c.fillStyle = 'black'
 	c.fillText('fuck', 50, 50)
 	c.fillText('press W A S D to move', 50, 100)
+	c.fillText('press B to ?', canvas.width - 300, canvas.height - 20)
 
 	
 	player.render(canvas)

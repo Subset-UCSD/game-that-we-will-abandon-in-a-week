@@ -1,4 +1,4 @@
-# game-that-we-will-abandon-in-a-week
+# Game that we will abandon in 3 days.
 
 <img src="docs/sheep.png" alt="sheep" height="300">
 
