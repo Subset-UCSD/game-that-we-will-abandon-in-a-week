@@ -1,8 +1,14 @@
 
-export InputMessage {
-	
+
+interface InputMessage {
+	type: "input",
+	value: {
+
+	}
 }
 
-export interface Message {
-	type: 
-}
+export type ClientMessage = InputMessage;
+
+export type ServerMessage = {}
+
+export type Message = ServerMessage | ClientMessage;
