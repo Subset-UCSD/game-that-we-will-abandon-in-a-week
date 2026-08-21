@@ -1,31 +1,3 @@
-
-
-const SERVER_GAME_TICK = 20;
-
-const inputListener = new InputListener({
-	default: {
-		attack: false,
-		use: false,
-	},
-	keymap: {
-		KeyW: "forward",
-		KeyA: "left",
-		KeyS: "backward",
-		KeyD: "right",
-		Space: "jump",
-		0: "attack", // Left mouse button
-		2: "use", // Right mouse button
-	},
-	handleInputs: (inputs) => {
-			connection.send({
-				type: "client-input",
-				...inputs,
-			});
-		},
-	period: SERVER_GAME_TICK,
-});
-
-
 export type InputListenerOptions<Inputs extends string> = {
 	default: Record<Inputs, boolean>;
 	keymap: Record<string | number, Inputs>;
@@ -41,7 +13,7 @@ export type InputListenerOptions<Inputs extends string> = {
 export class InputListener<Inputs extends string> {
 	options: InputListenerOptions<Inputs>;
 	#inputs: Record<Inputs, boolean>;
-	#intervalID: number = 0;
+	#intervalID?: ReturnType<typeof setInterval>
 	enabled = true;
 
 	constructor(options: InputListenerOptions<Inputs>) {
@@ -95,9 +67,9 @@ export class InputListener<Inputs extends string> {
 		removeEventListener("mouseup", this.#handleMouseup);
 		removeEventListener("blur", this.#handleBlur);
 
-		if (this.#intervalID !== 0) {
+		if (this.#intervalID !== undefined) {
 			window.clearInterval(this.#intervalID);
-			this.#intervalID = 0;
+			this.#intervalID = undefined;
 		}
 	}
 }

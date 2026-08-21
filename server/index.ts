@@ -13,13 +13,23 @@ app.get("/", (req, res) => {
   res.sendFile(join(__dirname, "public/index.html"));
 });
 
+let count = 0;
+
 const wss = new WebSocketServer({ 
-  server: server
+    server: server
 });
 
-// map player id (message.sendAt) to player info (location so far)
+// map player id to player info (location so far)
+type Player = {
+  id: string;
+  x: number;
+  y: number;
+};
+const players = new Map<WebSocket, Player>();
 
 wss.on("connection", (socket) => {
+  let id = count++;
+  players.set(socket, { id, x: 0, y: 0 });
   socket.on("message", (raw) => {
     const message = JSON.parse(raw.toString());
 
@@ -35,7 +45,10 @@ wss.on("connection", (socket) => {
     }
   });
 
-  socket.on("close", () => console.log("Client disconnected"));
+  socket.on("close", () => {
+    console.log("Client disconnected");
+    players.delete(socket);
+  });
 
   // socket send location info every frame (1/60th of a second)
 })

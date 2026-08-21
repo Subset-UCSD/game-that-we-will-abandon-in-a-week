@@ -2,6 +2,8 @@ import { render } from "./render";
 import { Player } from "./player";
 import { ws } from "./ws";
 import { Canvas} from './canvas'
+import { Arena } from "./rooms/arena";
+import { InputListener } from "./input-listener";
 
 void ws;
 
@@ -14,8 +16,36 @@ document.body.append(canvas.canvas)
 
 const player = new Player(true)
 const arena = new Arena(1200, 720, c);
-const objects = [arena];
+const objects = [arena, player];
 
+
+const inputListener = new InputListener({
+	default: {
+		attack: false,
+		use: false,
+		backward: false,
+		forward: false,
+		jump: false,
+		left: false,
+		right: false
+	},
+	keymap: {
+		KeyW: "forward",
+		KeyA: "left",
+		KeyS: "backward",
+		KeyD: "right",
+		Space: "jump",
+		0: "attack", // Left mouse button
+		2: "use", // Right mouse button
+	},
+	handleInputs: (inputs) => {
+		connection.send({
+			type: "client-input",
+			...inputs,
+		});
+	},
+	period: SERVER_GAME_TICK,
+});
 
 // Game loop
 while (true) {
@@ -27,7 +57,8 @@ while (true) {
 	c.fillText('fuck', 50, 50)
 	c.fillText('press A D S W to move', 50, 100)
 
-	player.render(canvas)
+	await render(objects);
+	player.render(c);
 	
 
 	// Wait for one frame (1/60 of a second on a 60 Hz, but can be shorter for high refresh displays)
