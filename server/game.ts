@@ -1,20 +1,28 @@
+import { ClientMessage } from "@common/messages";
+import { SESSION_KEY_NUM_BYTES, SessionId } from "@common/session";
+import { Player } from "@server/player";
+import { randomBytes } from "node:crypto";
 import { WebSocket } from "ws";
+import { send } from "./net/send";
 
 // ALL OF THE GAME LOGIC
 export class Game {
-	
-	private players: Player[];
-	
+
+	private players: Map<SessionId, Player> = new Map();
+	private connections: Map<SessionId, WebSocket> = new Map();
+	private idForConnection: Map<WebSocket, SessionId> = new Map();
+	private joinedSockets: Set<WebSocket> = new Set();
+
 	constructor() {
-		
+
 	}
-	
+
 	public loop() {
 
 		// process all of the inputs
 		// tick the game world
 
-		
+
 		// Send all of the clients the state of the world
 	}
 
@@ -23,11 +31,54 @@ export class Game {
 
 	}
 
-	handleConnection = () => {
-		// ???
+
+	handleMessage(ws: WebSocket, msg: ClientMessage) {
+		// Don't process messages from sockets who have not joined us yet
+		if (msg.type !== "join" && !this.joinedSockets.has(ws)) return;
+
+		switch (msg.type) {
+			case "join": {
+				const {sessionId} = msg.value;
+
+				if (sessionId && this.players.has(sessionId)) {
+					// Reconnecting player, kill their old socket
+					const oldSocket = this.connections.get(sessionId);
+					if (oldSocket && oldSocket.readyState === oldSocket.OPEN) {
+						oldSocket.close();
+						this.joinedSockets.delete(oldSocket);
+					}
+					// Set new connection data
+					this.connections.set(sessionId, ws);
+					this.idForConnection.set(ws, sessionId);
+					this.joinedSockets.add(ws);
+				} else {
+					const sessionId = randomBytes(SESSION_KEY_NUM_BYTES).toString("hex");
+					this.connections.set(sessionId, ws);
+					this.idForConnection.set(ws, sessionId);
+					this.joinedSockets.add(ws);
+					this.players.set(sessionId, new Player());
+				}
+				send(ws, "join-response", undefined);
+				return;
+			}
+			case "input": {
+				const sessionId = this.idForConnection.get(ws);
+				if (!sessionId) {
+					console.error("WebSocket input event happened but we don't have an id for that socket stored", msg);
+					return;
+				}
+				const player = this.players.get(sessionId);
+				if (!player) {
+					console.error(`No player found for session id ${sessionId}`);
+					return
+				}
+				player.setInputs(msg.value);
+			}
+				
+		}
+	}
+	handleDisconnect(ws: WebSocket) {
+		// bro idk
 	}
 
-	run () {
-		// ???
-	}
 };

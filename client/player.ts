@@ -47,9 +47,6 @@ class Player implements RenderableObject {
   y: number = 0;
   x_vel: number = 0;
   y_vel: number = 0;
-  // x_acc: number = 0;
-  // y_acc: number = 0;
-
 
   private max_speed: number = 2;
   private friction: number = 0.1;
@@ -57,28 +54,6 @@ class Player implements RenderableObject {
   private thought: string = ''
   private projectiles: Projectile[] = [];
 
-  //NICK DON'T CHANGE THIS TO A FUNCTION 
-  // but what if i did anyways....
-  // accelerate = (event: KeyboardEvent): void => {
-  //   const keyName = event.key;
-  //   if (keyName == "a") {
-  //       this.x_acc = -1;
-  //   }
-  //   else if (keyName == "d") {
-  //       this.x_acc = 1;
-  //   } else {
-  //     this.x_acc = 0;
-  //   }
-
-  //   if (keyName == "w") {
-  //       this.y_acc = -1
-  //   } else if (keyName == "s") {
-  //       this.y_acc = 1
-  //   } else {
-  //     this.y_acc = 0;
-  //   }
-  // }
-  
   constructor(is_you: boolean) {
     this.is_you = is_you;
   }

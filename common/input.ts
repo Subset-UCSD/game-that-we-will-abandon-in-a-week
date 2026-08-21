@@ -1,13 +1,18 @@
-export interface Inputs {
-	attack: boolean;
-	use: boolean;
-	down: boolean;
-	up: boolean;
-	right: boolean;
-	left: boolean;
-	jump: boolean;
-	baa: boolean
-}
+
+import z from "zod";
+
+export const inputSchema = z.object({
+	attack: z.boolean(),
+	use: z.boolean(),
+	down: z.boolean(),
+	up: z.boolean(),
+	right: z.boolean(),
+	left: z.boolean(),
+	jump: z.boolean(),
+	baa: z.boolean()
+});
+
+export type Inputs = z.infer<typeof inputSchema>;
 
 export const defaultInputs: Inputs = {
 	attack: false,

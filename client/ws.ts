@@ -1,4 +1,4 @@
-import { WholeFkingGameState } from "@common/game-objects";
+import { WholeFkingGameState } from "@common/game";
 import { Room } from "./rooms/room";
 import { WholeFkingGameStateMessage } from "@common/messages";
 
