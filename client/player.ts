@@ -52,7 +52,7 @@ type Projectile = {
 }
 
 
-    const SHEEP_WIDTH = 60
+    export const SHEEP_WIDTH = 60
 
 class Player implements RenderableObject {
   is_you: boolean;

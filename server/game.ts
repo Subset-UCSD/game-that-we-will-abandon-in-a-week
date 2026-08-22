@@ -7,6 +7,7 @@ import { WholeFkingGameState, GameObject } from "@common/game";
 import { Meatball } from "./meatball";
 import { Explosion } from "@server/explosion";
 import { StaticThing } from "./static-thing";
+import { Corpse } from "./coarpse";
 
 // ALL OF THE GAME LOGIC
 export class Game {
@@ -16,11 +17,9 @@ export class Game {
   private joinedSockets: Set<WebSocket> = new Set();
   private gameObjects: GameObject[] = [
     new StaticThing({type:'tree', x: -100, y: -100}),
-    new StaticThing({type:'campfire', x: -100, y: -50}),
-    new StaticThing({type:'techbro', x: -0, y: -50}),
+    new StaticThing({type:'campfire', x: -0, y: -100}),
+    new StaticThing({type:'techbro', x: -50, y: -120}),
   ];
-  // meatballs: Meatball[] = [];
-  // explosions: Explosion[] = [];
 
   constructor() {}
 
@@ -72,6 +71,10 @@ export class Game {
         things: this.gameObjects
         .filter((o) => o instanceof StaticThing)
         .map((ex) => ex.serialize()),
+        corpses: this.gameObjects
+        .filter((o) => o instanceof Corpse)
+        .map((ex) => ex.serialize()),
+        
     };
   }
 
@@ -103,7 +106,6 @@ export class Game {
           this.idForConnection.set(ws, sessionId);
           this.joinedSockets.add(ws);
           player = new Player(this);
-          player.addMeatball = this.addMeatball.bind(this) // HACK
           this.players.set(sessionId, player);
           this.gameObjects.push(player);
           console.log("welcome new user", sessionId.slice(0, 8));
@@ -131,17 +133,10 @@ export class Game {
     }
   }
 
-  addMeatball({x, y, angle}: {x: number, y: number, angle: number}) {
-    this.gameObjects.push(
-      new Meatball({
-        x, y,
-        xv: Math.cos(angle) * 5,
-        yv: (Math.sin(angle) * 5) / 2,
-        height: 42-15,
-        inithv: 5,
-      }),
-    );
+  addGameObject (gameObject: GameObject) : void {
+    this.gameObjects.push(gameObject)
   }
+
 
   handleDisconnect(ws: WebSocket) {
     // bro idk

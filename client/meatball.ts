@@ -21,8 +21,8 @@ export class ClientMeatball implements RenderableObject {
     renderShadow({c}: Canvas): void {
         if (!this.state) return
         const {x,y,height}=this.state
-        c.moveTo(x + 5, y+3)
-        c.ellipse(x, y+3, 5, 2, 0, 0, Math.PI*2)
+        c.moveTo(x + 5, y)
+        c.ellipse(x, y, 5, 2, 0, 0, Math.PI*2)
     }
 
     render ({c}: Canvas) {
@@ -34,7 +34,7 @@ const frame = frames[Math.floor(Date.now() / (470 + (this.state.id * Math.PI) % 
         
 
         const R = 7
-        c.drawImage(frame, x - R, y - R - height, R*2, R*2)
+        c.drawImage(frame, x - R, y - R - 3 - height, R*2, R*2)
         // c.fillStyle = '#800'
         // c.beginPath()
         // c.ellipse(x, y-height, 5, 5, 0, 0, Math.PI*2)

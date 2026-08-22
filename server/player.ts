@@ -2,6 +2,7 @@ import { defaultInputs, Inputs } from "@common/input";
 import { Player as NetPlayer,GameObject } from "@common/game";
 import { Meatball } from './meatball';
 import { Game } from './game';
+import { Corpse } from './coarpse'
 
 const MAX_HP = 67;
 
@@ -91,11 +92,16 @@ export class Player implements GameObject {
 
 
         const angle = Math.random() * 2 * Math.PI
-        this.addMeatball({
-          x: this.position.x + (this.facingLeft ? -1 : 1) * 15,
-          y: this.position.y,
-          angle
-        });
+        this.game.addGameObject(
+          new Meatball({
+            x: this.position.x + (this.facingLeft ? -1 : 1) * 15,
+            y: this.position.y,
+            xv: Math.cos(angle) * 5,
+            yv: (Math.sin(angle) * 5) / 2,
+            height: 42-15,
+            inithv: 5,
+          })
+        )
         this.wasBaaing = true
       }
     } else {
@@ -110,6 +116,16 @@ export class Player implements GameObject {
 
     if (this.velocity.y_vel != 0)
       this.position.y += this.velocity.y_vel / Math.hypot(this.velocity.x_vel , this.velocity.y_vel)
+
+    if (this.hp <= 0) {
+      this.hp = MAX_HP
+      this.game.addGameObject(new Corpse({
+        ...this.position,
+        facingLeft: this.facingLeft
+      }))
+      // TODO: respawn
+      this.position.x += 300
+    }
   }
   setHp(hp: number) {
     this.hp = hp;

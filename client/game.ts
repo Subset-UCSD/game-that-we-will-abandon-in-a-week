@@ -10,6 +10,7 @@ import {WholeFkingGameState,MeatBall, SerializedThing} from '@common/game'
 import {ClientMeatball} from './meatball'
 import { render } from "./render";
 import { ThingRenderer } from "./thing-renderer";
+import {ClientCorps} from './courpse'
 
 
 export class Game {
@@ -18,6 +19,7 @@ export class Game {
 	private player;
 	private allPlayers: Map<number, Player> = new Map();
 	private meatballs = new Map<number, ClientMeatball> ()
+	private corpses = new Map<number, ClientCorps> ()
 	private arena;
 	private objects;
 	private room;
@@ -87,6 +89,15 @@ export class Game {
 		this.meatballs = newMeatballs
 
 		this.things = gameState.things
+
+
+		const newCorpses = new Map<number, ClientCorps> ()
+		for (const meatball of gameState.corpses) {
+			let existing =	this.corpses.get(meatball.id) ?? new ClientCorps()
+			existing.state = meatball
+			newCorpses.set(meatball.id, existing)
+		}
+		this.corpses = newCorpses
 	}
 
 	setCurrPlayerId(id: number) {
@@ -125,6 +136,7 @@ export class Game {
 			this.player,
 			...this.allPlayers.values(),
 			...this.meatballs.values(),
+			...this.corpses.values(),
 			...this.things.values().map(thing => new ThingRenderer(thing)),
 		])
 
