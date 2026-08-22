@@ -57,6 +57,7 @@ class Player implements RenderableObject {
   y: number = 0;
   x_vel: number = 0;
   y_vel: number = 0;
+  id = 0
 
   private max_speed: number = 2;
   private friction: number = 0.1;
@@ -64,6 +65,7 @@ class Player implements RenderableObject {
   private thought: string = ''
   private projectiles: Projectile[] = [];
   private sleeping = false
+  private healthpercent = 1
 
   constructor(is_you: boolean) {
     this.is_you = is_you;
@@ -134,7 +136,7 @@ class Player implements RenderableObject {
     // this.movement() 
     /** in milliseconds */
     const isMoving = Math.hypot(this.x_vel, this.y_vel) > 0.1
-    const TIME_PER_FRAME = this.sleeping ? 770 : isMoving ? 50 : 500
+    const TIME_PER_FRAME = (this.sleeping ? 770 : isMoving ? 50 : 500) + (this.id * Math.PI) % 50
     const framesList =this.sleeping ?  framesSleeping: isMoving ? framesWalking: frames
     const frame = framesList[Math.floor(Date.now() / TIME_PER_FRAME) % framesList.length]
     // changed to be in handleInput, so we keep old direction if we stop moving
@@ -142,7 +144,7 @@ class Player implements RenderableObject {
 
 
     const TIME_PER_FRAME_THOUGHT = 600
-    const frameThought = framesThought[Math.floor(Date.now() / TIME_PER_FRAME_THOUGHT) % framesThought.length]
+    const frameThought = framesThought[Math.floor(Date.now() / (TIME_PER_FRAME_THOUGHT + (this.id * Math.PI) % 50)) % framesThought.length]
 
     
     
@@ -163,6 +165,14 @@ class Player implements RenderableObject {
         c.drawImage(frame, this.x - SHEEP_WIDTH/2, this.y, SHEEP_WIDTH, 50);
 
       }
+
+      if (this.healthpercent < 1){
+        c.fillStyle = '#ff025f'
+        c.fillRect(this.x - 20, this.y-10, 40*(this.healthpercent), 5)
+        c.strokeStyle = 'black'
+        c.strokeRect(this.x - 20.5, this.y-10.8, 41, 6)
+      }
+
       if (this.thought) {
         c.drawImage(frameThought, this.x + SHEEP_WIDTH/2, this.y-THOUGHT_HEIGHT, THOUGHT_WIDTH, THOUGHT_HEIGHT);
         c.fillStyle='black'
@@ -225,6 +235,8 @@ class Player implements RenderableObject {
       this.y_vel = playerData.y_vel
 
       this.sleeping = !playerData.connected || playerData.timeSinceLastInput > 10_000
+      this.healthpercent = playerData.hp / playerData.maxHp
+      this.id = playerData.id
   }
 
 

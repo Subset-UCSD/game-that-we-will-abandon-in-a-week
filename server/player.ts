@@ -1,12 +1,14 @@
 import { defaultInputs, Inputs } from "@common/input";
 import { Player as NetPlayer } from "@common/game";
-import { Meatball } from './meatball'
-import { Game } from './game'
+import { Meatball } from './meatball';
+import { Game } from './game';
+
+const MAX_HP = 67;
 
 export class Player implements Serializable {
   private inputs: Inputs;
   private max_speed: number = 100;
-  private position: { x: number, y: number } = { x: Math.random() * 300, y: Math.random() * 300 };
+  private position: { x: number, y: number } = { x: (Math.random()-0.5) * 1000, y: (Math.random()-0.5) * 1000 };
   private velocity: { x_vel: number, y_vel: number } = { x_vel: 0, y_vel: 0 };
   private id;
   private static next_id = 0;
@@ -52,6 +54,8 @@ export class Player implements Serializable {
       facingLeft:this.facingLeft,
       connected: this.connected,
       timeSinceLastInput:Date.now()- this.lastInputTime,
+      hp: this.hp,
+      maxHp: MAX_HP,
     };
   }
 

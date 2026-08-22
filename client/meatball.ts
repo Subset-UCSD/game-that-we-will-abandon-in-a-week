@@ -18,7 +18,7 @@ export class ClientMeatball {
     render ({c}: Canvas) {
         if (!this.state) return
 
-const frame = frames[Math.floor(Date.now() / 470) % frames.length]
+const frame = frames[Math.floor(Date.now() / (470 + (this.state.id * Math.PI) % 50)) % frames.length]
 
         const {x,y,height}=this.state
         c.fillStyle = 'rgba(0, 0, 0, 0.2)'

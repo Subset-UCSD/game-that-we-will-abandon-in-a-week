@@ -1,16 +1,24 @@
-import { Explosion as ExplosionType } from "@common/game";
+import { type Explosion as ExplosionType, GameObject } from "@common/game";
 
-export class Explosion implements GameObject {
+export type ExplosionProps = Omit<ExplosionType, "id"> & {
+	duration: number;
+}
+
+let nextId = 0;
+export class Explosion {
 	public publicState: ExplosionType;
   public shouldDelete = false;
-  durationTicks = 70
+	private duration: number;
 
-  constructor(props: ExplosionType) {
-		this.publicState = props;
+  constructor(props: ExplosionProps) {
+		this.publicState = {...props, id: nextId++};
+		this.duration = props.duration;
 	}
 
   tick(): void {
     if (this.shouldDelete) return;
+		this.duration--;
+		if (this.duration <= 0) this.shouldDelete = true;
   }
 
   serialize(): ExplosionType {

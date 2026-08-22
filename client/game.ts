@@ -21,6 +21,9 @@ export class Game {
 	private room;
 	private __debugText: string = ''
 	private id = -1;
+
+	private camera = {x:0,y:0}
+
 	// private gameState:WholeFkingGameState = {
 	// 	players:[]
 	// };
@@ -88,10 +91,31 @@ export class Game {
 
 	// width, height = screen size (useful for centering things)
 	render (canvas: Canvas) {
+		this.camera.x += (this.player.x - this.camera.x) * 0.2
+		this.camera.y += (this.player.y - this.camera.y) * 0.2
+
+
+		const {c} = canvas
+		c.save()
+		c.translate(
+			-this.camera.x + canvas.width/ 2, 
+			-this.camera.y + canvas.height/ 2, 
+		)
+
 
 		// TODO: draw game state
 		this.room.render(canvas)
 		this.arena.render(canvas)
+
+
+
+		c.fillStyle = 'black'
+		const lines = this.__debugText.split('\n')
+		for (const [i, line] of lines.entries()){
+			canvas.context.fillText(line, 0,  i * 10)
+		}
+
+
 		this.player.render(canvas)
 
 		for (const otherPlayers of this.allPlayers.values()) {
@@ -102,10 +126,7 @@ export class Game {
 			mb.render(canvas)
 		}
 
-		const lines = this.__debugText.split('\n')
-		for (const [i, line] of lines.entries()){
-			canvas.context.fillText(line, 0, canvas.height + (i - lines.length) * 10)
-		}
+		c.restore()
 	}
 
 }

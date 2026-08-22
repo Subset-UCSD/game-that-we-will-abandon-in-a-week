@@ -14,6 +14,7 @@ document.body.append(canvas.canvas)
 const game = new Game();
 
 
+
 // Game loop
 while (true) {
 	// TEMP
@@ -24,6 +25,11 @@ while (true) {
 	c.fillStyle = 'rgba(40, 150, 50, 1)'
 	c.fillRect(0, 0, canvas.width, canvas.height)
 
+
+
+	game.render(canvas)
+
+
 	// arena.render(canvas)
 
 	c.fillStyle = 'black'
@@ -31,9 +37,8 @@ while (true) {
 	c.fillText('press W A S D to move', 50, 100)
 	c.fillText('press B to ?', canvas.width - 300, canvas.height - 20)
 
-
-	game.render(canvas)
 	
+
 	// player.render(canvas)
 
 
