@@ -1,11 +1,11 @@
 import { defaultInputs, Inputs } from "@common/input";
-import { Player as NetPlayer } from "@common/game";
+import { Player as NetPlayer,GameObject } from "@common/game";
 import { Meatball } from './meatball';
 import { Game } from './game';
 
 const MAX_HP = 67;
 
-export class Player implements Serializable {
+export class Player implements GameObject {
   private inputs: Inputs;
   private max_speed: number = 100;
   private position: { x: number, y: number } = { x: (Math.random()-0.5) * 1000, y: (Math.random()-0.5) * 1000 };
@@ -19,6 +19,7 @@ export class Player implements Serializable {
   private facingLeft =false
   connected = false;
   lastInputTime = 0;
+  shouldDelete = false
 
  
   constructor(game: Game) {
@@ -90,13 +91,11 @@ export class Player implements Serializable {
 
 
         const angle = Math.random() * 2 * Math.PI
-        this.game.meatballs.push(new Meatball({
+        this.addMeatball({
           x: this.position.x + (this.facingLeft ? -1 : 1) * 15,
           y: this.position.y + 15,
-          xv: Math.cos(angle)*5,
-          yv: Math.sin(angle)*5 / 2,
-          inithv:5
-        }))
+          angle
+        });
         this.wasBaaing = true
       }
     } else {
@@ -105,7 +104,7 @@ export class Player implements Serializable {
     }
   }
 
-  act() {
+  tick() {
     if (this.velocity.x_vel != 0)
       this.position.x += this.velocity.x_vel  / Math.hypot(this.velocity.x_vel, this.velocity.y_vel)
 
@@ -113,7 +112,7 @@ export class Player implements Serializable {
       this.position.y += this.velocity.y_vel / Math.hypot(this.velocity.x_vel , this.velocity.y_vel)
   }
   setHp(hp: number) {
-    this.hp -= hp;
+    this.hp = hp;
   }
   getHp() {
     return this.hp;

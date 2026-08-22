@@ -38,6 +38,7 @@ export type Explosion = z.infer<typeof explosionSchema>;
 export const wholeFkingGameState = z.object({
 	players: z.array(playerSchema),
   meatballs: z.array(meatBallSchema),
+  explosions: z.array(explosionSchema),
   // add to this when you want the client to know more about the game
 });
 export type WholeFkingGameState = z.infer<typeof wholeFkingGameState>;
@@ -45,6 +46,6 @@ export type WholeFkingGameState = z.infer<typeof wholeFkingGameState>;
 export interface GameObject {
   shouldDelete: boolean;
   tick(): void;
-  serialize(): any;
+  serialize(): unknown;
 }
 

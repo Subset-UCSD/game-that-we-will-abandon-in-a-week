@@ -5,7 +5,7 @@ export type ExplosionProps = Omit<ExplosionType, "id"> & {
 }
 
 let nextId = 0;
-export class Explosion {
+export class Explosion implements GameObject {
 	public publicState: ExplosionType;
   public shouldDelete = false;
 	private duration: number;

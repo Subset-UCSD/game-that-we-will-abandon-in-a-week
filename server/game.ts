@@ -4,7 +4,7 @@ import { Player } from "@server/player";
 import { randomBytes } from "node:crypto";
 import { WebSocket } from "ws";
 import { send } from "./net/send";
-import { WholeFkingGameState } from "@common/game";
+import { WholeFkingGameState, GameObject } from "@common/game";
 import { Meatball } from "./meatball";
 import { Explosion } from "@server/explosion";
 
@@ -14,34 +14,36 @@ export class Game {
   private connections: Map<string, WebSocket> = new Map();
   private idForConnection: Map<WebSocket, string> = new Map();
   private joinedSockets: Set<WebSocket> = new Set();
-	meatballs: Meatball[] = [];
+  private gameObjects: GameObject[] = [];
+  // meatballs: Meatball[] = [];
+  // explosions: Explosion[] = [];
 
   constructor() {}
 
   public loop() {
     // process all of the inputs
     // tick the game world
-    for (const player of this.players.values()) {
-      player.act();
-    }
 
-    for (const meatball of this.meatballs) {
+    for (const meatball of this.gameObjects) {
       meatball.tick();
     }
-    for (const meatball of this.meatballs) {
-      if (!meatball.shouldDelete) continue;
-      new Explosion({
-        duration: 20,
-        radius: 200,
-        x: meatball.publicState.x,
-        y: meatball.publicState.y,
-      });
+    for (const meatball of this.gameObjects) {
+      if (!meatball.shouldDelete || !(meatball instanceof Meatball)) continue;
+      this.gameObjects.push(
+        new Explosion({
+          duration: 20,
+          radius: 200,
+          x: meatball.publicState.x,
+          y: meatball.publicState.y,
+        }),
+      );
       const EXPLOSION_DAMAGE = 20;
       for (const [_, player] of this.players) {
         player.setHp(player.getHp() - EXPLOSION_DAMAGE);
       }
     }
-    this.meatballs = this.meatballs.filter((mb) => !mb.shouldDelete);
+    this.gameObjects = this.gameObjects.filter((mb) => !mb.shouldDelete);
+    // this.explosions = this.explosions.filter((ex) => !ex.shouldDelete);
 
     // Send all of the clients the state of the world
 
@@ -57,7 +59,12 @@ export class Game {
         .values()
         .map((player) => player.serialize())
         .toArray(),
-      meatballs: this.meatballs.map((mb) => mb.serialize()),
+      meatballs: this.gameObjects
+        .filter((o) => o instanceof Meatball)
+        .map((mb) => mb.serialize()),
+      explosions: this.gameObjects
+        .filter((o) => o instanceof Explosion)
+        .map((ex) => ex.serialize()),
     };
   }
 
@@ -89,7 +96,9 @@ export class Game {
           this.idForConnection.set(ws, sessionId);
           this.joinedSockets.add(ws);
           player = new Player(this);
+          player.addMeatball = this.addMeatball.bind(this) // HACK
           this.players.set(sessionId, player);
+          this.gameObjects.push(player);
           console.log("welcome new user", sessionId.slice(0, 8));
         }
         player.connected = true;
@@ -114,6 +123,18 @@ export class Game {
       }
     }
   }
+
+  addMeatball({x, y, angle}: {x: number, y: number, angle: number}) {
+    this.gameObjects.push(
+      new Meatball({
+        x, y,
+        xv: Math.cos(angle) * 5,
+        yv: (Math.sin(angle) * 5) / 2,
+        inithv: 5,
+      }),
+    );
+  }
+
   handleDisconnect(ws: WebSocket) {
     // bro idk
     const sessionId = this.idForConnection.get(ws);
