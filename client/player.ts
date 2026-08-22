@@ -1,6 +1,7 @@
 import type { Canvas } from './canvas'
 import { RenderableObject } from './render'
 import { Inputs } from "@common/input";
+import { Player as NetPlayer } from "@common/game";
 
 const [frames,framesWalking, framesThought] = await Promise.all([
       // standing
@@ -198,10 +199,18 @@ class Player implements RenderableObject {
   // this.updateRenderProjectiles(c);
 
   // for other player
-  setLocation(x:number, y:number, thought: string) {
-    // if (!this.is_you) {
 
-    
+  updatePlayerState(playerData: NetPlayer) {
+      this.thought = playerData.baaing
+      this.setLocation(playerData.x, playerData.y);
+      this.x_vel = playerData.x_vel
+      this.y_vel = playerData.y_vel
+
+  }
+
+
+  setLocation(x:number, y:number) {
+    // if (!this.is_you) 
       if (x < this.x)
         this.shouldFlipX = true
       else if (x > this.x) {
@@ -211,7 +220,6 @@ class Player implements RenderableObject {
 
       this.x = x;
       this.y = y;
-      this.thought = thought
     // }
   }
 }

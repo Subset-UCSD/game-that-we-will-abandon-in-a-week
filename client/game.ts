@@ -6,7 +6,8 @@ import { InputListener} from "./input-listener";
 import {Connection} from './connection'
 import { SERVER_GAME_TICK } from "@common/index";
 import { defaultInputs, keymap } from "@common/input";
-import {WholeFkingGameState} from '@common/game'
+import {WholeFkingGameState,MeatBall} from '@common/game'
+import {ClientMeatball} from './meatball'
 
 
 export class Game {
@@ -14,7 +15,7 @@ export class Game {
 	private inputListener;
 	private player;
 	private allPlayers: Map<number, Player> = new Map();
-	// private meatballs = new Map<number, MeatBall> ()
+	private meatballs = new Map<number, ClientMeatball> ()
 	private arena;
 	private objects;
 	private room;
@@ -58,19 +59,26 @@ export class Game {
 
 		for (const playerUpdate of gameState.players.values()) {
 			if (this.allPlayers.has(playerUpdate.id)) {
-				// how do I get this not to complain about being undefined @nick @sean
-				this.allPlayers.get(playerUpdate.id)?.setLocation(playerUpdate.x, playerUpdate.y, playerUpdate.baaing)
+				this.allPlayers.get(playerUpdate.id)?.updatePlayerState(playerUpdate)
 			}
 			else if (playerUpdate.id != this.id) {
 				const newPlayer = new Player(false)
-				newPlayer.setLocation(playerUpdate.x, playerUpdate.y, playerUpdate.baaing)
+				newPlayer.updatePlayerState(playerUpdate)
 				this.allPlayers.set(playerUpdate.id, newPlayer)
 			}
 			else {
-				this.player.setLocation(playerUpdate.x, playerUpdate.y, playerUpdate.baaing)
+				this.player.updatePlayerState(playerUpdate)
 				// this.allPlayers.set(playerUpdate.id, this.player)
 			}
 		}
+
+		const newMeatballs = new Map<number, ClientMeatball> ()
+		for (const meatball of gameState.meatballs) {
+			let existing =	this.meatballs.get(meatball.id) ?? new ClientMeatball()
+			existing.state = meatball
+			newMeatballs.set(meatball.id, existing)
+		}
+		this.meatballs = newMeatballs
 	}
 
 	setCurrPlayerId(id: number) {
@@ -88,6 +96,10 @@ export class Game {
 
 		for (const otherPlayers of this.allPlayers.values()) {
 			otherPlayers.render(canvas)
+		}
+
+		for (const mb of this.meatballs.values()) {
+			mb.render(canvas)
 		}
 
 		const lines = this.__debugText.split('\n')

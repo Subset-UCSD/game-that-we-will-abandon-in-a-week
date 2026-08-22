@@ -5,7 +5,7 @@ import { Game } from './game'
 
 export class Player implements Serializable {
   private inputs: Inputs;
-  private max_speed: number = 50;
+  private max_speed: number = 100;
   private position: { x: number, y: number } = { x: 0, y: 0 };
   private velocity: { x_vel: number, y_vel: number } = { x_vel: 0, y_vel: 0 };
   private id;

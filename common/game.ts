@@ -23,7 +23,7 @@ export type MeatBall = z.infer<typeof meatBallSchema>;
 
 export const wholeFkingGameState = z.object({
 	players: z.array(playerSchema),
-  meatballs: z.array(meatBallSchema).optional(),
+  meatballs: z.array(meatBallSchema),
   // add to this when you want the client to know more about the game
 });
 export type WholeFkingGameState = z.infer<typeof wholeFkingGameState>;
