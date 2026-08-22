@@ -4,9 +4,12 @@
   "description": "High level idea: we make a box and we hit people in the box",
   "main": "index.js",
   "scripts": {
-    "start": "node dist/server.js",
-    "build": "node ./esbuild.js",
-    "dev": "nodemon --watch . --ext '*.ts' --ignore dist --ignore public/dist --exec run-s build start"
+    "start": "node dist/server.js 6767",
+    "start:watch": "mkdir -p dist && touch dist/server.js && node --watch --watch-preserve-output  dist/server.js 6769",
+    "build": "node ./esbuild.ts build",
+    "build:watch": "node ./esbuild.ts serve",
+    "dev": "run-p build:watch start:watch",
+    "clean": "rm -rf dist public/dist"
   },
   "repository": {
     "type": "git",
@@ -23,7 +26,6 @@
     "@types/node": "^26.2.0",
     "@types/ws": "^8.18.1",
     "esbuild": "^0.28.2",
-    "nodemon": "^3.1.14",
     "npm-run-all2": "^9.0.3"
   },
   "dependencies": {

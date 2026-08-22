@@ -1,7 +1,7 @@
 import esbuild from "esbuild";
 const mode = process.argv[2];
 
-const serverConfig = {
+const serverConfig = await esbuild.context({
 	bundle: true,
 	outfile: "dist/server.js",
 	platform: "node",
@@ -10,9 +10,9 @@ const serverConfig = {
 	format: "esm",
 	packages: "external",
 	entryPoints: ["server/index.ts"],
-};
+});
 
-const clientConfig = {
+const clientConfig = await esbuild.context({
   bundle: true,
   outfile: "public/dist/client.js",
   platform: "browser",
@@ -20,10 +20,33 @@ const clientConfig = {
   sourcemap: true,
   format: "esm",
   entryPoints: ["client/index.ts"],
-};
+});
 
-(async () => {
-	await esbuild.build(serverConfig);
-	await esbuild.build(clientConfig);
-})();
-
+switch (mode) {
+	case 'build': {
+		console.log('building')
+		await Promise.all([
+		 serverConfig.rebuild(), // .then(() => console.log('server done')),
+		 clientConfig.rebuild(), // .then(() => console.log('client done')),
+		])
+		break
+	}
+	case 'serve': {
+		console.log('serving')
+		const clientServe = await clientConfig.serve({servedir:'public', port:6767,})
+		for (const host of clientServe.hosts) {
+			console.log(`http://${host}:${clientServe.port}`)
+		}
+		await serverConfig.watch()
+		break
+	}
+	default: {
+		console.error('usage: node esbuild.ts (build|serve)')
+		console.error('🤡')
+		process.exit(1)
+	}
+}
+await Promise.all([
+	serverConfig.dispose(),
+	clientConfig.dispose(),
+])
