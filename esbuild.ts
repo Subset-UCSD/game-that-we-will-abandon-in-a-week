@@ -25,7 +25,7 @@ const clientConfigPromise = esbuild.context({
   format: "esm",
   entryPoints: ["client/index.ts"],
 	banner: {
-		js: isGitHubPages ? 'import "../gh-pages-preview-ws-polyfill.js"' : ''
+		js: (isGitHubPages ? 'import "../gh-pages-preview-ws-polyfill.js"\n' : '') + 'Symbol.dispose ??= Symbol("safari issue")'
 	},
 	define: {
 		IS_SERVING: isServe?'true':'false'
