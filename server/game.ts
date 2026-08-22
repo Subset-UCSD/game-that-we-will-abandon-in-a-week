@@ -1,7 +1,6 @@
 import { ClientMessage } from "@common/messages";
 import { SESSION_KEY_NUM_BYTES } from "@common/session";
 import { Player } from "@server/player";
-import { randomBytes } from "node:crypto";
 import { WebSocket } from "ws";
 import { send } from "./net/send";
 import { WholeFkingGameState, GameObject } from "@common/game";
@@ -91,7 +90,7 @@ export class Game {
           player = this.players.get(sessionId)!;
           console.log("welcome existing user", sessionId.slice(0, 8));
         } else {
-          sessionId = randomBytes(SESSION_KEY_NUM_BYTES).toString("hex");
+          sessionId = crypto.getRandomValues(new Uint8Array(SESSION_KEY_NUM_BYTES)).toHex();
           this.connections.set(sessionId, ws);
           this.idForConnection.set(ws, sessionId);
           this.joinedSockets.add(ws);

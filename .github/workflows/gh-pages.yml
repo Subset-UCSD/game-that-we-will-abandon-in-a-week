@@ -24,6 +24,8 @@ jobs:
       - name: Setup Pages
         uses: actions/configure-pages@v6
       - name: Build
+        env:
+          GH_PAGES: 1
         run: |
           npm install
           npm run build

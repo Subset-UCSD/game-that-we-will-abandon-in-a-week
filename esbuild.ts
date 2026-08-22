@@ -2,16 +2,17 @@ import esbuild from "esbuild";
 const mode = process.argv[2];
 
 const isServe = mode==='serve'
+const isGitHubPages = !!process.env.GH_PAGES&&!isServe
 
 const serverConfigPromise = esbuild.context({
 	bundle: true,
-	outfile: "dist/server.js",
-	platform: "node",
-	minify: false,
+	outfile: isGitHubPages ? 'public/dist/worker.js' : "dist/server.js",
+	platform: isGitHubPages ? 'browser' : "node",
+	minify: isGitHubPages,
 	sourcemap: true,
 	format: "esm",
-	packages: "external",
-	entryPoints: ["server/index.ts"],
+	packages: isGitHubPages ? 'bundle' : "external",
+	entryPoints: [isGitHubPages ? 'server/gh-pages-preview-worker.js': "server/index.ts"],
 });
 
 const clientConfigPromise = esbuild.context({
@@ -22,6 +23,9 @@ const clientConfigPromise = esbuild.context({
   sourcemap: true,
   format: "esm",
   entryPoints: ["client/index.ts"],
+	banner: {
+		js: isGitHubPages ? 'import "../gh-pages-preview-ws-polyfill.js"' : ''
+	},
 	define: {
 		IS_SERVING: isServe?'true':'false'
 	}

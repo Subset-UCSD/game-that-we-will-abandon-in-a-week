@@ -1,5 +1,6 @@
 {
 	"compilerOptions": {
+		"lib": ["ESNext"],
 		"jsx": "preserve",
 		"types": ["node"],
 		"allowSyntheticDefaultImports": true,
