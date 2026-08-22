@@ -35,10 +35,20 @@ export const explosionSchema = z.object({
 });
 export type Explosion = z.infer<typeof explosionSchema>;
 
+export const thingSchema = z.strictObject({
+  id: playerIdSchema,
+  x: z.number(),
+  y: z.number(),
+  type: z.literal(['tree','campfire','techbro']),
+})
+export type SerializedThing = z.infer<typeof thingSchema>;
+
+
 export const wholeFkingGameState = z.object({
 	players: z.array(playerSchema),
   meatballs: z.array(meatBallSchema),
   explosions: z.array(explosionSchema),
+  things: z.array(thingSchema),
   // add to this when you want the client to know more about the game
 });
 export type WholeFkingGameState = z.infer<typeof wholeFkingGameState>;

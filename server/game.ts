@@ -6,6 +6,7 @@ import { send } from "./net/send";
 import { WholeFkingGameState, GameObject } from "@common/game";
 import { Meatball } from "./meatball";
 import { Explosion } from "@server/explosion";
+import { StaticThing } from "./static-thing";
 
 // ALL OF THE GAME LOGIC
 export class Game {
@@ -13,7 +14,11 @@ export class Game {
   private connections: Map<string, WebSocket> = new Map();
   private idForConnection: Map<WebSocket, string> = new Map();
   private joinedSockets: Set<WebSocket> = new Set();
-  private gameObjects: GameObject[] = [];
+  private gameObjects: GameObject[] = [
+    new StaticThing({type:'tree', x: -100, y: -100}),
+    new StaticThing({type:'campfire', x: -100, y: -50}),
+    new StaticThing({type:'techbro', x: -0, y: -50}),
+  ];
   // meatballs: Meatball[] = [];
   // explosions: Explosion[] = [];
 
@@ -63,6 +68,9 @@ export class Game {
         .map((mb) => mb.serialize()),
       explosions: this.gameObjects
         .filter((o) => o instanceof Explosion)
+        .map((ex) => ex.serialize()),
+        things: this.gameObjects
+        .filter((o) => o instanceof StaticThing)
         .map((ex) => ex.serialize()),
     };
   }

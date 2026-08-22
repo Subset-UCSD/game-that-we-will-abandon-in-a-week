@@ -6,9 +6,10 @@ import { InputListener} from "./input-listener";
 import {Connection} from './connection'
 import { SERVER_GAME_TICK } from "@common";
 import { defaultInputs, keymap } from "@common/input";
-import {WholeFkingGameState,MeatBall} from '@common/game'
+import {WholeFkingGameState,MeatBall, SerializedThing} from '@common/game'
 import {ClientMeatball} from './meatball'
 import { render } from "./render";
+import { ThingRenderer } from "./thing-renderer";
 
 
 export class Game {
@@ -22,6 +23,7 @@ export class Game {
 	private room;
 	private __debugText: string = ''
 	private id = -1;
+	private things: SerializedThing[] = []
 
 	private camera = {x:0,y:0}
 
@@ -83,6 +85,8 @@ export class Game {
 			newMeatballs.set(meatball.id, existing)
 		}
 		this.meatballs = newMeatballs
+
+		this.things = gameState.things
 	}
 
 	setCurrPlayerId(id: number) {
@@ -121,6 +125,7 @@ export class Game {
 			this.player,
 			...this.allPlayers.values(),
 			...this.meatballs.values(),
+			...this.things.values().map(thing => new ThingRenderer(thing)),
 		])
 
 		c.restore()

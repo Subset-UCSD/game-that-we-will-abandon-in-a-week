@@ -136,7 +136,7 @@ class Player implements RenderableObject {
   }
 
   renderShadow({c}:Canvas) {
-
+        c.moveTo(this.x + SHEEP_WIDTH * 0.4, this.y + 42)
         c.ellipse(this.x, this.y+42, SHEEP_WIDTH * 0.4, SHEEP_WIDTH * 0.08, 0, 0, Math.PI*2)
   }
 

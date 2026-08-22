@@ -3,8 +3,8 @@ import type { Canvas } from './canvas'
 
 interface RenderableObject {
   y: number
-  render: (canvas: Canvas) => void;
-  renderShadow?: (canvas: Canvas) => void
+  render (canvas: Canvas) : void;
+  renderShadow? (canvas: Canvas) : void
 }
 
 /**
