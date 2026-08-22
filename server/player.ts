@@ -93,7 +93,7 @@ export class Player implements GameObject {
         const angle = Math.random() * 2 * Math.PI
         this.addMeatball({
           x: this.position.x + (this.facingLeft ? -1 : 1) * 15,
-          y: this.position.y + 15,
+          y: this.position.y,
           angle
         });
         this.wasBaaing = true

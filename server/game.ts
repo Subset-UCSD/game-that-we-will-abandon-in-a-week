@@ -137,6 +137,7 @@ export class Game {
         x, y,
         xv: Math.cos(angle) * 5,
         yv: (Math.sin(angle) * 5) / 2,
+        height: 42-15,
         inithv: 5,
       }),
     );

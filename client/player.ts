@@ -136,8 +136,8 @@ class Player implements RenderableObject {
   }
 
   renderShadow({c}:Canvas) {
-        c.moveTo(this.x + SHEEP_WIDTH * 0.4, this.y + 42)
-        c.ellipse(this.x, this.y+42, SHEEP_WIDTH * 0.4, SHEEP_WIDTH * 0.08, 0, 0, Math.PI*2)
+        c.moveTo(this.x + SHEEP_WIDTH * 0.4, this.y )
+        c.ellipse(this.x, this.y, SHEEP_WIDTH * 0.4, SHEEP_WIDTH * 0.08, 0, 0, Math.PI*2)
   }
 
   render({c,width}: Canvas): void {
@@ -161,25 +161,25 @@ class Player implements RenderableObject {
       if (this.shouldFlipX) {
         c.save()
         c.scale(-1, 1)
-        c.drawImage(frame, -(this.x )- SHEEP_WIDTH/2, this.y, SHEEP_WIDTH, 50);
+        c.drawImage(frame, -(this.x )- SHEEP_WIDTH/2, this.y-42, SHEEP_WIDTH, 50);
         c.restore()
 
       } else {
-        c.drawImage(frame, this.x - SHEEP_WIDTH/2, this.y, SHEEP_WIDTH, 50);
+        c.drawImage(frame, this.x - SHEEP_WIDTH/2, this.y-42, SHEEP_WIDTH, 50);
 
       }
 
       if (this.healthpercent < 1){
         c.fillStyle = '#ff025f'
-        c.fillRect(this.x - 20, this.y-10, 40*(this.healthpercent), 5)
+        c.fillRect(this.x - 20, this.y-10-42, 40*(this.healthpercent), 5)
         c.strokeStyle = 'black'
-        c.strokeRect(this.x - 20.5, this.y-10.8, 41, 6)
+        c.strokeRect(this.x - 20.5, this.y-10.8-42, 41, 6)
       }
 
       if (this.thought) {
-        c.drawImage(frameThought, this.x + SHEEP_WIDTH/2, this.y-THOUGHT_HEIGHT, THOUGHT_WIDTH, THOUGHT_HEIGHT);
+        c.drawImage(frameThought, this.x + SHEEP_WIDTH/2, this.y-THOUGHT_HEIGHT-42, THOUGHT_WIDTH, THOUGHT_HEIGHT);
         c.fillStyle='black'
-        c.fillText(this.thought, this.x + SHEEP_WIDTH/2 + 20, this.y - 25)
+        c.fillText(this.thought, this.x + SHEEP_WIDTH/2 + 20, this.y - 25-42)
       }    
   }
 
