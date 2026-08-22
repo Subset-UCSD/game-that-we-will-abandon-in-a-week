@@ -14,6 +14,7 @@ export class Game {
 	private inputListener;
 	private player;
 	private allPlayers: Map<number, Player> = new Map();
+	// private meatballs = new Map<number, MeatBall> ()
 	private arena;
 	private objects;
 	private room;
@@ -58,15 +59,15 @@ export class Game {
 		for (const playerUpdate of gameState.players.values()) {
 			if (this.allPlayers.has(playerUpdate.id)) {
 				// how do I get this not to complain about being undefined @nick @sean
-				this.allPlayers.get(playerUpdate.id)!.setLocation(playerUpdate.x, playerUpdate.y)
+				this.allPlayers.get(playerUpdate.id)?.setLocation(playerUpdate.x, playerUpdate.y, playerUpdate.baaing)
 			}
 			else if (playerUpdate.id != this.id) {
 				const newPlayer = new Player(false)
-				newPlayer.setLocation(playerUpdate.x, playerUpdate.y)
+				newPlayer.setLocation(playerUpdate.x, playerUpdate.y, playerUpdate.baaing)
 				this.allPlayers.set(playerUpdate.id, newPlayer)
 			}
 			else {
-				this.player.setLocation(playerUpdate.x, playerUpdate.y)
+				this.player.setLocation(playerUpdate.x, playerUpdate.y, playerUpdate.baaing)
 				// this.allPlayers.set(playerUpdate.id, this.player)
 			}
 		}
@@ -79,14 +80,13 @@ export class Game {
 
 	// width, height = screen size (useful for centering things)
 	render (canvas: Canvas) {
-		
+
 		// TODO: draw game state
 		this.room.render(canvas)
 		this.arena.render(canvas)
 		this.player.render(canvas)
-		console.log("the others", this.allPlayers.values())
+
 		for (const otherPlayers of this.allPlayers.values()) {
-			console.log(otherPlayers)
 			otherPlayers.render(canvas)
 		}
 

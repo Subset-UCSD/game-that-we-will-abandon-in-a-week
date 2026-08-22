@@ -1,14 +1,18 @@
 import { defaultInputs, Inputs } from "@common/input";
 import { Player as NetPlayer } from "@common/game";
+import { Meatball } from './meatball'
+import { Game } from './game'
 
 export class Player implements Serializable {
   private inputs: Inputs;
-  private max_speed: number = 2;
+  private max_speed: number = 50;
   private position: { x: number, y: number } = { x: 0, y: 0 };
-  private velocity: { x: number, y: number } = { x: 0, y: 0 };
+  private velocity: { x_vel: number, y_vel: number } = { x_vel: 0, y_vel: 0 };
   private id;
   private static next_id = 0;
   private game: Game
+  private wasBaaing = false
+  private thought: string = ''
  
 
   constructor(game: Game) {
@@ -37,34 +41,54 @@ export class Player implements Serializable {
   }
 
   serialize(): NetPlayer {
-    return {...this.position, id: this.id};
+    return {...this.position, ...this.velocity, id: this.id, baaing:this.thought};
   }
 
   handleInput(inputs: Inputs) {
     if (inputs.up) {
-      this.velocity.y = -this.max_speed
+      this.velocity.y_vel = -this.max_speed
     }
     else if (inputs.down) {
-      this.velocity.y = this.max_speed
+      this.velocity.y_vel = this.max_speed
     } else {
-      this.velocity.y = 0
+      this.velocity.y_vel = 0
     }
 
     if (inputs.left) {
-      this.velocity.x = -this.max_speed
+      this.velocity.x_vel = -this.max_speed
     }
     else if (inputs.right) {
-      this.velocity.x = this.max_speed
+      this.velocity.x_vel = this.max_speed
     } else {
-      this.velocity.x = 0
+      this.velocity.x_vel = 0
+    }
+
+    if (inputs.baa) {
+      if (!this.wasBaaing) {
+
+        const thoughts = ['baa','hungy','beh']
+        this.thought = thoughts[Math.floor(Math.random() * thoughts.length)]
+
+
+        const angle = Math.random() * 2 * Math.PI
+        this.game.meatBalls.push(new Meatball({
+          xv: Math.cos(angle),
+          yv: Math.sin(angle),
+          inithv:5
+        }))
+        this.wasBaaing = true
+      }
+    } else {
+      this.thought = ''
+      this.wasBaaing = false
     }
   }
 
   act() {
-    if (this.velocity.x != 0)
-      this.position.x += this.velocity.x  / Math.hypot(this.velocity.x, this.velocity.y)
+    if (this.velocity.x_vel != 0)
+      this.position.x += this.velocity.x_vel  / Math.hypot(this.velocity.x_vel, this.velocity.y_vel)
 
-    if (this.velocity.y != 0)
-      this.position.y += this.velocity.y / Math.hypot(this.velocity.x , this.velocity.y)
+    if (this.velocity.y_vel != 0)
+      this.position.y += this.velocity.y_vel / Math.hypot(this.velocity.x_vel , this.velocity.y_vel)
   }
 }

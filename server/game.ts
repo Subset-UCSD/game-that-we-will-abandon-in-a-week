@@ -14,7 +14,7 @@ export class Game {
 	private connections: Map<string, WebSocket> = new Map();
 	private idForConnection: Map<WebSocket, string> = new Map();
 	private joinedSockets: Set<WebSocket> = new Set();
-	private meatBalls: Meatball[] = []
+	 meatBalls: Meatball[] = []
 
 	constructor() {
 

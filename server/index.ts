@@ -7,6 +7,7 @@ import { type ClientMessage, clientMessage } from "@common/messages";
 import { prettifyError } from 'zod'
 import {SERVER_GAME_TICK} from '@common/index'
 
+
 if (process.argv.length !== 3) {
   console.error('usage: node dist/server.js <port>')
 }

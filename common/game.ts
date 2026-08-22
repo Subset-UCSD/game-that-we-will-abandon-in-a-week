@@ -5,7 +5,10 @@ export const playerIdSchema = z.number();
 export const playerSchema = z.object({
   id: playerIdSchema,
   x: z.number(),
-  y: z.number()
+  y: z.number(),
+  x_vel: z.number(),
+  y_vel: z.number(),
+  baaing: z.string(),
 });
 export type Player = z.infer<typeof playerSchema>;
 

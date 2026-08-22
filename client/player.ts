@@ -198,10 +198,20 @@ class Player implements RenderableObject {
   // this.updateRenderProjectiles(c);
 
   // for other player
-  setLocation(x:number, y:number) {
+  setLocation(x:number, y:number, thought: string) {
     // if (!this.is_you) {
+
+    
+      if (x < this.x)
+        this.shouldFlipX = true
+      else if (x > this.x) {
+        this.shouldFlipX = false
+      }
+
+
       this.x = x;
       this.y = y;
+      this.thought = thought
     // }
   }
 }

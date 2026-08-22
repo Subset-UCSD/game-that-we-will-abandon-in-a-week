@@ -27,7 +27,6 @@ class Room implements RenderableObject {
                 player.setLocation(server_player.x, server_player.y);
             }
         }
-        console.log(server_players)
     }
 
     render(canvas: Canvas) {
