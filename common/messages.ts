@@ -27,7 +27,7 @@ export const joinMessage = $message("join", z.object({
 }));
 export type JoinMessage = z.infer<typeof joinMessage>;
 
-export const clientMessage = z.union([
+export const clientMessage = z.discriminatedUnion('type',[
 	inputMessage,
 	joinMessage
 ]);

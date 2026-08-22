@@ -17,15 +17,12 @@ const arena = new Arena(1200, 720); // small room
 const objects = [arena, player];
 const room = new Room(); // render players
 
-const conn = new Connection
+const conn = new Connection();
 const inputListener = new InputListener({
 	default: defaultInputs,
 	keymap: keymap,
 	handleInputs: (inputs) => {
-		// TEMP
-		// player.handleInput(inputs)
-
-	conn.send('input',inputs);
+		conn.send('input', inputs);
 	},
 	period: SERVER_GAME_TICK,
 });

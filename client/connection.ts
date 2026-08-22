@@ -6,7 +6,6 @@ const SESSION_KEY = "session";
 
 class Connection {
 	private ws!: WebSocket;  /// this ! should make you MAD
-	private sessionId?: SessionId; //you're right i HATE types
 	private queue: ClientMessage[] = [];
 
 	private reconnectAttempts = 0;
@@ -19,15 +18,15 @@ class Connection {
 		try {
 			json = JSON.parse(event.data);
 		} catch (error) {
-			console.error('Invalid JSON', error, event.data)
+			console.error('Invalid JSON', event.data,error, );
 			return;
 		}
 		const result = serverMessage.safeParse(json)
 		if (!result.success) {
-			console.error('Schema fucky', result.error, json);
+			console.error('Schema fucky',json, result.error, );
 			return;
 		}
-		const message = result.data
+		const message = result.data;
 		console.log('[server 🗣️]', message);
 		switch (message.type) {
 			case 'join-response': {
@@ -47,7 +46,9 @@ class Connection {
 		const url = window.location.origin.replace(/^http/, "ws");
 		this.ws = new WebSocket( IS_SERVING ? 'ws://localhost:6769/': url);
 
+	
 		this.ws.onopen = () => {
+			console.log("open")
 			this.reconnectAttempts = 0;
 			// join will be the first thing not added to queue
 			this.send("join", { sessionId: pastSession });
