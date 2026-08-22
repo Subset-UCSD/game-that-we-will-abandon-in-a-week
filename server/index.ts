@@ -1,14 +1,15 @@
-import {createServer} from "http";
+import { createServer } from "http";
 import { WebSocketServer } from "ws";
 import express from "express";
 import {join} from "path";
 import { Game } from "@server/game";
 import { type ClientMessage, clientMessage } from "@common/messages";
+import { prettifyError } from 'zod'
 
 if (process.argv.length !== 3) {
   console.error('usage: node dist/server.js <port>')
 }
-const [,, port] = process.argv
+const [,, port] = process.argv;
 
 const server = createServer();
 const app = express();
@@ -26,14 +27,24 @@ const game = new Game();
 
 wss.on("connection", (ws) => {
   ws.on("message", (msg) => {
-    let content: ClientMessage;
+    
+    let json;
     try {
-      content = clientMessage.parse(JSON.parse(msg.toString()));
+      json = JSON.parse(msg.toString());
     } catch (e) {
-      console.error("erm buddy your message is shit: ", e);
+      console.error("erm buddy your message is shit THAT is not json: ", e,);
+      console.error('message', msg)
       return;
     }
-    game.handleMessage(ws, content);
+    const result = clientMessage.safeParse(json)
+    if (result.success){
+    game.handleMessage(ws, result.data);
+  } else {
+    console.error("erm buddy your message is shit", );
+    console.dir(result.error.issues, {depth:null})
+    console.dir(json, {depth:null})
+      return;
+  }
   });
   ws.on("close", () => {
     game.handleDisconnect(ws);

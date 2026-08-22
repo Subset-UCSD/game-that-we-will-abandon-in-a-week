@@ -38,7 +38,7 @@ export class Game {
 
 		switch (msg.type) {
 			case "join": {
-				const {sessionId} = msg.value;
+				let {sessionId} = msg.value;
 
 				if (sessionId && this.players.has(sessionId)) {
 					// Reconnecting player, kill their old socket
@@ -51,14 +51,16 @@ export class Game {
 					this.connections.set(sessionId, ws);
 					this.idForConnection.set(ws, sessionId);
 					this.joinedSockets.add(ws);
+					console.log('welcome existing user', sessionId.slice(0,8))
 				} else {
-					const sessionId = randomBytes(SESSION_KEY_NUM_BYTES).toString("hex");
+					sessionId = randomBytes(SESSION_KEY_NUM_BYTES).toString("hex");
 					this.connections.set(sessionId, ws);
 					this.idForConnection.set(ws, sessionId);
 					this.joinedSockets.add(ws);
 					this.players.set(sessionId, new Player());
+					console.log('welcome new user', sessionId.slice(0,8))
 				}
-				send(ws, "join-response", undefined);
+				send(ws, "join-response", sessionId);
 				return;
 			}
 			case "input": {

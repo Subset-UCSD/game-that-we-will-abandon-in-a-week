@@ -7,6 +7,7 @@ import { sessionIdSchema } from "./session";
  * Message schema helper. This returns a zod schema for message shape with a payload
  * @param name The literal name of the message
  * @param value The Zod schema that defines the shape of your message's payload
+ * cannot be undefined or void!!!
  * @returns 
  */
 function $message<Type extends string, Payload extends z.ZodType>(name: Type, value: Payload) {
@@ -37,10 +38,10 @@ export type ClientMessage = z.infer<typeof clientMessage>;
 export const wholeFkingGameStateMessage = $message("game-state", wholeFkingGameState);
 export type WholeFkingGameStateMessage = z.infer<typeof wholeFkingGameStateMessage>;
 
-export const joinResponse = $message("join-response", z.void());
+export const joinResponse = $message("join-response", sessionIdSchema);
 export type JoinResponse = z.infer<typeof joinResponse>;
 
-export const serverMessage = z.union([
+export const serverMessage = z.discriminatedUnion('type',[
 	wholeFkingGameStateMessage,
 	joinResponse
 ]);
@@ -48,8 +49,8 @@ export type ServerMessage = z.infer<typeof serverMessage>;
 
 
 // Generalized message schema that includes all client and server messages
-export const messageSchema = z.union([
-	clientMessage, 
-	serverMessage
+export const messageSchema = z.discriminatedUnion('type',[
+	...clientMessage.options, 
+	...serverMessage.options
 ]);
 export type Message = z.infer<typeof messageSchema>;
