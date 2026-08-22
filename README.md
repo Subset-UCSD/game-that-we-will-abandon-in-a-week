@@ -6,6 +6,8 @@ High level idea: we make a box and we hit people in the box
 
 ## Devloper
 
+You need Node 26+. You can switch to Node 26 with `nvm use 26`.
+
 ```sh
 npm install
 npm run dev
