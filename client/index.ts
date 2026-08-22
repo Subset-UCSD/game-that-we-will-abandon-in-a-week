@@ -1,6 +1,6 @@
 import { defaultInputs, keymap } from "@common/input";
 import { InputListener} from "./input-listener";
-import { SERVER_GAME_TICK } from "@common/index";
+import { SERVER_GAME_TICK } from "@common";
 import {Connection} from './connection'
 import {Game} from './game'
 import {Canvas} from './canvas'

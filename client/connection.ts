@@ -1,4 +1,4 @@
-import { ClientMessage, serverMessage } from "@common/index";
+import { ClientMessage, serverMessage } from "@common";
 import { Game } from './game'
 /** set by esbuild.ts */
 declare const IS_SERVING: boolean

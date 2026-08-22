@@ -13,6 +13,27 @@ npm run dev
 
 Open this in your browser: http://localhost:6767/
 
+Check types:
+
+```sh
+npx tsc
+```
+
+Final build:
+
+```sh
+npm run build
+npm start
+```
+
+GitHub Pages preview:
+
+```sh
+GITHUB_PAGES=true npm run build
+npm i -g http-server
+http-server public -c-1 -s
+```
+
 # High Level Overview
 
 ```javascript

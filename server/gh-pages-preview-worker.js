@@ -4,7 +4,7 @@
 
 import { Game } from "@server/game";
 import { clientMessage } from "@common/messages";
-import {SERVER_GAME_TICK} from '@common/index'
+import {SERVER_GAME_TICK} from '@common'
 
 const game = new Game();
 

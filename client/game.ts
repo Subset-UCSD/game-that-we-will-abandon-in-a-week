@@ -4,7 +4,7 @@ import { Arena } from "./rooms/arena";
 import { Room } from "./rooms/room";
 import { InputListener} from "./input-listener";
 import {Connection} from './connection'
-import { SERVER_GAME_TICK } from "@common/index";
+import { SERVER_GAME_TICK } from "@common";
 import { defaultInputs, keymap } from "@common/input";
 import {WholeFkingGameState,MeatBall} from '@common/game'
 import {ClientMeatball} from './meatball'

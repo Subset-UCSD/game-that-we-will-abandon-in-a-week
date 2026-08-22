@@ -5,7 +5,7 @@ import {join} from "path";
 import { Game } from "@server/game";
 import { type ClientMessage, clientMessage } from "@common/messages";
 import { prettifyError } from 'zod'
-import {SERVER_GAME_TICK} from '@common/index'
+import {SERVER_GAME_TICK} from '@common'
 
 
 if (process.argv.length !== 3) {

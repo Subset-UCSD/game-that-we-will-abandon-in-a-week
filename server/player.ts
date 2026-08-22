@@ -36,7 +36,7 @@ export class Player implements GameObject {
   }
 
   setInputs(newInputs: Inputs) {
-    // @ts-ignore
+    // @ts-expect-error
     if (Object.entries(this.inputs).some(([key,value])=>newInputs[key]!==value)){
 
       this.lastInputTime = Date.now()

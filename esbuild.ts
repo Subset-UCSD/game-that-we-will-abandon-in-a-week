@@ -2,7 +2,7 @@ import esbuild from "esbuild";
 const mode = process.argv[2];
 
 const isServe = mode==='serve'
-const isGitHubPages = !!process.env.GH_PAGES&&!isServe
+const isGitHubPages = !!process.env.GITHUB_PAGES&&!isServe
 
 const serverConfigPromise = esbuild.context({
 	bundle: true,

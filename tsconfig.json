@@ -1,13 +1,14 @@
 {
 	"compilerOptions": {
-		"lib": ["ESNext"],
-		"jsx": "preserve",
+		"lib": ["ESNext", "dom"],
 		"types": ["node"],
 		"allowSyntheticDefaultImports": true,
 		"esModuleInterop": true,
 		"paths": {
 			"@client/*": ["./client/*"],
 			"@server/*": ["./server/*"],
+			"@common": ["./common"],
+			// should we remove this and encourage @common instead
 			"@common/*": ["./common/*"],
 		},
   	"noEmit": true

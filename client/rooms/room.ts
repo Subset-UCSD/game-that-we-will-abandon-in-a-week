@@ -11,6 +11,7 @@ type Server_Player = {
 };
 
 class Room implements RenderableObject {
+    y = 0 // TODO
     players = new Map<string, Player>();
 
     constructor() {

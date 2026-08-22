@@ -1,3 +1,0 @@
-interface Serializable {
-	serialize(): any
-}
