@@ -1,10 +1,16 @@
 ## Backend
 
-1. write ping pong function
-   a. make sure frontend and backend can talk with each other
-2. save state on memory
-3. have 2 players see each other
-4. messaging between players
+1. save state on memory
+2. messaging between players
+3. BasicWorldLogic
+   3a. collision logic 
+   3b. Walls
+   3c. WorldGenerator?
+
 
 ## Frontend
-1. render arena - done
+
+1. Add a d20 rolling mechanic client side
+
+## Random Ideas
+- Rivers

@@ -46,7 +46,7 @@ export class Meatball {
     this.hv -= 0.5;
     if (this.publicState.height < 0) {
       this.bounces++
-      if (this.bounces > 3) {
+      if (this.bounces > 5) {
         this.shouldDelete = true;
         return
       }

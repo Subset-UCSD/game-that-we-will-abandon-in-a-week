@@ -29,7 +29,11 @@ export class Game {
 		for (const meatball of this.meatBalls) {
 			meatball.tick()
 		}
+		for (const meatball of this.meatBalls) {
+			meatball.publicState.x
+		}
 		this.meatBalls = this.meatBalls.filter(mb => !mb.shouldDelete)
+
 
 		// Send all of the clients the state of the world
 

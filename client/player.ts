@@ -134,7 +134,13 @@ class Player implements RenderableObject {
     const TIME_PER_FRAME_THOUGHT = 600
     const frameThought = framesThought[Math.floor(Date.now() / TIME_PER_FRAME_THOUGHT) % framesThought.length]
 
+    
+    
     const SHEEP_WIDTH = 60
+    c.fillStyle = 'rgba(0, 0, 0, 0.1)'
+        c.beginPath()
+        c.ellipse(this.x, this.y+42, SHEEP_WIDTH * 0.4, SHEEP_WIDTH * 0.08, 0, 0, Math.PI*2)
+        c.fill()
     const THOUGHT_WIDTH = 60
     const THOUGHT_HEIGHT = 50
       if (this.shouldFlipX) {
@@ -149,6 +155,7 @@ class Player implements RenderableObject {
       }
       if (this.thought) {
         c.drawImage(frameThought, this.x + SHEEP_WIDTH/2, this.y-THOUGHT_HEIGHT, THOUGHT_WIDTH, THOUGHT_HEIGHT);
+        c.fillStyle='black'
         c.fillText(this.thought, this.x + SHEEP_WIDTH/2 + 20, this.y - 25)
       }    
   }
@@ -203,6 +210,7 @@ class Player implements RenderableObject {
   updatePlayerState(playerData: NetPlayer) {
       this.thought = playerData.baaing
       this.setLocation(playerData.x, playerData.y);
+      this.shouldFlipX = playerData.facingLeft
       this.x_vel = playerData.x_vel
       this.y_vel = playerData.y_vel
 
@@ -211,11 +219,11 @@ class Player implements RenderableObject {
 
   setLocation(x:number, y:number) {
     // if (!this.is_you) 
-      if (x < this.x)
-        this.shouldFlipX = true
-      else if (x > this.x) {
-        this.shouldFlipX = false
-      }
+      // if (x < this.x)
+      //   this.shouldFlipX = true
+      // else if (x > this.x) {
+      //   this.shouldFlipX = false
+      // }
 
 
       this.x = x;

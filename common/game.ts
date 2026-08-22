@@ -8,6 +8,7 @@ export const playerSchema = z.object({
   y: z.number(),
   x_vel: z.number(),
   y_vel: z.number(),
+  facingLeft:z.boolean(),
   baaing: z.string(),
 });
 export type Player = z.infer<typeof playerSchema>;
