@@ -4,6 +4,7 @@ import { Player } from "@server/player";
 import { randomBytes } from "node:crypto";
 import { WebSocket } from "ws";
 import { send } from "./net/send";
+import {WholeFkingGameState} from '@common/game'
 
 // ALL OF THE GAME LOGIC
 export class Game {
@@ -18,12 +19,20 @@ export class Game {
 	}
 
 	public loop() {
-
 		// process all of the inputs
 		// tick the game world
-
+		for (const player of this.players.values()) {
+			player.act()
+		}
 
 		// Send all of the clients the state of the world
+
+		const gameState: WholeFkingGameState ={
+			players: this.players.values().map(player => player.serialize() ).toArray()
+		}
+		for (const conn of this.connections.values()) {
+			send(conn, 'game-state',gameState )
+		}
 	}
 
 

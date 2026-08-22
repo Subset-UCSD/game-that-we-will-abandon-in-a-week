@@ -5,6 +5,7 @@ import {join} from "path";
 import { Game } from "@server/game";
 import { type ClientMessage, clientMessage } from "@common/messages";
 import { prettifyError } from 'zod'
+import {SERVER_GAME_TICK} from '@common/index'
 
 if (process.argv.length !== 3) {
   console.error('usage: node dist/server.js <port>')
@@ -54,3 +55,10 @@ wss.on("connection", (ws) => {
 server.listen({port:+port}, () => {
   console.log(`the server is at http://localhost:${port}`);
 });
+
+while (true) {
+
+  game.loop()
+
+  await new Promise(resolve => setTimeout(resolve, SERVER_GAME_TICK))
+}

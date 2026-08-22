@@ -4,9 +4,26 @@ declare const IS_SERVING: boolean
 
 const SESSION_KEY = "session";
 
+const safeToDedupe = new Set<ClientMessage['type']>([
+	'input'
+])
+function dedupeMessages (queue: ClientMessage[]): ClientMessage[] {
+	const deduped = []
+	for (const message of queue) {
+		if (safeToDedupe.has(message.type) &&
+		 deduped.at(-1)?.type === message.type) {
+			deduped[deduped.length - 1] = message
+		 } else {
+			deduped.push(message)
+		 }
+	}
+	return deduped
+}
+
 class Connection {
 	private ws!: WebSocket;  /// this ! should make you MAD
 	private queue: ClientMessage[] = [];
+	
 
 	private reconnectAttempts = 0;
 	constructor() {
@@ -33,13 +50,18 @@ class Connection {
 				localStorage.setItem(SESSION_KEY, message.value);
 				break
 			}
+			case 'game-state': {
+				
+			}
 		}
 	}
 
-	private async reconnect() {
+	private  reconnect = async () => {
 		if (this.reconnectAttempts > 0) {
 			// exponentially BACK OFF connect attempts
 			await new Promise(res => setTimeout(res, (2**this.reconnectAttempts) * 1000));
+			// wait until user sees the tab
+			await new Promise(window.requestAnimationFrame)
 		}
 			
 		const pastSession = localStorage.getItem(SESSION_KEY) ?? undefined;
@@ -48,12 +70,12 @@ class Connection {
 
 	
 		this.ws.onopen = () => {
-			console.log("open")
+			console.log("🤝 connected to server")
 			this.reconnectAttempts = 0;
 			// join will be the first thing not added to queue
 			this.send("join", { sessionId: pastSession });
 			
-			const q = this.queue
+			const q =dedupeMessages( this.queue)
 			this.queue = []
 			for (const msg of q) {
 				this.send(msg.type, msg.value);

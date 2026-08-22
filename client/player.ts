@@ -120,7 +120,7 @@ class Player implements RenderableObject {
   }
 
   render({c,width}: Canvas): void {
-    this.movement() 
+    // this.movement() 
     /** in milliseconds */
     const isMoving = Math.hypot(this.x_vel, this.y_vel) > 0.1
     const TIME_PER_FRAME = isMoving ? 50 : 500
@@ -153,21 +153,21 @@ class Player implements RenderableObject {
   }
 
   handleInput(inputs: Inputs) {
-    if (inputs.up) {
-      this.y_vel = -this.max_speed
-    }
-    else if (inputs.down) {
-      this.y_vel = this.max_speed
-    } else {
-      this.y_vel = 0
-    }
+    // if (inputs.up) {
+    //   this.y_vel = -this.max_speed
+    // }
+    // else if (inputs.down) {
+    //   this.y_vel = this.max_speed
+    // } else {
+    //   this.y_vel = 0
+    // }
 
     if (inputs.left) {
-      this.x_vel = -this.max_speed
+      // this.x_vel = -this.max_speed
       this.shouldFlipX = true;
     }
     else if (inputs.right) {
-      this.x_vel = this.max_speed
+      // this.x_vel = this.max_speed
        this.shouldFlipX = false;
     } else {
       this.x_vel = 0
@@ -184,25 +184,25 @@ class Player implements RenderableObject {
     }
   }
 
-  movement() {
-    if (this.is_you) {
-        if (this.x_vel != 0)
-          this.x += this.x_vel / Math.hypot(this.x_vel, this.y_vel)
+  // movement() {
+  //   if (this.is_you) {
+  //       if (this.x_vel != 0)
+  //         this.x += this.x_vel / Math.hypot(this.x_vel, this.y_vel)
 
-        if (this.y_vel != 0)
-          this.y += this.y_vel / Math.hypot(this.x_vel, this.y_vel)
-    }
-  } 
+  //       if (this.y_vel != 0)
+  //         this.y += this.y_vel / Math.hypot(this.x_vel, this.y_vel)
+  //   }
+  // } 
 
   // render projectile prob move this later
   // this.updateRenderProjectiles(c);
 
   // for other player
   setLocation(x:number, y:number) {
-    if (!this.is_you) {
+    // if (!this.is_you) {
       this.x = x;
       this.y = y;
-    }
+    // }
   }
 }
 
