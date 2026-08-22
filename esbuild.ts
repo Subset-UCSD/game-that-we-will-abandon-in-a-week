@@ -1,7 +1,7 @@
 import esbuild from "esbuild";
 const mode = process.argv[2];
 
-const serverConfig = await esbuild.context({
+const serverConfigPromise = esbuild.context({
 	bundle: true,
 	outfile: "dist/server.js",
 	platform: "node",
@@ -12,7 +12,7 @@ const serverConfig = await esbuild.context({
 	entryPoints: ["server/index.ts"],
 });
 
-const clientConfig = await esbuild.context({
+const clientConfigPromise = esbuild.context({
   bundle: true,
   outfile: "public/dist/client.js",
   platform: "browser",
@@ -21,6 +21,8 @@ const clientConfig = await esbuild.context({
   format: "esm",
   entryPoints: ["client/index.ts"],
 });
+
+const [serverConfig,clientConfig] = await Promise.all([serverConfigPromise,clientConfigPromise])
 
 switch (mode) {
 	case 'build': {
@@ -38,7 +40,8 @@ switch (mode) {
 			console.log(`http://${host}:${clientServe.port}`)
 		}
 		await serverConfig.watch()
-		break
+		// hang
+		await new Promise(() => {})
 	}
 	default: {
 		console.error('usage: node esbuild.ts (build|serve)')
@@ -46,6 +49,7 @@ switch (mode) {
 		process.exit(1)
 	}
 }
+
 await Promise.all([
 	serverConfig.dispose(),
 	clientConfig.dispose(),
