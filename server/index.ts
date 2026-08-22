@@ -5,6 +5,11 @@ import {join} from "path";
 import { Game } from "@server/game";
 import { type ClientMessage, clientMessage } from "@common/messages";
 
+if (process.argv.length !== 3) {
+  console.error('usage: node dist/server.js <port>')
+}
+const [,, port] = process.argv
+
 const server = createServer();
 const app = express();
 const wss = new WebSocketServer({ 
@@ -35,6 +40,6 @@ wss.on("connection", (ws) => {
   });
 });
 
-server.listen({port:6767}, () => {
-  console.log("the server is at http://localhost:6767");
+server.listen({port:+port}, () => {
+  console.log(`the server is at http://localhost:${port}`);
 });

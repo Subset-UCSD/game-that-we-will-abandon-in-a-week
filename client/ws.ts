@@ -2,8 +2,10 @@ import { WholeFkingGameState } from "@common/game";
 import { Room } from "./rooms/room";
 import { WholeFkingGameStateMessage } from "@common/messages";
 
+/** set by esbuild.ts */
+declare const IS_SERVING: boolean
 const url = window.location.origin.replace(/^http/, "ws")
-export const ws = new WebSocket(url);
+export const ws = new WebSocket( IS_SERVING ? 'ws://localhost:6769/': url);
 let room:Room | null = null;
 
 ws.onopen = () => {
