@@ -19,6 +19,7 @@ const clientConfigPromise = esbuild.context({
   bundle: true,
   outfile: "public/dist/client.js",
   platform: "browser",
+	target: 'es2022',
   minify: !isServe,
   sourcemap: true,
   format: "esm",
