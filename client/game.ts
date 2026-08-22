@@ -27,7 +27,7 @@ export class Game {
 	private id = -1;
 	private things: SerializedThing[] = []
 
-	private camera = {x:0,y:0}
+	private camera = {x:0,y:0,scale:1}
 
 	// private gameState:WholeFkingGameState = {
 	// 	players:[]
@@ -107,15 +107,22 @@ export class Game {
 
 	// width, height = screen size (useful for centering things)
 	render (canvas: Canvas) {
+		const targetZoom = this.player.isAsleep() ? 5 : 1
 		this.camera.x += (this.player.x - this.camera.x) * 0.2
 		this.camera.y += (this.player.y - this.camera.y) * 0.2
+		this.camera.scale += (targetZoom - this.camera.scale) * 0.2
 
 
 		const {c} = canvas
 		c.save()
 		c.translate(
-			-this.camera.x + canvas.width/ 2, 
-			-this.camera.y + canvas.height/ 2, 
+			canvas.width/ 2, 
+			canvas.height/ 2, 
+		)
+		c.scale(this.camera.scale, this.camera.scale)
+		c.translate(
+			-this.camera.x, // + canvas.width/ 2, 
+			-this.camera.y, // + canvas.height/ 2, 
 		)
 
 

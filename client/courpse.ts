@@ -31,15 +31,15 @@ export class ClientCorps implements RenderableObject {
 const frame = frames[Math.floor(Date.now() / (770 + (this.state.id * Math.PI) % 50)) % frames.length]
 
         const {x,y,}=this.state
-        const offset = Math.sin(Date.now() / 800) * 10
+        const offset = Math.sin(Date.now() / (900 + (this.state.id * Math.PI) % 100)) * 5
         if (this.state.facingLeft) {
         c.save()
         c.scale(-1, 1)
-        c.drawImage(frame, -(this.x )- SHEEP_WIDTH/2, this.y-42+offset, SHEEP_WIDTH, 50);
+        c.drawImage(frame, -(x )- SHEEP_WIDTH/2, y-42+offset, SHEEP_WIDTH, 50);
         c.restore()
 
       } else {
-        c.drawImage(frame, this.x - SHEEP_WIDTH/2, this.y-42+offset, SHEEP_WIDTH, 50);
+        c.drawImage(frame, x - SHEEP_WIDTH/2, y-42+offset, SHEEP_WIDTH, 50);
 
       }
     }

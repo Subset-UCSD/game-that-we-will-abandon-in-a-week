@@ -256,6 +256,10 @@ class Player implements RenderableObject {
       this.y = y;
     // }
   }
+
+  isAsleep (): boolean {
+    return this.sleeping
+  }
 }
 
 export {Player};
