@@ -1,18 +1,20 @@
 import { ClientMessage } from "@common/messages";
-import { SESSION_KEY_NUM_BYTES, SessionId } from "@common/session";
+import { SESSION_KEY_NUM_BYTES } from "@common/session";
 import { Player } from "@server/player";
 import { randomBytes } from "node:crypto";
 import { WebSocket } from "ws";
 import { send } from "./net/send";
 import {WholeFkingGameState} from '@common/game'
+import { Meatball} from './meatball'
 
 // ALL OF THE GAME LOGIC
 export class Game {
 
-	private players: Map<SessionId, Player> = new Map();
-	private connections: Map<SessionId, WebSocket> = new Map();
-	private idForConnection: Map<WebSocket, SessionId> = new Map();
+	private players: Map<string, Player> = new Map();
+	private connections: Map<string, WebSocket> = new Map();
+	private idForConnection: Map<WebSocket, string> = new Map();
 	private joinedSockets: Set<WebSocket> = new Set();
+	private meatBalls: Meatball[] = []
 
 	constructor() {
 
@@ -24,20 +26,25 @@ export class Game {
 		for (const player of this.players.values()) {
 			player.act()
 		}
+		for (const meatball of this.meatBalls) {
+			meatball.tick()
+		}
+		this.meatBalls = this.meatBalls.filter(mb => !mb.shouldDelete)
 
 		// Send all of the clients the state of the world
 
-		const gameState: WholeFkingGameState ={
-			players: this.players.values().map(player => player.serialize() ).toArray()
-		}
+		const gameState = this.getWorldState()
 		for (const conn of this.connections.values()) {
 			send(conn, 'game-state',gameState )
 		}
 	}
 
 
-	getWorldState() {
-
+	getWorldState():WholeFkingGameState {
+		return {
+			players: this.players.values().map(player => player.serialize() ).toArray(),
+			meatballs: this.meatBalls.map(mb => mb.serialize())
+		}
 	}
 
 
@@ -48,6 +55,7 @@ export class Game {
 		switch (msg.type) {
 			case "join": {
 				let {sessionId} = msg.value;
+				let player: Player;
 
 				if (sessionId && this.players.has(sessionId)) {
 					// Reconnecting player, kill their old socket
@@ -60,16 +68,18 @@ export class Game {
 					this.connections.set(sessionId, ws);
 					this.idForConnection.set(ws, sessionId);
 					this.joinedSockets.add(ws);
+					player = this.players.get(sessionId)!;
 					console.log('welcome existing user', sessionId.slice(0,8))
 				} else {
 					sessionId = randomBytes(SESSION_KEY_NUM_BYTES).toString("hex");
 					this.connections.set(sessionId, ws);
 					this.idForConnection.set(ws, sessionId);
 					this.joinedSockets.add(ws);
-					this.players.set(sessionId, new Player());
+					player = new Player(this);
+					this.players.set(sessionId, player);
 					console.log('welcome new user', sessionId.slice(0,8))
 				}
-				send(ws, "join-response", sessionId);
+				send(ws, "join-response", {sessionId, playerId: player.getId()});
 				return;
 			}
 			case "input": {

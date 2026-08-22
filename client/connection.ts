@@ -1,4 +1,5 @@
-import { ClientMessage, SessionId, serverMessage } from "@common/index";
+import { ClientMessage, serverMessage } from "@common/index";
+import { Game } from './game'
 /** set by esbuild.ts */
 declare const IS_SERVING: boolean
 
@@ -7,27 +8,33 @@ const SESSION_KEY = "session";
 const safeToDedupe = new Set<ClientMessage['type']>([
 	'input'
 ])
+// this is a code smell, 
+// TODO: this could be better
 function dedupeMessages (queue: ClientMessage[]): ClientMessage[] {
-	const deduped = []
+	/*const deduped = []
 	for (const message of queue) {
 		if (safeToDedupe.has(message.type) &&
 		 deduped.at(-1)?.type === message.type) {
+			// overwrite last message with newer one
 			deduped[deduped.length - 1] = message
 		 } else {
 			deduped.push(message)
 		 }
 	}
-	return deduped
+	return deduped*/
+	return queue;
 }
 
 class Connection {
 	private ws!: WebSocket;  /// this ! should make you MAD
 	private queue: ClientMessage[] = [];
-	
+	private game;
+
 
 	private reconnectAttempts = 0;
-	constructor() {
+	constructor(game: Game) {
 		this.reconnect();
+		this.game = game
 	}
 
 	private handleMessage = (event: MessageEvent) => {
@@ -44,14 +51,20 @@ class Connection {
 			return;
 		}
 		const message = result.data;
-		console.log('[server 🗣️]', message);
 		switch (message.type) {
 			case 'join-response': {
-				localStorage.setItem(SESSION_KEY, message.value);
+				localStorage.setItem(SESSION_KEY, message.value.sessionId);
+				this.game.setCurrPlayerId(message.value.playerId)
+
 				break
 			}
 			case 'game-state': {
+				this.game.updateGameState(message.value)
+				break
+			}
+			default: {
 				
+		console.log('[server 🗣️]', message);
 			}
 		}
 	}
@@ -89,11 +102,14 @@ class Connection {
 	}
 
 	send<T extends ClientMessage["type"], P extends Extract<ClientMessage, {type: T}>["value"]>(type: T, value: P) {
+		// Remove when you want to replay events when you have a way to do that
+		if (this.ws.readyState !== this.ws.OPEN && type === "input") return; 
+
 		const message = {
 			type, value
 		} as ClientMessage; //:(
 		
-		if (this.ws && this.ws.readyState === WebSocket.OPEN){
+		if ( this.ws.readyState === WebSocket.OPEN){
 			this.ws.send(JSON.stringify(message));
 		} else {
 			this.queue.push(message)

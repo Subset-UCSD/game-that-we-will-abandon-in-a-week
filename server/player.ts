@@ -8,9 +8,11 @@ export class Player implements Serializable {
   private velocity: { x: number, y: number } = { x: 0, y: 0 };
   private id;
   private static next_id = 0;
+  private game: Game
  
 
-  constructor() {
+  constructor(game: Game) {
+    this.game = game
     this.inputs = { ...defaultInputs };
     this.id = Player.next_id++;
   }

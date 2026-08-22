@@ -1,7 +1,6 @@
 import { Inputs, inputSchema } from "@common/input";
 import { wholeFkingGameState } from "@common/game";
 import z from "zod";
-import { sessionIdSchema } from "./session";
 
 /**
  * Message schema helper. This returns a zod schema for message shape with a payload
@@ -23,7 +22,7 @@ export const inputMessage = $message("input", inputSchema);
 export type InputMessage = z.infer<typeof inputMessage>;
 
 export const joinMessage = $message("join", z.object({
-	sessionId: sessionIdSchema.optional()
+	sessionId: z.string().optional()
 }));
 export type JoinMessage = z.infer<typeof joinMessage>;
 
@@ -38,7 +37,10 @@ export type ClientMessage = z.infer<typeof clientMessage>;
 export const wholeFkingGameStateMessage = $message("game-state", wholeFkingGameState);
 export type WholeFkingGameStateMessage = z.infer<typeof wholeFkingGameStateMessage>;
 
-export const joinResponse = $message("join-response", sessionIdSchema);
+export const joinResponse = $message("join-response", z.object({
+	sessionId: z.string(),
+	playerId: z.number()
+}));
 export type JoinResponse = z.infer<typeof joinResponse>;
 
 export const serverMessage = z.discriminatedUnion('type',[

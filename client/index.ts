@@ -31,6 +31,8 @@ while (true) {
 	c.fillText('press W A S D to move', 50, 100)
 	c.fillText('press B to ?', canvas.width - 300, canvas.height - 20)
 
+
+	game.render(canvas)
 	
 	// player.render(canvas)
 
