@@ -6,11 +6,14 @@ export class ClientMeatball {
 
     render ({c}: Canvas) {
         if (!this.state) return
-        c.fillStyle = 'rgba(0, 0, 0, 0.1)'
         const {x,y,height}=this.state
+        c.fillStyle = 'rgba(0, 0, 0, 0.2)'
         c.beginPath()
-        c.ellipse(x, y, 10, 5, 0, 0, Math.PI*2)
+        c.ellipse(x, y, 5, 2, 0, 0, Math.PI*2)
         c.fill()
-        
+        c.fillStyle = '#800'
+        c.beginPath()
+        c.ellipse(x, y-height, 5, 5, 0, 0, Math.PI*2)
+        c.fill()
     }
 }

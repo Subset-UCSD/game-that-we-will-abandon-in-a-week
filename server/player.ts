@@ -72,8 +72,10 @@ export class Player implements Serializable {
 
         const angle = Math.random() * 2 * Math.PI
         this.game.meatBalls.push(new Meatball({
-          xv: Math.cos(angle),
-          yv: Math.sin(angle),
+          x: this.position.x + (this.velocity.x_vel < 0 ? -1 : 1) * 15,
+          y: this.position.y + 15,
+          xv: Math.cos(angle)*5,
+          yv: Math.sin(angle)*5 / 2,
           inithv:5
         }))
         this.wasBaaing = true

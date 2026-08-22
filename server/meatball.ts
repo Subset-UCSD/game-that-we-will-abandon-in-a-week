@@ -15,6 +15,7 @@ export class Meatball {
   yv: number;
   hv: number;
   shouldDelete = false;
+  bounces = 0
 
   constructor({
     x = 0,
@@ -44,7 +45,13 @@ export class Meatball {
     this.publicState.height += this.hv;
     this.hv -= 0.5;
     if (this.publicState.height < 0) {
-      this.shouldDelete = true;
+      this.bounces++
+      if (this.bounces > 3) {
+        this.shouldDelete = true;
+        return
+      }
+      this.hv *= -0.6
+      this.publicState.height = 0
     }
   }
 
