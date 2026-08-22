@@ -3,7 +3,7 @@ import { RenderableObject } from './render'
 import { Inputs } from "@common/input";
 import { Player as NetPlayer } from "@common/game";
 
-const [frames,framesWalking, framesThought] = await Promise.all([
+const [frames,framesWalking, framesThought,framesSleeping] = await Promise.all([
       // standing
       Promise.all([
         "./assets/sheep.png",
@@ -26,6 +26,15 @@ const [frames,framesWalking, framesThought] = await Promise.all([
       Promise.all([
         "./assets/think1.png",
         "./assets/think2.png"
+        ].map(async url =>
+          await createImageBitmap(
+            await fetch(url).then((r) => r.blob()),
+          )
+      )),
+      // sleep
+      Promise.all([
+        "./assets/sheep-sleep1.png",
+        "./assets/sheep-sleep2.png"
         ].map(async url =>
           await createImageBitmap(
             await fetch(url).then((r) => r.blob()),
@@ -54,6 +63,7 @@ class Player implements RenderableObject {
   private shouldFlipX: boolean = false;
   private thought: string = ''
   private projectiles: Projectile[] = [];
+  private sleeping = false
 
   constructor(is_you: boolean) {
     this.is_you = is_you;
@@ -124,8 +134,8 @@ class Player implements RenderableObject {
     // this.movement() 
     /** in milliseconds */
     const isMoving = Math.hypot(this.x_vel, this.y_vel) > 0.1
-    const TIME_PER_FRAME = isMoving ? 50 : 500
-    const framesList =isMoving ? framesWalking: frames
+    const TIME_PER_FRAME = this.sleeping ? 770 : isMoving ? 50 : 500
+    const framesList =this.sleeping ?  framesSleeping: isMoving ? framesWalking: frames
     const frame = framesList[Math.floor(Date.now() / TIME_PER_FRAME) % framesList.length]
     // changed to be in handleInput, so we keep old direction if we stop moving
     // const shouldFlipX = this.x_vel < 0
@@ -208,12 +218,13 @@ class Player implements RenderableObject {
   // for other player
 
   updatePlayerState(playerData: NetPlayer) {
-      this.thought = playerData.baaing
+      this.thought = playerData.connected ? playerData.baaing : 'ded'
       this.setLocation(playerData.x, playerData.y);
       this.shouldFlipX = playerData.facingLeft
       this.x_vel = playerData.x_vel
       this.y_vel = playerData.y_vel
 
+      this.sleeping = !playerData.connected || playerData.timeSinceLastInput > 10_000
   }
 
 

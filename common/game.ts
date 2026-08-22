@@ -10,6 +10,8 @@ export const playerSchema = z.object({
   y_vel: z.number(),
   facingLeft:z.boolean(),
   baaing: z.string(),
+  connected: z.boolean(),
+  timeSinceLastInput:z.number(),
 });
 export type Player = z.infer<typeof playerSchema>;
 
@@ -22,9 +24,23 @@ export const meatBallSchema = z.object({
 });
 export type MeatBall = z.infer<typeof meatBallSchema>;
 
+export const explosionSchema = z.object({
+  id: playerIdSchema,
+  x: z.number(),
+  y: z.number(),
+  radius: z.number(),
+  damage: z.number()
+});
+export type Explosion = z.infer<typeof explosionSchema>;
+
 export const wholeFkingGameState = z.object({
 	players: z.array(playerSchema),
   meatballs: z.array(meatBallSchema),
   // add to this when you want the client to know more about the game
 });
 export type WholeFkingGameState = z.infer<typeof wholeFkingGameState>;
+
+
+export interface GameObject {
+  shouldDelete: boolean;
+}

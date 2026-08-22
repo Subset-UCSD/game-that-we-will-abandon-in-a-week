@@ -1,4 +1,4 @@
-import { MeatBall as PublicMeatBall } from "@common/game";
+import { MeatBall as PublicMeatBall, GameObject } from "@common/game";
 
 let nextMeatballId = 0;
 
@@ -9,11 +9,12 @@ export type MeatballOptions = Omit<PublicMeatBall, "id"> & {
   inithv: number;
 };
 
-export class Meatball {
+export class Meatball implements GameObject {
+  static nextId = 0;
   publicState: PublicMeatBall;
-  xv: number;
-  yv: number;
-  hv: number;
+  private xv: number;
+  private yv: number;
+  private hv: number;
   shouldDelete = false;
   bounces = 0
 

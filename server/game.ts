@@ -83,6 +83,7 @@ export class Game {
 					this.players.set(sessionId, player);
 					console.log('welcome new user', sessionId.slice(0,8))
 				}
+				player.connected = true
 				send(ws, "join-response", {sessionId, playerId: player.getId()});
 				return;
 			}
@@ -104,6 +105,11 @@ export class Game {
 	}
 	handleDisconnect(ws: WebSocket) {
 		// bro idk
+		const sessionId = this.idForConnection.get(ws);
+		if (!sessionId) return
+		const player = this.players.get(sessionId);
+		if (!player) return
+		player.connected = false
 	}
 
 };

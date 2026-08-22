@@ -6,7 +6,7 @@ import { Game } from './game'
 export class Player implements Serializable {
   private inputs: Inputs;
   private max_speed: number = 100;
-  private position: { x: number, y: number } = { x: 0, y: 0 };
+  private position: { x: number, y: number } = { x: Math.random() * 300, y: Math.random() * 300 };
   private velocity: { x_vel: number, y_vel: number } = { x_vel: 0, y_vel: 0 };
   private id;
   private static next_id = 0;
@@ -15,6 +15,8 @@ export class Player implements Serializable {
   private thought: string = ''
   private hp: number = 67;
   private facingLeft =false
+  connected = false
+  lastInputTime = 0
  
   constructor(game: Game) {
     this.game = game
@@ -30,6 +32,10 @@ export class Player implements Serializable {
   }
 
   setInputs(newInputs: Inputs) {
+    if (Object.entries(this.inputs).some(([key,value])=>newInputs[key]!==value)){
+
+      this.lastInputTime = Date.now()
+    }
     this.inputs = { ...newInputs };
     this.handleInput(this.inputs);
   }
@@ -44,6 +50,8 @@ export class Player implements Serializable {
   serialize(): NetPlayer {
     return {...this.position, ...this.velocity, id: this.id, baaing:this.thought,
       facingLeft:this.facingLeft,
+      connected: this.connected,
+      timeSinceLastInput:Date.now()- this.lastInputTime,
     };
   }
 
