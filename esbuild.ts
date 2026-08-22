@@ -1,6 +1,8 @@
 import esbuild from "esbuild";
 const mode = process.argv[2];
 
+const isServe = mode==='serve'
+
 const serverConfigPromise = esbuild.context({
 	bundle: true,
 	outfile: "dist/server.js",
@@ -16,10 +18,13 @@ const clientConfigPromise = esbuild.context({
   bundle: true,
   outfile: "public/dist/client.js",
   platform: "browser",
-  minify: false,
+  minify: !isServe,
   sourcemap: true,
   format: "esm",
   entryPoints: ["client/index.ts"],
+	define: {
+		IS_SERVING: isServe?'true':'false'
+	}
 });
 
 const [serverConfig,clientConfig] = await Promise.all([serverConfigPromise,clientConfigPromise])
