@@ -17,8 +17,9 @@ export class Player implements Serializable {
   private thought: string = ''
   private hp: number = 67;
   private facingLeft =false
-  connected = false
-  lastInputTime = 0
+  connected = false;
+  lastInputTime = 0;
+
  
   constructor(game: Game) {
     this.game = game
@@ -34,6 +35,7 @@ export class Player implements Serializable {
   }
 
   setInputs(newInputs: Inputs) {
+    // @ts-ignore
     if (Object.entries(this.inputs).some(([key,value])=>newInputs[key]!==value)){
 
       this.lastInputTime = Date.now()
@@ -88,7 +90,7 @@ export class Player implements Serializable {
 
 
         const angle = Math.random() * 2 * Math.PI
-        this.game.meatBalls.push(new Meatball({
+        this.game.meatballs.push(new Meatball({
           x: this.position.x + (this.facingLeft ? -1 : 1) * 15,
           y: this.position.y + 15,
           xv: Math.cos(angle)*5,

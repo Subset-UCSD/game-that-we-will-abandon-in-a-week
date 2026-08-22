@@ -2,7 +2,9 @@ import type { Canvas } from './canvas'
 
 
 interface RenderableObject {
-  render: ({c,width}: Canvas) => void;
+  y: number
+  render: (canvas: Canvas) => void;
+  renderShadow?: (canvas: Canvas) => void
 }
 
 /**
@@ -14,7 +16,15 @@ interface RenderableObject {
  *
  */
 export async function render(canvas: Canvas, objects: RenderableObject[]) {
-  for (const object of objects) {
+  const c = canvas.c
+  const sorted = objects.toSorted((a, b) => a.y -b.y)
+    c.fillStyle = 'rgba(0, 0, 0, 0.1)'
+    c.beginPath()
+  for (const object of sorted) {
+    object.renderShadow?.(canvas);
+  }
+      c.fill()
+  for (const object of sorted) {
     object.render(canvas);
   }
 }

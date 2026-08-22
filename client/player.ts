@@ -51,6 +51,9 @@ type Projectile = {
   remainingFrames: number;
 }
 
+
+    const SHEEP_WIDTH = 60
+
 class Player implements RenderableObject {
   is_you: boolean;
   x: number = 0;
@@ -132,6 +135,11 @@ class Player implements RenderableObject {
     context.restore();
   }
 
+  renderShadow({c}:Canvas) {
+
+        c.ellipse(this.x, this.y+42, SHEEP_WIDTH * 0.4, SHEEP_WIDTH * 0.08, 0, 0, Math.PI*2)
+  }
+
   render({c,width}: Canvas): void {
     // this.movement() 
     /** in milliseconds */
@@ -148,11 +156,6 @@ class Player implements RenderableObject {
 
     
     
-    const SHEEP_WIDTH = 60
-    c.fillStyle = 'rgba(0, 0, 0, 0.1)'
-        c.beginPath()
-        c.ellipse(this.x, this.y+42, SHEEP_WIDTH * 0.4, SHEEP_WIDTH * 0.08, 0, 0, Math.PI*2)
-        c.fill()
     const THOUGHT_WIDTH = 60
     const THOUGHT_HEIGHT = 50
       if (this.shouldFlipX) {

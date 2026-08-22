@@ -10,13 +10,12 @@ export type MeatballOptions = Omit<PublicMeatBall, "id"> & {
 };
 
 export class Meatball implements GameObject {
-  static nextId = 0;
   publicState: PublicMeatBall;
-  private xv: number;
-  private yv: number;
-  private hv: number;
+  private  xv: number;
+  private  yv: number;
+  private  hv: number;
   shouldDelete = false;
-  bounces = 0
+  private  bounces = 0
 
   constructor({
     x = 0,

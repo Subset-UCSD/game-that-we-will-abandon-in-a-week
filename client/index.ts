@@ -1,4 +1,3 @@
-import { render } from "./render";
 import { defaultInputs, keymap } from "@common/input";
 import { InputListener} from "./input-listener";
 import { SERVER_GAME_TICK } from "@common/index";

@@ -14,8 +14,7 @@ export class Game {
   private connections: Map<string, WebSocket> = new Map();
   private idForConnection: Map<WebSocket, string> = new Map();
   private joinedSockets: Set<WebSocket> = new Set();
-	gameObjects: GameObject[];
-  meatBalls: Meatball[] = [];
+	meatballs: Meatball[] = [];
 
   constructor() {}
 
@@ -25,10 +24,11 @@ export class Game {
     for (const player of this.players.values()) {
       player.act();
     }
-    for (const meatball of this.meatBalls) {
+
+    for (const meatball of this.meatballs) {
       meatball.tick();
     }
-    for (const meatball of this.meatBalls) {
+    for (const meatball of this.meatballs) {
       if (!meatball.shouldDelete) continue;
       new Explosion({
         duration: 20,
@@ -41,7 +41,7 @@ export class Game {
         player.setHp(player.getHp() - EXPLOSION_DAMAGE);
       }
     }
-    this.meatBalls = this.meatBalls.filter((mb) => !mb.shouldDelete);
+    this.meatballs = this.meatballs.filter((mb) => !mb.shouldDelete);
 
     // Send all of the clients the state of the world
 
@@ -57,7 +57,7 @@ export class Game {
         .values()
         .map((player) => player.serialize())
         .toArray(),
-      meatballs: this.meatBalls.map((mb) => mb.serialize()),
+      meatballs: this.meatballs.map((mb) => mb.serialize()),
     };
   }
 

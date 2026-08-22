@@ -8,6 +8,7 @@ import { SERVER_GAME_TICK } from "@common/index";
 import { defaultInputs, keymap } from "@common/input";
 import {WholeFkingGameState,MeatBall} from '@common/game'
 import {ClientMeatball} from './meatball'
+import { render } from "./render";
 
 
 export class Game {
@@ -116,15 +117,11 @@ export class Game {
 		}
 
 
-		this.player.render(canvas)
-
-		for (const otherPlayers of this.allPlayers.values()) {
-			otherPlayers.render(canvas)
-		}
-
-		for (const mb of this.meatballs.values()) {
-			mb.render(canvas)
-		}
+		render(canvas, [
+			this.player,
+			...this.allPlayers.values(),
+			...this.meatballs.values(),
+		])
 
 		c.restore()
 	}

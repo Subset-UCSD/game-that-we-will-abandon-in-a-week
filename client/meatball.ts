@@ -1,6 +1,7 @@
 import {WholeFkingGameState,MeatBall} from '@common/game'
 import { Canvas} from './canvas'
 
+import { RenderableObject } from './render'
 
 
 const frames = await Promise.all([
@@ -12,8 +13,10 @@ const frames = await Promise.all([
           )
       ))
 
-export class ClientMeatball {
+export class ClientMeatball implements RenderableObject {
     state?: MeatBall
+
+    get y () { return this.state?.y ?? 0 }
 
     render ({c}: Canvas) {
         if (!this.state) return
