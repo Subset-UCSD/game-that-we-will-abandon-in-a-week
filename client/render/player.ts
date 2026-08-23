@@ -1,3 +1,8 @@
+/**
+ * this class is a RENDER only class so if you add non-render logic here (such as audio),
+ * i will DELETE it since it should probably go in a different file or client/game.ts
+ */
+
 import { Canvas } from "./canvas";
 import { loadFrames } from "./frames";
 import { RenderableObject } from "./render";
@@ -16,12 +21,10 @@ export const SLEEP_TIME = 10000;
 
 export class Player implements RenderableObject {
 	private props: NetPlayer;
-	private lastFootstepTime: number;
 	get index() { return this.props.y };
 
 	constructor(props: NetPlayer) {
 		this.props = props;
-		this.lastFootstepTime = Date.now();
 	}
 
 	renderShadow({ c }: Canvas) {
@@ -31,9 +34,8 @@ export class Player implements RenderableObject {
 	}
 
 	render({ c }: Canvas): void {
-		const { id, x, y, x_vel, y_vel, timeSinceLastInput, healthpercent, thought } = this.props;
-		const sleeping = timeSinceLastInput > SLEEP_TIME;
-		const shouldFlipX = x_vel < 0;
+		const { id, x, y, x_vel, y_vel, facingLeft, timeSinceLastInput, healthpercent,maxHp, thought,connected } = this.props;
+		const sleeping = timeSinceLastInput > SLEEP_TIME||!connected;;
 		/** in milliseconds */
 		const isMoving = Math.hypot(x_vel, y_vel) > 0.1
 		const TIME_PER_FRAME = (sleeping ? 770 : isMoving ? 50 : 500) + (id * Math.PI) % 50
@@ -47,27 +49,28 @@ export class Player implements RenderableObject {
 
 		const THOUGHT_WIDTH = 60
 		const THOUGHT_HEIGHT = 50
-		if (shouldFlipX) {
+		if (facingLeft) {
 			c.save()
 			c.scale(-1, 1)
 			c.drawImage(frame, -(x) - SHEEP_WIDTH / 2, y - 42, SHEEP_WIDTH, 50);
 			c.restore()
-
 		} else {
 			c.drawImage(frame, x - SHEEP_WIDTH / 2, y - 42, SHEEP_WIDTH, 50);
 		}
 
-		if (healthpercent < 1) {
+		const actualhealthpercent = healthpercent / maxHp
+		if (actualhealthpercent < 1) {
 			c.fillStyle = '#ff025f'
-			c.fillRect(x - 20, y - 10 - 42, 40 * (healthpercent), 5)
+			c.fillRect(x - 20, y - 10 - 42, 40 * (actualhealthpercent), 5)
 			c.strokeStyle = 'black'
 			c.strokeRect(x - 20.5, y - 10.8 - 42, 41, 6)
 		}
 
-		if (thought) {
+		const realThought = connected ? thought : 'ded'
+		if (realThought) {
 			c.drawImage(frameThought, x + SHEEP_WIDTH / 2, y - THOUGHT_HEIGHT - 42, THOUGHT_WIDTH, THOUGHT_HEIGHT);
 			c.fillStyle = 'black'
-			c.fillText(thought, x + SHEEP_WIDTH / 2 + 20, y - 25 - 42)
+			c.fillText(realThought, x + SHEEP_WIDTH / 2 + 20, y - 25 - 42)
 		}
 
 		c.strokeStyle = 'green'

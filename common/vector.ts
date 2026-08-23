@@ -31,7 +31,7 @@ export const rotate = (axis: Vec2, point: Vec2, radians: number) => {
 	const translated_point = subVec(axis, point);
 	const point_prime = vec2(
 		translated_point.x * Math.cos(radians) - translated_point.y * Math.sin(radians),
-		translated_point.y * Math.sin(radians) + translated_point.x * Math.cos(radians)
+		translated_point.x * Math.sin(radians) + translated_point.y * Math.cos(radians)
 	)
 	return addVec(axis, point_prime)
 }

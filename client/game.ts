@@ -3,7 +3,7 @@ import { Arena } from "./render/arena";
 import { Room } from "./render/room";
 import { Connection } from './net/connection'
 import { InputListener } from "./input-listener";
-import { addVec, isVecEq, SERVER_GAME_TICK } from "@common";
+import { addVec, isVecEq, SERVER_GAME_TICK,lerp } from "@common";
 import { defaultInputs, keymap } from "@common/input";
 import { WholeFkingGameState, MeatBall, SerializedThing, Line, SerializedCollider, Player as NetPlayer } from '@common/game'
 import { ClientSeed, ClientExplosion, ClientCorpse, ThingRenderer, render, ClientMeatball, Canvas } from "./render"
@@ -81,7 +81,7 @@ export class Game {
 
 		const newMeatballs = new Map<number, ClientMeatball>()
 		for (const meatball of gameState.meatballs) {
-			if (!this.meatballs.get(meatball.id)) this.playAudioAtPosition('baaa', meatball.x, meatball.y);
+			if (!this.meatballs.get(meatball.id)) this.playAudioAtPosition('baaa', meatball.x, meatball.y, 500, { playbackRate: 1 + Math.random() * 0.2 });
 			let existing = this.meatballs.get(meatball.id) ?? new ClientMeatball()
 			existing.state = meatball
 			newMeatballs.set(meatball.id, existing)
@@ -89,6 +89,13 @@ export class Game {
 		this.meatballs = newMeatballs
 
 		this.things = gameState.things
+
+		const newSeeds = new Map<number, ClientSeed>();
+		for (const seed of gameState.seeds) {
+			let existing = this.seeds.get(seed.id) ?? new ClientSeed(seed);
+
+		}
+		this.seeds = gameState.seeds;
 
 
 		const newCorpses = new Map<number, ClientCorpse>()
@@ -166,7 +173,6 @@ export class Game {
 		this.room.render(canvas);
 		this.arena.render(canvas);
 
-
 		c.fillStyle = 'black';
 		c.fillText('fuck', 50, -100);
 		c.fillText('press W A S D to move', 50, -50);
@@ -186,7 +192,8 @@ export class Game {
 			...this.meatballs.values(),
 			...this.corpses.values(),
 			...this.things.values().map(thing => new ThingRenderer(thing)),
-			...this.explosions.values()
+			...this.explosions.values(),
+			...this.seeds.values()
 		])
 
 		c.strokeStyle = 'red'
@@ -229,8 +236,6 @@ export class Game {
 		const LINE_RADIUS = 5;
 		c.lineWidth = LINE_RADIUS * 2;
 		c.lineCap = 'round';
-		// TODO: move this to util
-		const lerp = (a: number, b: number, progress: number) => a + (b - a) * progress;
 		// fresh: rgb(54,26,9)
 		// aged: rgb(33,101,6)
 		const lineColor = (age: number) => `rgb(${lerp(54, 33, age)}, ${lerp(26, 101, age)}, ${lerp(9, 6, age)})`;

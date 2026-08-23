@@ -5,3 +5,4 @@ export * from "./messages";
 export * from "./input";
 export * from "./game";
 export * from "./vector";
+export * from "./interpolator";

@@ -72,7 +72,8 @@ export class Game {
     // Send all of the clients the state of the world
 
     const versionId = crypto.randomUUID()
-    const gameState = this.getWorldState();
+    // some classes return objects then proceed to mutate them, so deep clone them before they get the chance
+    const gameState = structuredClone(this.getWorldState());
     let partialGameStateMessage: PartialFkingGameStateMessage['value'] | undefined
     for (const conn of this.connections.values()) {
       if (this.lastSentGameState && conn.lastSentGameStateVersionId === this.lastSentGameState.versionId) {
@@ -255,11 +256,11 @@ export class Game {
           const angle = Math.random() * 2 * Math.PI
           this.addGameObject(
             new Meatball({
-              x: player.position.x + (player.facingLeft ? -1 : 1) * 15,
+              x: player.position.x + (player.facingLeft ? -1 : 1) * 10,
               y: player.position.y,
               xv: Math.cos(angle) * 5,
               yv: (Math.sin(angle) * 5) / 2,
-              height: 42 - 15,
+              height: 42 - 15 - 9,
               inithv: 5,
             })
           )
