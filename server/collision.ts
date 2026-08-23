@@ -1,4 +1,4 @@
-import { Vec2, vec2, rotate, ortho, normalize, subVec, dot, scaleVec, vecLength } from '@common'
+import { Vec2, vec2, rotate, ortho, normalize, subVec, dot, scaleVec, vecLength, SerializedCollider } from '@common'
 import test from 'node:test';
 
 export interface Collider {
@@ -7,11 +7,12 @@ export interface Collider {
   // with the same mask can collide with other objects within that mask
   mask: number; //binary mask
 
-  // collier
+  // border collie
   collide(Collider: Collider): Vec2;
   getNearestPoint(point: Vec2): Vec2;
   onCollide(cb: () => void): void;
   updateLocation(center: Vec2): void;
+  serialize(): SerializedCollider
 }
 
 export interface PloygonCollider extends Collider {
@@ -26,10 +27,11 @@ const getEdges = (vec_list:Vec2[]): Vec2[] => {
         const p2 = vec_list[i+1 < vec_list.length ? i + 1 : 0]
         edges.push(subVec(p1, p2))
     }
-    return vec_list
+
+    return edges
 }
 
-//the axes in SAT to test are the normal of the edges
+// the axes in SAT to test are the normal of the edges
 const getAxes = (edges: Vec2[]): Vec2[] => {
     // const edges = getEdges(polygonCollider1.getCorners())
     const axes:Vec2[] = []
@@ -39,7 +41,10 @@ const getAxes = (edges: Vec2[]): Vec2[] => {
     return axes
 }
 
-//Get the ratio of p1 on the line to point 2
+//TODO: FIND A POINT FURTHER DOWN RELATIVE TO ANOTHER POINT
+
+
+// Get the ratio of p1 on the line to point 2
 // assumes points are on the same line
 const ratioOfDistances = (p1: Vec2, p2: Vec2): number => {
     return vecLength(p1) / vecLength(p2)
@@ -53,12 +58,14 @@ const projShape = (corners: Vec2[], axis:Vec2): Vec2[] => {
     // each of these points are on the line of the axis at the origin
     let startPoint: Vec2 = projVec(corners[0], axis)
     let endPoint: Vec2 = projVec(corners[1], axis)
+    
+    
     for (const corner of corners.slice(2)) {
         const testPoint = projVec(corner, axis)
-        const t_start = ratioOfDistances(testPoint, startPoint)
+        const t_start = ratioOfDistances(subVec(endPoint,testPoint), subVec(endPoint,startPoint))
         if (t_start < 0)
             startPoint = testPoint
-        const t_end = ratioOfDistances(testPoint, endPoint)
+        const t_end = ratioOfDistances(subVec(startPoint, testPoint), subVec(startPoint,endPoint))
         if (t_end > 1)
             endPoint = testPoint
         
@@ -70,38 +77,44 @@ const projShape = (corners: Vec2[], axis:Vec2): Vec2[] => {
 //https://dyn4j.org/2010/01/sat/ <- algorithm to detect collisons in convex polygon
 // Nolan is a roman
 /** sats lover */
-const SATSolver = (polygonCollider1: PloygonCollider, polygonCollider2: PloygonCollider): [boolean,number, Vec2]  => {
+const SATSolver = (polygonCollider1: PloygonCollider, polygonCollider2: PloygonCollider): [isColliding:boolean,overlapAmount:number, direction:Vec2]  => {
     const corners1 = polygonCollider1.getCorners()
     const corners2 = polygonCollider2.getCorners()
+    
+    // The normals of the Shape
     const axes = [... getAxes(getEdges(corners1)), ... getAxes(getEdges(corners2))]
     
-    let smallestOverlapAmount = Number.MAX_SAFE_INTEGER;
+    
+    let smallestOverlapAmount = Infinity;
     let mtvAxis = axes[0];
 
     for (const axis of axes) {
         const [start_1, end_1] = projShape(corners1, axis)
-        const [start_2, end_2] = projShape(corners1, axis)
+        const [start_2, end_2] = projShape(corners2, axis)
         
         //check non overlap in projects
         // if one axis has two projections that don't overlap, then garenteed to not collide!
         // !(start_1 <= end_2 && start_2 <= end_1)
 
-        const t1 = ratioOfDistances(start_1, end_2)
-        const t2 = ratioOfDistances(start_2, end_1)
+        //TEMP DOES NOT WORK
+        const some_small_number = vec2(-1000, -1000)
+       
+        const t1 = ratioOfDistances(subVec(some_small_number, start_1), subVec(some_small_number,end_2))
+        const t2 = ratioOfDistances(subVec(some_small_number, start_2), subVec(some_small_number, end_1))
         
         // the distance from the origin to start_1 was less than to end_2
         // and vice versa for t2
         // THEN OVERLAP
 
         //otherwise no overlap
-        if (!(t1 < 1 && t2 < 2)) {
+        if (!((t1 < 1) && (t2 < 1))) {
             return [false, 0, vec2(0,0)]
         } else {
-            console.log("overlap", t1, t2)
             const overlapAmount = Math.min(
                 vecLength(subVec(start_2,end_1)),
                 vecLength(subVec(start_1,end_2))
             )
+            
             if (overlapAmount < smallestOverlapAmount) {
                 smallestOverlapAmount = overlapAmount;
                 mtvAxis = axis;
@@ -137,8 +150,8 @@ export class BoxCollider implements PloygonCollider {
     return [
       rotate(this.center, vec2(this.x + this.width / 2, this.y + this.height / 2), this.radians), //bottom right
       rotate(this.center, vec2(this.x - this.width / 2, this.y + this.height / 2), this.radians), //bottom left
-      rotate(this.center, vec2(this.x + this.width / 2, this.y - this.height / 2), this.radians), //top right
       rotate(this.center, vec2(this.x - this.width / 2, this.y - this.height / 2), this.radians), //top left
+      rotate(this.center, vec2(this.x + this.width / 2, this.y - this.height / 2), this.radians), //top right
     ]
   }
 
@@ -148,7 +161,7 @@ export class BoxCollider implements PloygonCollider {
       const [isColliding, overlapAmount, direction] = SATSolver(this, Collider);
       //TODO: these reuslts from SAT helps you find MTV but
       // I don't know how to compute MTV, this is my best guess
-      return scaleVec(direction, -overlapAmount)
+      return scaleVec(direction, overlapAmount* 100)
 
     }
     if (Collider instanceof CircleCollider) {
@@ -178,6 +191,10 @@ export class BoxCollider implements PloygonCollider {
     this.center = center
     this.corners = this.getCorners()
   }
+
+  serialize(): SerializedCollider {
+      return {type: 'box',x:this.x-this.width/2,y:this.y-this.height/2,width:this.width,height:this.height}
+  }
   
 }
 
@@ -200,6 +217,10 @@ export class CircleCollider implements Collider {
 
   updateLocation(point: Vec2): void {
     throw new Error('Method not implemented.');
+  }
+
+  serialize(): SerializedCollider {
+      throw new Error('Method not implemented.');
   }
 }
 
@@ -364,6 +385,12 @@ export class CapsuleCollider implements Collider {
 
   onCollide(cb: () => void): void {
       this.collisionCallbacks.push(cb);
+  }
+
+  
+
+  serialize(): SerializedCollider {
+      return {type: 'capsule',x:this.center.x,y:this.center.y,width:this.body.width,height:this.body.height}
   }
 }
 

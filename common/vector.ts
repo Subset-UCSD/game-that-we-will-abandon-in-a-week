@@ -17,7 +17,12 @@ export const normalize = (v: Vec2): Vec2 => scaleVec(v, 1/vecLength(v));
 
 export const ortho =  ({ x, y }: Vec2): Vec2 => vec2(-y, x);
 
-export const dot = (a: Vec2, b: Vec2): number => a.x*b.x + b.y+b.y
+// let it be known:
+//   the produce was once
+//     a.x*b.x + a.y+b.y
+//   then it was changed to
+//     a.x*b.x + b.y*b.y
+export const dot = (a: Vec2, b: Vec2): number => a.x * b.x + a.y * b.y 
 
 /**
  * rotates `point` `radians` radians *clockwise* about `axis`

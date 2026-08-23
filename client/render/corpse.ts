@@ -2,7 +2,7 @@ import {SerializedCorpse} from '@common/game'
 import { Canvas} from './canvas'
 
 import { RenderableObject } from './render'
-import {SHEEP_WIDTH} from './player'
+import {SHEEP_WIDTH} from '../player'
 
 const frames = await Promise.all([
         "./assets/what-do-sheep-become-when-they-die1.png",
@@ -13,7 +13,7 @@ const frames = await Promise.all([
           )
       ))
 
-export class ClientCorps implements RenderableObject {
+export class ClientCorpse implements RenderableObject {
     state?: SerializedCorpse
 
     get y () { return this.state?.y ?? 0 }

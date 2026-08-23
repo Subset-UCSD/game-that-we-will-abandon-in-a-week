@@ -30,24 +30,15 @@ export class Game {
     //TEMP
     for (const [id1, player1] of this.players.entries()) {
       for (const [id2, player2] of this.players.entries()) {
-        if (id1 == id2)
-          continue
-          const mtv = player1.collider.collide(player2.collider)
-          if (mtv.x != 0 && mtv.y != 0)
-            console.log('mtv',mtv)
-            player1.velocity = vec2(0,0)
+        if (id1 == id2) continue;
+        const mtv = player1.collider.collide(player2.collider);
+        player1.velocity = vec2(0,0)
+        if (mtv.x != 0 && mtv.y != 0) {
+          player1.collied = true
+        }
+         player1.collied = false
       }
     }
-
-    // for (const collider of this.colliders) {
-    //   for (const otherColider of this.colliders) {
-    //     // if (collider.collide()) {
-    //     //   //
-    //     // }
-    //   }
-    // }
-
-    
 
     for (const meatball of this.gameObjects) {
       meatball.tick();
@@ -101,7 +92,8 @@ export class Game {
       corpses: this.gameObjects
         .filter((o) => o instanceof Corpse)
         .map((ex) => ex.serialize()),
-      seeds: this.gameObjects.filter(x=>x instanceof Seed).map(x=>x.serialize())
+      seeds: this.gameObjects.filter(x => x instanceof Seed).map(x => x.serialize()),
+      colliders: this.gameObjects.map(object => object.collider?.serialize()).filter(collider => collider !== undefined),
     };
   }
 
@@ -194,18 +186,19 @@ export class Game {
           y: player.position.y,
         }
         if (!last || last.committed) {
-          wipLine = {            start: point, end: point,
+          wipLine = {
+            start: point, end: point,
           }
           player.lines.push(wipLine)
         } else {
           wipLine = last
         }
-        const proposedNewLine = {...wipLine,end:point}
+        const proposedNewLine = { ...wipLine, end: point }
         const MAX_LEN = 20
         // split new line segment when it would get too long
         if (vecLengthSquared(subVec(proposedNewLine.start, proposedNewLine.end)) > MAX_LEN * MAX_LEN) {
           wipLine.committed = Date.now()
-          player.lines.push({start:wipLine.end, end: point})
+          player.lines.push({ start: wipLine.end, end: point })
         } else {
           wipLine.end = point
         }
@@ -254,6 +247,6 @@ export class Game {
     const player = this.players.get(sessionId);
     if (!player) return console.log('someone left but they dont have a player for some reason', sessionId.slice(0, 8));
     player.connected = false;
-          console.log("bye", sessionId.slice(0, 8));
+    console.log("bye", sessionId.slice(0, 8));
   }
 }

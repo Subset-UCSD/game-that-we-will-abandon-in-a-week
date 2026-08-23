@@ -49,7 +49,7 @@ switch (mode) {
 		for (const host of clientServe.hosts) {
 			console.log(`http://${host}:${clientServe.port}`)
 		}
-		await serverConfig.watch()
+		await serverConfig.watch({})
 		// hang
 		await new Promise(() => {})
 	}

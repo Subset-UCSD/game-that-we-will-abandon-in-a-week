@@ -1,5 +1,5 @@
 import { ClientMessage, serverMessage } from "@common";
-import { Game } from './game'
+import { Game } from '@client/game'
 /** set by esbuild.ts */
 declare const IS_SERVING: boolean
 
@@ -10,7 +10,7 @@ const safeToDedope = new Set<ClientMessage['type']>([
 ]);
 
 class Connection {
-	// WE use ! here because ws is definitely defined in this.reconnect but TS is DUMB and thinks it's not
+	// WE use ! here because ws is definitelyt defined in this.reconnect but TS is DUMB and thinks it's not
 	private ws!: WebSocket;
 	private queue: ClientMessage[] = [];
 	private game;

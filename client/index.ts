@@ -3,7 +3,8 @@ import { InputListener} from "./input-listener";
 import { SERVER_GAME_TICK } from "@common";
 import {Connection} from './connection'
 import {Game} from './game'
-import {Canvas} from './canvas'
+import {Canvas} from './render'
+import {audio} from './audio'
 
 using canvas = new Canvas()
 const c = canvas.context

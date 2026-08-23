@@ -6,10 +6,108 @@
 
 export type DiffPayload = unknown
 
-export function generateDiffPayload (lastSent: unknown, newValue: unknown): DiffPayload {
-  return // idk
+function isObject (value: unknown): value is Record<string, unknown> {
+  return typeof value === 'object' && value !== null && !Array.isArray(value)
+}
+
+const DELETE = 0
+const REPLACE = 1
+
+
+export function generateDiffPayload (lastSent: unknown, newValue: unknown, keyState = ['x','y']): DiffPayload {
+  if (newValue === undefined) {
+    if (lastSent !== undefined) {
+      return [DELETE]
+    } else {
+      return undefined
+    }
+  }
+  if (isObject(lastSent)) {
+    if ((isObject(newValue))) {
+      const result: Record<number, unknown> = {}
+      let changes = 0
+      for (const key of new Set([...Object.keys(lastSent), ...Object.keys(newValue)])) {
+        const payload = generateDiffPayload(lastSent[key], newValue[key])
+        let index = keyState.indexOf(key)
+        if (index === -1) {
+          keyState.push(key)
+          index = keyState.length - 1
+        }
+        if (payload !== undefined) {
+          result[index] = payload
+          changes++
+        }
+      }
+      return changes === 0 ? undefined : result
+    } else {
+      return newValue
+    }
+  }
+  if (Array.isArray(lastSent)) {
+    if (Array.isArray(newValue)) {
+      const result: Record<number | 'l'  | 'e', unknown> = {l:undefined,e:undefined}
+      let changed = lastSent.length !== newValue.length
+      if (lastSent.length > newValue.length) {
+        result.l = newValue.length
+      } else if (newValue.length > lastSent.length) {
+        result.e = newValue.slice(lastSent.length)
+      }
+      const commonLength = Math.min(lastSent.length, newValue.length)
+      for (let i = 0; i < commonLength; i++) {
+        const payload = generateDiffPayload(lastSent[i] ?? null, newValue[i] ?? null)
+        if (payload !== undefined) {
+          changed = true
+          result[i] = payload
+        }
+      }
+      return result
+    } else {
+      return [REPLACE, newValue]
+    }
+  }
+  return newValue === lastSent ? undefined : newValue
 }
 
 export function applyDiffPayload (lastReceived: unknown, diff: DiffPayload): unknown {
-  return // idk
+  if (diff === undefined) {
+    return lastReceived
+  }
+  if (Array.isArray(diff) && diff[0] === DELETE) {
+    return undefined
+  }
+  if (isObject(lastReceived)) {
+    if (isObject(diff)) {
+      const result = {...lastReceived}
+      for (const [key, value] of Object.entries(diff)) {
+        const applied = applyDiffPayload(lastReceived[key], value)
+        if (applied === undefined) {
+          delete result[key]
+        } else {
+          result[key] = applied
+        }
+      }
+      return result
+    } else {
+      return diff
+    }
+  }
+  if (Array.isArray(lastReceived)) {
+    if (Array.isArray(diff)) {
+      return diff[1]
+    } else if (isObject(diff)) {
+      const result = lastReceived.slice(0, typeof diff.l === 'number' ? diff.l : undefined)
+      if (Array.isArray(diff.e)) {
+        result.push(...diff.e)
+      }
+      for (const [key, value] of Object.entries(diff)) {
+        if (key === 'l' || key === 'e') continue
+        const index = +key
+        result[index] = applyDiffPayload(lastReceived[index], diff[index])
+      }
+      return result
+    } else {
+      throw new Error('should not happen')
+    }
+  }
+  return diff
 }

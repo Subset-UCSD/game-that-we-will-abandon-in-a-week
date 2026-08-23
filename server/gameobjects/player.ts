@@ -28,6 +28,7 @@ export class Player implements GameObject {
   shouldDelete = false
   seedCooldownTicks = 0;
   collider: BoxCollider;
+  collied: boolean = false;
  
   constructor(game: Game) {
     this.game = game
@@ -74,6 +75,7 @@ export class Player implements GameObject {
       hp: this.hp,
       maxHp: MAX_HP,
       lines: this.lines.map(({start,end,committed}) => ({start,end,age:committed?Math.min(1, Math.max(0, (Date.now() - (committed + LINE_START_AGE)) / LINE_MAX_AGE)) : null})),
+      collied: this.collied
     };
   }
 
@@ -98,6 +100,7 @@ export class Player implements GameObject {
       this.position.x += 300;
     }
     this.seedCooldownTicks = Math.max(this.seedCooldownTicks - 1, 0);
+    this.collider.updateLocation(this.position)
   }
   setHp(hp: number) {
     this.hp = hp;

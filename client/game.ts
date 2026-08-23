@@ -1,17 +1,12 @@
 import { Player } from "./player";
-import { Canvas } from './canvas'
-import { Arena } from "./rooms/arena";
-import { Room } from "./rooms/room";
+import { Arena } from "./render/arena";
+import { Room } from "./render/room";
 import { InputListener } from "./input-listener";
 import { Connection } from './connection'
 import { addVec, isVecEq, SERVER_GAME_TICK } from "@common";
 import { defaultInputs, keymap } from "@common/input";
-import { WholeFkingGameState, MeatBall, SerializedThing, Line } from '@common/game'
-import { ClientMeatball } from './meatball'
-import { render } from "./render";
-import { ThingRenderer } from "./thing-renderer";
-import { ClientCorps } from './courpse'
-import { ClientExplosion } from "./explosion";
+import { WholeFkingGameState, MeatBall, SerializedThing, Line, SerializedCollider } from '@common/game'
+import { ClientSeed, ClientExplosion, ClientCorpse, ThingRenderer, render, ClientMeatball, Canvas } from "./render"
 
 
 export class Game {
@@ -20,7 +15,7 @@ export class Game {
 	private player;
 	private allPlayers: Map<number, Player> = new Map();
 	private meatballs = new Map<number, ClientMeatball>()
-	private corpses = new Map<number, ClientCorps>()
+	private corpses = new Map<number, ClientCorpse>()
 	private explosions = new Map<number, ClientExplosion>()
 	private seeds = new Map<number, ClientSeed>();
 	private arena;
@@ -30,6 +25,7 @@ export class Game {
 	private id = -1;
 	private things: SerializedThing[] = []
 	private lines: Line[] = []
+	private debugColldiers: SerializedCollider[] =[ ]
 
 	private camera = { x: 0, y: 0, scale: 1 }
 
@@ -95,9 +91,9 @@ export class Game {
 		this.things = gameState.things
 
 
-		const newCorpses = new Map<number, ClientCorps>()
+		const newCorpses = new Map<number, ClientCorpse>()
 		for (const meatball of gameState.corpses) {
-			let existing = this.corpses.get(meatball.id) ?? new ClientCorps()
+			let existing = this.corpses.get(meatball.id) ?? new ClientCorpse()
 			existing.state = meatball
 			newCorpses.set(meatball.id, existing)
 		}
@@ -112,6 +108,8 @@ export class Game {
 		this.explosions = new Map(this.explosions.entries().filter(([, plosion]) => !plosion.shouldDie))
 
 		this.lines = gameState.players.values().flatMap(player => player.lines).toArray()
+
+		this.debugColldiers = gameState.colliders
 	}
 
 	setCurrPlayerId(id: number) {
@@ -174,10 +172,41 @@ export class Game {
 			// ...this. //what is this???
 		])
 
+		c.strokeStyle = 'red'
+		for (const collider of this.debugColldiers) {
+			switch (collider.type) {
+				case 'box': {
+					c.strokeRect(collider.x, collider.y, collider.width, collider.height)
+					break
+				}
+				case 'capsule': {
+					// untested
+					c.beginPath()
+					c.moveTo(collider.x + collider.width/2, collider.y + collider.height/2)
+					if (collider.width > collider.height) {
+						// horizontal
+					c.lineTo(collider.x - collider.width/2, collider.y + collider.height/2)
+					c.arc(collider.x - collider.width/2, collider.y, collider.height/2, Math.PI/4, 3*Math.PI/4)
+					c.lineTo(collider.x + collider.width/2, collider.y - collider.height/2)
+					c.arc(collider.x + collider.width/2, collider.y, collider.height/2, -Math.PI/4, Math.PI/4)
+					} else {
+						
+					c.arc(collider.x, collider.y + collider.height/2, collider.width/2, 0, Math.PI/2)
+					c.lineTo(collider.x - collider.width/2, collider.y - collider.height/2)
+					c.arc(collider.x, collider.y - collider.height/2, collider.width/2, -Math.PI/2, 0)
+					c.closePath()
+					}
+					c.stroke()
+					break
+				}
+			}
+		}
+
 		c.restore()
 	}
 
 	private	paintLines(c: CanvasRenderingContext2D) {
+		c.save()
 		// null age means it's fresh (age=0) AND to lift the end up to connect to the sheep ass
 		const playerLineGroups = Map.groupBy(this.lines, line => line.age === 0 || line.age === null ? (line.age !== null && isVecEq(line.start, line.end) ? 'fresh-dot' : 'fresh') : line.age === 1 ? (isVecEq(line.start, line.end) ? 'aged-dot' : 'aged') : 'aging')
 		const LINE_RADIUS = 5;
@@ -230,6 +259,7 @@ export class Game {
 				c.stroke()
 			}
 		}
+		c.restore()
 	}
 
 }

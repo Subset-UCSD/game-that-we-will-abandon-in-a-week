@@ -1,46 +1,15 @@
-import type { Canvas } from './canvas'
-import { RenderableObject } from './render'
+import type { Canvas } from './render'
+import { RenderableObject } from './render/render'
 import { Inputs } from "@common/input";
 import { Player as NetPlayer } from "@common/game";
+import { loadFrames } from './render';
 
-const [frames,framesWalking, framesThought,framesSleeping] = await Promise.all([
-      // standing
-      Promise.all([
-        "./assets/sheep.png",
-        "./assets/sheep2.png"
-        ].map(async url =>
-          await createImageBitmap(
-            await fetch(url).then((r) => r.blob()),
-          )
-      )),
-      // walking
-      Promise.all([
-        "./assets/sheep-walk1.png",
-        "./assets/sheep-walk2.png"
-        ].map(async url =>
-          await createImageBitmap(
-            await fetch(url).then((r) => r.blob()),
-          )
-      )),
-      // thought bubble
-      Promise.all([
-        "./assets/think1.png",
-        "./assets/think2.png"
-        ].map(async url =>
-          await createImageBitmap(
-            await fetch(url).then((r) => r.blob()),
-          )
-      )),
-      // sleep
-      Promise.all([
-        "./assets/sheep-sleep1.png",
-        "./assets/sheep-sleep2.png"
-        ].map(async url =>
-          await createImageBitmap(
-            await fetch(url).then((r) => r.blob()),
-          )
-      )),
-    ])
+const {base, walking, think, sleep} = await loadFrames({
+	base: ["./assets/sheep.png", "./assets/sheep2.png"],
+	walking: ["./assets/sheep-walk1.png", "./assets/sheep-walk2.png"],
+	think: ["./assets/think1.png", "./assets/think2.png"],
+	sleep: ["./assets/sheep-sleep1.png", "./assets/sheep-sleep2.png"]
+} as const);
 
 // pew pew
 type Projectile = {
@@ -61,6 +30,7 @@ class Player implements RenderableObject {
   x_vel: number = 0;
   y_vel: number = 0;
   id = 0
+  collied = false
 
   private max_speed: number = 2;
   private friction: number = 0.1;
@@ -103,8 +73,7 @@ class Player implements RenderableObject {
       }
     )
   }
-
-    // 
+  
   private updateRenderProjectiles(context: CanvasRenderingContext2D): void{
     context.save();
     context.fillStyle = "#f5d442"; //yelo
@@ -145,14 +114,14 @@ class Player implements RenderableObject {
     /** in milliseconds */
     const isMoving = Math.hypot(this.x_vel, this.y_vel) > 0.1
     const TIME_PER_FRAME = (this.sleeping ? 770 : isMoving ? 50 : 500) + (this.id * Math.PI) % 50
-    const framesList =this.sleeping ?  framesSleeping: isMoving ? framesWalking: frames
+    const framesList =this.sleeping ?  sleep : isMoving ? walking: base
     const frame = framesList[Math.floor(Date.now() / TIME_PER_FRAME) % framesList.length]
     // changed to be in handleInput, so we keep old direction if we stop moving
     // const shouldFlipX = this.x_vel < 0
 
 
     const TIME_PER_FRAME_THOUGHT = 600
-    const frameThought = framesThought[Math.floor(Date.now() / (TIME_PER_FRAME_THOUGHT + (this.id * Math.PI) % 50)) % framesThought.length]
+    const frameThought = think[Math.floor(Date.now() / (TIME_PER_FRAME_THOUGHT + (this.id * Math.PI) % 50)) % think.length]
 
     
     
@@ -181,18 +150,12 @@ class Player implements RenderableObject {
         c.fillStyle='black'
         c.fillText(this.thought, this.x + SHEEP_WIDTH/2 + 20, this.y - 25-42)
       }    
+    
+    c.strokeStyle = 'green'
+    c.rect(this.x - SHEEP_WIDTH/2, this.y-42, SHEEP_WIDTH, 50)
   }
 
   handleInput(inputs: Inputs) {
-    // if (inputs.up) {
-    //   this.y_vel = -this.max_speed
-    // }
-    // else if (inputs.down) {
-    //   this.y_vel = this.max_speed
-    // } else {
-    //   this.y_vel = 0
-    // }
-
     if (inputs.left) {
       // this.x_vel = -this.max_speed
       this.shouldFlipX = true;
@@ -204,7 +167,6 @@ class Player implements RenderableObject {
       this.x_vel = 0
     }
 
-
     if (inputs.baa) {
       if (!this.thought) {
         const thoughts = ['baa','hungy','beh']
@@ -215,20 +177,6 @@ class Player implements RenderableObject {
     }
   }
 
-  // movement() {
-  //   if (this.is_you) {
-  //       if (this.x_vel != 0)
-  //         this.x += this.x_vel / Math.hypot(this.x_vel, this.y_vel)
-
-  //       if (this.y_vel != 0)
-  //         this.y += this.y_vel / Math.hypot(this.x_vel, this.y_vel)
-  //   }
-  // } 
-
-  // render projectile prob move this later
-  // this.updateRenderProjectiles(c);
-
-  // for other player
 
   updatePlayerState(playerData: NetPlayer) {
       this.thought = playerData.connected ? playerData.baaing : 'ded'
@@ -240,21 +188,14 @@ class Player implements RenderableObject {
       this.sleeping = !playerData.connected || playerData.timeSinceLastInput > 10_000
       this.healthpercent = playerData.hp / playerData.maxHp
       this.id = playerData.id
+
+      this.collied = playerData.collied
   }
 
 
   setLocation(x:number, y:number) {
-    // if (!this.is_you) 
-      // if (x < this.x)
-      //   this.shouldFlipX = true
-      // else if (x > this.x) {
-      //   this.shouldFlipX = false
-      // }
-
-
       this.x = x;
       this.y = y;
-    // }
   }
 
   isAsleep (): boolean {

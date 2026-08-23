@@ -1,3 +1,4 @@
+import { Collider } from "@server/collision";
 import z from "zod";
 
 export const playerIdSchema = z.number();
@@ -25,6 +26,7 @@ export const playerSchema = z.object({
   
   maxHp: z.number(),
   lines: z.array(lineSchema),
+  collied: z.boolean()
 });
 export type Player = z.infer<typeof playerSchema>;
 
@@ -71,19 +73,28 @@ export const corpseSchema = z.strictObject({
 export type SerializedCorpse = z.infer<typeof corpseSchema>;
 
 
+const colliderSchema = z.discriminatedUnion('type', [
+  z.object({type:z.literal('box'),x:z.number(),y:z.number(),width:z.number(),height:z.number()}),
+  z.object({type:z.literal('capsule'),x:z.number(),y:z.number(),width:z.number(),height:z.number()}),
+])
+export type SerializedCollider = z.infer<typeof colliderSchema>
+
+
 export const wholeFkingGameState = z.object({
 	players: z.array(playerSchema),
   meatballs: z.array(meatBallSchema),
   explosions: z.array(explosionSchema),
   things: z.array(thingSchema),
   corpses: z.array(corpseSchema),
-  seeds: z.array(seedSchema)
+  seeds: z.array(seedSchema),
+  colliders: z.array(colliderSchema),//.optional(),
   // add to this when you want the client to know more about the game
 });
 export type WholeFkingGameState = z.infer<typeof wholeFkingGameState>;
 
 export interface GameObject {
   shouldDelete: boolean;
+  collider?: Collider
   tick(): void;
   serialize(): unknown;
 }
