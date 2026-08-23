@@ -4,8 +4,11 @@ import { Game } from '@server/game';
 import { Vec2 } from "@common";
 import { Corpse } from './corpse'
 import { Meatball } from './meatball';
+import { BoxCollider } from "@server/collision";
 
 const MAX_HP = 67;
+const LINE_START_AGE = 5_000
+const LINE_MAX_AGE = 10_000
 
 export class Player implements GameObject {
   inputs: Inputs;
@@ -21,13 +24,22 @@ export class Player implements GameObject {
   facingLeft =false
   connected = false;
   lastInputTime = 0;
+  lines: {start:Vec2, end:Vec2,committed?:number}[] = []
   shouldDelete = false
-
+  seedCooldownTicks = 0;
+  collider: BoxCollider;
  
   constructor(game: Game) {
     this.game = game
     this.inputs = { ...defaultInputs };
     this.id = Player.next_id++;
+    this.collider = new BoxCollider(
+      this.position.x,
+      this.position.y-20,
+      30,
+      50,
+      0
+    )
   }
 
   setPosition(x: number, y: number) {
@@ -61,6 +73,7 @@ export class Player implements GameObject {
       timeSinceLastInput:Date.now()- this.lastInputTime,
       hp: this.hp,
       maxHp: MAX_HP,
+      lines: this.lines.map(({start,end,committed}) => ({start,end,age:committed?Math.min(1, Math.max(0, (Date.now() - (committed + LINE_START_AGE)) / LINE_MAX_AGE)) : null})),
     };
   }
 
@@ -82,8 +95,9 @@ export class Player implements GameObject {
         facingLeft: this.facingLeft
       }))
       // TODO: respawn
-      this.position.x += 300
+      this.position.x += 300;
     }
+    this.seedCooldownTicks = Math.max(this.seedCooldownTicks - 1, 0);
   }
   setHp(hp: number) {
     this.hp = hp;

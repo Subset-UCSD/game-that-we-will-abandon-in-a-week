@@ -1,16 +1,10 @@
+import { WebSocket } from "ws";
 import { ClientMessage } from "@common/messages";
 import { SESSION_KEY_NUM_BYTES } from "@common/session";
-import { Player } from "@server/gameobjects/player";
-import { WebSocket } from "ws";
+import { Seed, Corpse, Explosion, StaticThing, Meatball, Player, SEED_COOLDOWN } from "@server/gameobjects";
 import { send } from "./net/send";
-import { WholeFkingGameState, GameObject } from "@common/game";
-import { Meatball } from "./gameobjects/meatball";
-import { Explosion } from "@server/gameobjects/explosion";
-import { StaticThing } from "./gameobjects/static-thing";
-import { Corpse } from "./gameobjects/corpse";
-import { subVec, vecLength } from "@common";
+import { subVec, vecLength, WholeFkingGameState, GameObject, vecLengthSquared, vec2 } from "@common";
 import { Collider } from "./collision";
-import { Seed } from "./gameobjects/seed";
 
 // ALL OF THE GAME LOGIC
 export class Game {
@@ -31,15 +25,29 @@ export class Game {
     // process all of the inputs
     // tick the game world
 
-    for (const collider of this.colliders) {
-      for (const otherColider of this.colliders) {
-        // if (collider.collide()) {
-        //   //
-        // }
+    this.handlePlayerInputs();
+
+    //TEMP
+    for (const [id1, player1] of this.players.entries()) {
+      for (const [id2, player2] of this.players.entries()) {
+        if (id1 == id2)
+          continue
+          const mtv = player1.collider.collide(player2.collider)
+          if (mtv.x != 0 && mtv.y != 0)
+            console.log('mtv',mtv)
+            player1.velocity = vec2(0,0)
       }
     }
 
-    this.handlePlayerInputs();
+    // for (const collider of this.colliders) {
+    //   for (const otherColider of this.colliders) {
+    //     // if (collider.collide()) {
+    //     //   //
+    //     // }
+    //   }
+    // }
+
+    
 
     for (const meatball of this.gameObjects) {
       meatball.tick();
@@ -93,7 +101,7 @@ export class Game {
       corpses: this.gameObjects
         .filter((o) => o instanceof Corpse)
         .map((ex) => ex.serialize()),
-
+      seeds: this.gameObjects.filter(x=>x instanceof Seed).map(x=>x.serialize())
     };
   }
 
@@ -177,6 +185,34 @@ export class Game {
         player.velocity.x = 0
       }
 
+      const last = player.lines.at(-1)
+      if (player.inputs.paint) {
+        let wipLine
+        const point = {
+          // this is the opposite of the meatball spawn position below
+          x: player.position.x + (player.facingLeft ? 1 : -1) * 15,
+          y: player.position.y,
+        }
+        if (!last || last.committed) {
+          wipLine = {            start: point, end: point,
+          }
+          player.lines.push(wipLine)
+        } else {
+          wipLine = last
+        }
+        const proposedNewLine = {...wipLine,end:point}
+        const MAX_LEN = 20
+        // split new line segment when it would get too long
+        if (vecLengthSquared(subVec(proposedNewLine.start, proposedNewLine.end)) > MAX_LEN * MAX_LEN) {
+          wipLine.committed = Date.now()
+          player.lines.push({start:wipLine.end, end: point})
+        } else {
+          wipLine.end = point
+        }
+      } else if (last && !last.committed) {
+        // commit challenge refernece??
+        last.committed = Date.now()
+      }
       if (player.inputs.baa) {
         if (!player.wasBaaing) {
 
@@ -200,7 +236,7 @@ export class Game {
         player.thought = ''
         player.wasBaaing = false
       }
-      if (player.inputs.seed) {
+      if (player.inputs.seed && player.seedCooldownTicks <= 0) {
         this.addGameObject(new Seed({
           growthStage: 0,
           x: player.position.x,
@@ -214,9 +250,10 @@ export class Game {
   handleDisconnect(ws: WebSocket) {
     // bro idk
     const sessionId = this.idForConnection.get(ws);
-    if (!sessionId) return;
+    if (!sessionId) return console.log('someone left but we dont know who they are');
     const player = this.players.get(sessionId);
-    if (!player) return;
+    if (!player) return console.log('someone left but they dont have a player for some reason', sessionId.slice(0, 8));
     player.connected = false;
+          console.log("bye", sessionId.slice(0, 8));
   }
 }

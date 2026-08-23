@@ -2,6 +2,15 @@ import z from "zod";
 
 export const playerIdSchema = z.number();
 
+const vec2Schema = z.object({ x: z.number(), y: z.number() })
+
+const lineSchema = z.object({
+  start: vec2Schema,
+  end: vec2Schema,
+  age: z.number().nullable(),
+})
+export type Line = z.infer<typeof lineSchema>
+
 export const playerSchema = z.object({
   id: playerIdSchema,
   x: z.number(),
@@ -15,6 +24,7 @@ export const playerSchema = z.object({
   hp: z.number(),
   
   maxHp: z.number(),
+  lines: z.array(lineSchema),
 });
 export type Player = z.infer<typeof playerSchema>;
 
@@ -67,6 +77,7 @@ export const wholeFkingGameState = z.object({
   explosions: z.array(explosionSchema),
   things: z.array(thingSchema),
   corpses: z.array(corpseSchema),
+  seeds: z.array(seedSchema)
   // add to this when you want the client to know more about the game
 });
 export type WholeFkingGameState = z.infer<typeof wholeFkingGameState>;

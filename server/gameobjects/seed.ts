@@ -4,7 +4,7 @@ export type SeedProps = Omit<SeedType, "id">;
 
 const AVG_GROW_TICKS = 1000;
 const AVG_GROW_DEVIATION = 200;
-const SEED_COOLDOWN = 500;
+export const SEED_COOLDOWN = 500;
 
 let nextId = 0;
 export class Seed implements GameObject {
