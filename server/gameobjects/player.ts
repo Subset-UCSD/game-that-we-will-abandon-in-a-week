@@ -1,7 +1,7 @@
 import { defaultInputs, Inputs } from "@common/input";
 import { Player as NetPlayer,GameObject } from "@common/game";
 import { Game } from '@server/game';
-import { Vec2 } from "@common";
+import { subVec, Vec2 } from "@common";
 import { Corpse } from './corpse'
 import { Meatball } from './meatball';
 import { BoxCollider } from "@server/collision";
@@ -38,7 +38,7 @@ export class Player implements GameObject {
       this.position.x,
       this.position.y-20,
       30,
-      50,
+      30,
       0
     )
   }
@@ -102,7 +102,7 @@ export class Player implements GameObject {
       this.position={ x: (Math.random()-0.5) * 1000, y: (Math.random()-0.5) * 1000 }
     }
     this.seedCooldownTicks = Math.max(this.seedCooldownTicks - 1, 0);
-    this.collider.updateLocation(this.position)
+    this.collider.updateLocation(subVec(this.position, {x:0,y:10}))
   }
   setHp(hp: number) {
     this.hp = hp;

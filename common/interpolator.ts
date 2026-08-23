@@ -11,6 +11,12 @@ import { SERVER_GAME_TICK } from "@common"
  */
 export const lerp = (a: number, b: number, progress: number) => a + (b - a) * progress
 
+export const lerpAngle = (a: number, b: number, progress: number) => {
+  a = (a % (2 * Math.PI) + a) % (2 * Math.PI)
+  b = (b % (2 * Math.PI) + b) % (2 * Math.PI)
+  // TODO
+}
+
 /**
  * this will delay showing the current value to the user and instead spend the
  * next `SERVER_GAME_TICK` smoothly animating from the current value to the new

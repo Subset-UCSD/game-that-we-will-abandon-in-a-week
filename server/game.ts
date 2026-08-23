@@ -63,6 +63,10 @@ export class Game {
         if (vecLength(subVec(player.getPosition(), meatball.publicState)) < explosion.radius) {
           player.setHp(player.getHp() - EXPLOSION_DAMAGE);
         }
+        player.lines = player.lines.filter(x => 
+          vecLength(subVec(x.end, meatball.publicState)) >= explosion.radius ||
+          vecLength(subVec(x.start, meatball.publicState)) >= explosion.radius
+        );
       }
     }
     this.gameObjects = this.gameObjects.filter((mb) => !mb.shouldDelete);
