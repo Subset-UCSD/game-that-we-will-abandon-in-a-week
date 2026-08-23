@@ -12,7 +12,7 @@ export class ClientExplosion implements RenderableObject {
     this.#explosion = explosion
   }
 
-  get y ( ) { return this.#explosion.y}
+  get index( ) { return this.#explosion.y}
   get shouldDie () { return Date.now() - this.#created >= EXPLOSION_ANIM_MAX_AGE }
   get progress () { return Math.min(1, (Date.now() - this.#created) / EXPLOSION_ANIM_MAX_AGE) }
 

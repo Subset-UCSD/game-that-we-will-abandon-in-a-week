@@ -21,6 +21,8 @@ function $message<Type extends string, Payload extends z.ZodType>(name: Type, va
 export const inputMessage = $message("input", inputSchema);
 export type InputMessage = z.infer<typeof inputMessage>;
 
+export const pleaseSendMeFullGameStateMessage = $message("please-send-full-game-state", z.null());
+
 export const joinMessage = $message("join", z.object({
 	sessionId: z.string().optional()
 }));
@@ -28,14 +30,27 @@ export type JoinMessage = z.infer<typeof joinMessage>;
 
 export const clientMessage = z.discriminatedUnion('type',[
 	inputMessage,
+	pleaseSendMeFullGameStateMessage,
 	joinMessage
 ]);
 export type ClientMessage = z.infer<typeof clientMessage>;
 
 // ================== BEGIN SERVER-SENT MESSAGE SCHEMAS ==================================
 
-export const wholeFkingGameStateMessage = $message("game-state", wholeFkingGameState);
+export const wholeFkingGameStateMessage = $message("game-state", z.object({
+	gameState: wholeFkingGameState,
+	versionId: z.string(),
+}));
 export type WholeFkingGameStateMessage = z.infer<typeof wholeFkingGameStateMessage>;
+
+
+export const partialFkingGameStateMessage = $message("partial-game-state", z.object({
+	gameState: z.unknown().optional(),
+	keyState:z.string().array().optional(),
+	expectedPreviousVersionId: z.string(),
+	newVersionId: z.string(),
+}));
+export type PartialFkingGameStateMessage = z.infer<typeof partialFkingGameStateMessage>;
 
 export const joinResponse = $message("join-response", z.object({
 	sessionId: z.string(),
@@ -45,6 +60,7 @@ export type JoinResponse = z.infer<typeof joinResponse>;
 
 export const serverMessage = z.discriminatedUnion('type',[
 	wholeFkingGameStateMessage,
+	partialFkingGameStateMessage,
 	joinResponse
 ]);
 export type ServerMessage = z.infer<typeof serverMessage>;

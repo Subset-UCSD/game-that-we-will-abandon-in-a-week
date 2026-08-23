@@ -1,19 +1,17 @@
-import { ClientMessage, serverMessage } from "@common";
+import { ClientMessage, serverMessage, wholeFkingGameState, WholeFkingGameState } from "@common";
 import { Game } from '@client/game'
+import { applyDiffPayload } from "@common/json-optimizer";
 /** set by esbuild.ts */
 declare const IS_SERVING: boolean
 
 const SESSION_KEY = "session";
-
-const safeToDedope = new Set<ClientMessage['type']>([
-	'input'
-]);
 
 class Connection {
 	// WE use ! here because ws is definitelyt defined in this.reconnect but TS is DUMB and thinks it's not
 	private ws!: WebSocket;
 	private queue: ClientMessage[] = [];
 	private game;
+	private lastReceivedGameState?: { gameState: WholeFkingGameState, versionId: string }
 
 	private reconnectAttempts = 0;
 	constructor(game: Game) {
@@ -44,7 +42,27 @@ class Connection {
 				break
 			}
 			case 'game-state': {
-				this.game.updateGameState(message.value)
+				this.lastReceivedGameState = message.value
+				this.game.updateGameState(message.value.gameState)
+				break
+			}
+			case 'partial-game-state': {
+				if (message.value.expectedPreviousVersionId === this.lastReceivedGameState?.versionId) {
+					const appliedDiff = applyDiffPayload(this.lastReceivedGameState.gameState, message.value.gameState, message.value.keyState??[])
+					const result = wholeFkingGameState.safeParse(appliedDiff)
+					if (result.success) {
+						this.lastReceivedGameState = { gameState: result.data, versionId: message.value.newVersionId }
+						this.game.updateGameState(result.data)
+						break
+					} 
+					console.error('applying schema resulted in weird game state',appliedDiff, result.error, );
+				} else {
+					console.error('unexpected prev version id', {
+						expected: message.value.expectedPreviousVersionId,
+						iHave: this.lastReceivedGameState,
+					});
+				}
+				this.send('please-send-full-game-state', null)
 				break
 			}
 			default: {

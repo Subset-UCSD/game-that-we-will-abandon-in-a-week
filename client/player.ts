@@ -1,206 +1,101 @@
-import type { Canvas } from './render'
-import { RenderableObject } from './render/render'
-import { Inputs } from "@common/input";
-import { Player as NetPlayer } from "@common/game";
-import { loadFrames } from './render';
+// import type { Canvas } from './render'
+// import { RenderableObject } from './render/render'
+// import { Inputs } from "@common/input";
+// import { Player as NetPlayer } from "@common/game";
+// import { loadFrames } from './render';
 
-const {base, walking, think, sleep} = await loadFrames({
-	base: ["./assets/sheep.png", "./assets/sheep2.png"],
-	walking: ["./assets/sheep-walk1.png", "./assets/sheep-walk2.png"],
-	think: ["./assets/think1.png", "./assets/think2.png"],
-	sleep: ["./assets/sheep-sleep1.png", "./assets/sheep-sleep2.png"]
-} as const);
+// class Player {
+//   is_you: boolean;
+//   x: number = 0;
+//   y: number = 0;
+//   x_vel: number = 0;
+//   y_vel: number = 0;
+// id = 0
+//   collied = false
 
-// pew pew
-type Projectile = {
-  x: number;
-  y: number;
-  xVelocity: number;
-  yVelocity: number;
-  remainingFrames: number;
-}
+//   private max_speed: number = 2;
+//   private friction: number = 0.1;
+//   private shouldFlipX: boolean = false;
+//   private thought: string = ''
+//   private projectiles: Projectile[] = [];
+//   private sleeping = false
+//   private healthpercent = 1
 
-
-    export const SHEEP_WIDTH = 60
-
-class Player implements RenderableObject {
-  is_you: boolean;
-  x: number = 0;
-  y: number = 0;
-  x_vel: number = 0;
-  y_vel: number = 0;
-  id = 0
-  collied = false
-
-  private max_speed: number = 2;
-  private friction: number = 0.1;
-  private shouldFlipX: boolean = false;
-  private thought: string = ''
-  private projectiles: Projectile[] = [];
-  private sleeping = false
-  private healthpercent = 1
-
-  constructor(is_you: boolean) {
-    this.is_you = is_you;
-  }
+//   constructor(is_you: boolean) {
+//     this.is_you = is_you;
+//   }
 
  
-  fireAt(targetX: number, targetY: number): void {
-    const startX = this.x;
+//   fireAt(targetX: number, targetY: number): void {
+//     const startX = this.x;
 
-    const startY = this.y + 50;
+//     const startY = this.y + 50;
 
-    const deltaX = targetX - startX;
-    const deltaY = targetY - startY;
-    const distance = Math.hypot(deltaX, deltaY);
+//     const deltaX = targetX - startX;
+//     const deltaY = targetY - startY;
+//     const distance = Math.hypot(deltaX, deltaY);
 
-    if (distance ===0 ){
-      return;
-    }
+//     if (distance ===0 ){
+//       return;
+//     }
 
-    const projectileSpeed = 0;
+//     const projectileSpeed = 0;
 
-    // push projectile object
-    this.projectiles.push(
-      {
-        x: startX,
-        y: startY,
+//     // push projectile object
+//     this.projectiles.push(
+//       {
+//         x: startX,
+//         y: startY,
 
-        // normalizing by distance so diagonal shots move at same speed as horiz/vert
-        xVelocity:deltaX / distance * projectileSpeed,
-        yVelocity: deltaY / distance * projectileSpeed,
-        remainingFrames: 180,
-      }
-    )
-  }
-  
-  private updateRenderProjectiles(context: CanvasRenderingContext2D): void{
-    context.save();
-    context.fillStyle = "#f5d442"; //yelo
+//         // normalizing by distance so diagonal shots move at same speed as horiz/vert
+//         xVelocity:deltaX / distance * projectileSpeed,
+//         yVelocity: deltaY / distance * projectileSpeed,
+//         remainingFrames: 180,
+//       }
+//     )
+//   }
+//   handleInput(inputs: Inputs) {
+//     if (inputs.left) {
+//       // this.x_vel = -this.max_speed
+//       this.shouldFlipX = true;
+//     }
+//     else if (inputs.right) {
+//       // this.x_vel = this.max_speed
+//        this.shouldFlipX = false;
+//     } else {
+//       this.x_vel = 0
+//     }
 
-    for (let index = this.projectiles.length - 1; index >= 0; index--){
-      const projectile = this.projectiles[index];
+//     if (inputs.baa) {
+//       if (!this.thought) {
+//         const thoughts = ['baa','hungy','beh']
+//         this.thought = thoughts[Math.floor(Math.random() * thoughts.length)]
+//       }
+//     } else {
+//       this.thought = ''
+//     }
+//   }
+//   updatePlayerState(playerData: NetPlayer) {
+//       this.thought = playerData.connected ? playerData.baaing : 'ded'
+//       this.setLocation(playerData.x, playerData.y);
+//       this.shouldFlipX = playerData.facingLeft
+//       this.x_vel = playerData.x_vel
+//       this.y_vel = playerData.y_vel
 
-      projectile.x += projectile.xVelocity;
-      projectile.y += projectile.yVelocity;
-      projectile.remainingFrames--;
+//       this.sleeping = !playerData.connected || playerData.timeSinceLastInput > 10_000
+//       this.healthpercent = playerData.hp / playerData.maxHp
+//       this.id = playerData.id
 
-      if (projectile.remainingFrames <= 0) {
-        this.projectiles.splice(index, 1);
-        continue;
-      }
+//       this.collied = playerData.collied
+//   }
+//   setLocation(x:number, y:number) {
+//       this.x = x;
+//       this.y = y;
+//   }
 
-      context.beginPath();
-      context.arc(
-        projectile.x,
-        projectile.y,
-        5,
-        0,
-        Math.PI * 2,
-      );
-      context.fill();
-    }
+//   isAsleep (): boolean {
+//     return this.sleeping
+//   }
+// }
 
-    context.restore();
-  }
-
-  renderShadow({c}:Canvas) {
-        c.moveTo(this.x + SHEEP_WIDTH * 0.4, this.y )
-        c.ellipse(this.x, this.y, SHEEP_WIDTH * 0.4, SHEEP_WIDTH * 0.08, 0, 0, Math.PI*2)
-  }
-
-  render({c,width}: Canvas): void {
-    // this.movement() 
-    /** in milliseconds */
-    const isMoving = Math.hypot(this.x_vel, this.y_vel) > 0.1
-    const TIME_PER_FRAME = (this.sleeping ? 770 : isMoving ? 50 : 500) + (this.id * Math.PI) % 50
-    const framesList =this.sleeping ?  sleep : isMoving ? walking: base
-    const frame = framesList[Math.floor(Date.now() / TIME_PER_FRAME) % framesList.length]
-    // changed to be in handleInput, so we keep old direction if we stop moving
-    // const shouldFlipX = this.x_vel < 0
-
-
-    const TIME_PER_FRAME_THOUGHT = 600
-    const frameThought = think[Math.floor(Date.now() / (TIME_PER_FRAME_THOUGHT + (this.id * Math.PI) % 50)) % think.length]
-
-    
-    
-    const THOUGHT_WIDTH = 60
-    const THOUGHT_HEIGHT = 50
-      if (this.shouldFlipX) {
-        c.save()
-        c.scale(-1, 1)
-        c.drawImage(frame, -(this.x )- SHEEP_WIDTH/2, this.y-42, SHEEP_WIDTH, 50);
-        c.restore()
-
-      } else {
-        c.drawImage(frame, this.x - SHEEP_WIDTH/2, this.y-42, SHEEP_WIDTH, 50);
-
-      }
-
-      if (this.healthpercent < 1){
-        c.fillStyle = '#ff025f'
-        c.fillRect(this.x - 20, this.y-10-42, 40*(this.healthpercent), 5)
-        c.strokeStyle = 'black'
-        c.strokeRect(this.x - 20.5, this.y-10.8-42, 41, 6)
-      }
-
-      if (this.thought) {
-        c.drawImage(frameThought, this.x + SHEEP_WIDTH/2, this.y-THOUGHT_HEIGHT-42, THOUGHT_WIDTH, THOUGHT_HEIGHT);
-        c.fillStyle='black'
-        c.fillText(this.thought, this.x + SHEEP_WIDTH/2 + 20, this.y - 25-42)
-      }    
-    
-    c.strokeStyle = 'green'
-    c.rect(this.x - SHEEP_WIDTH/2, this.y-42, SHEEP_WIDTH, 50)
-  }
-
-  handleInput(inputs: Inputs) {
-    if (inputs.left) {
-      // this.x_vel = -this.max_speed
-      this.shouldFlipX = true;
-    }
-    else if (inputs.right) {
-      // this.x_vel = this.max_speed
-       this.shouldFlipX = false;
-    } else {
-      this.x_vel = 0
-    }
-
-    if (inputs.baa) {
-      if (!this.thought) {
-        const thoughts = ['baa','hungy','beh']
-        this.thought = thoughts[Math.floor(Math.random() * thoughts.length)]
-      }
-    } else {
-      this.thought = ''
-    }
-  }
-
-
-  updatePlayerState(playerData: NetPlayer) {
-      this.thought = playerData.connected ? playerData.baaing : 'ded'
-      this.setLocation(playerData.x, playerData.y);
-      this.shouldFlipX = playerData.facingLeft
-      this.x_vel = playerData.x_vel
-      this.y_vel = playerData.y_vel
-
-      this.sleeping = !playerData.connected || playerData.timeSinceLastInput > 10_000
-      this.healthpercent = playerData.hp / playerData.maxHp
-      this.id = playerData.id
-
-      this.collied = playerData.collied
-  }
-
-
-  setLocation(x:number, y:number) {
-      this.x = x;
-      this.y = y;
-  }
-
-  isAsleep (): boolean {
-    return this.sleeping
-  }
-}
-
-export {Player};
+// export {Player};

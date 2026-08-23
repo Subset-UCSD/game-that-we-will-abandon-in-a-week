@@ -1,47 +1,52 @@
-import { Player } from "./player";
+import { Player, SLEEP_TIME } from "@client/render/player";
 import { Arena } from "./render/arena";
 import { Room } from "./render/room";
+import { Connection } from './net/connection'
 import { InputListener } from "./input-listener";
-import { Connection } from './connection'
 import { addVec, isVecEq, SERVER_GAME_TICK } from "@common";
 import { defaultInputs, keymap } from "@common/input";
-import { WholeFkingGameState, MeatBall, SerializedThing, Line, SerializedCollider } from '@common/game'
+import { WholeFkingGameState, MeatBall, SerializedThing, Line, SerializedCollider, Player as NetPlayer } from '@common/game'
 import { ClientSeed, ClientExplosion, ClientCorpse, ThingRenderer, render, ClientMeatball, Canvas } from "./render"
+import { audio, PlaySoundOptions } from '@client/audio/index';
 
+audio.unlockOnFirstInteraction();
+audio.preload({
+	footstep: [
+		"./assets/sounds/Footstep1.wav",
+		"./assets/sounds/Footstep2.wav",
+		"./assets/sounds/Footstep3.wav",
+		"./assets/sounds/Footstep4.wav"
+	],
+	baaa: [
+		"./assets/sounds/baaa1.wav",
+		"./assets/sounds/baaa2.wav",
+		"./assets/sounds/baaa3.wav",
+		"./assets/sounds/baaa4.wav"
+	],
+});
 
 export class Game {
 	private conn;
 	private inputListener;
-	private player;
-	private allPlayers: Map<number, Player> = new Map();
+	private players: Map<number, Player> = new Map();
 	private meatballs = new Map<number, ClientMeatball>()
 	private corpses = new Map<number, ClientCorpse>()
 	private explosions = new Map<number, ClientExplosion>()
 	private seeds = new Map<number, ClientSeed>();
 	private arena;
-	private objects;
+	// private objects;
 	private room;
 	private __debugText: string = ''
 	private id = -1;
 	private things: SerializedThing[] = []
 	private lines: Line[] = []
 	private debugColldiers: SerializedCollider[] =[ ]
+	private currPlayerState?: NetPlayer;
 
 	private camera = { x: 0, y: 0, scale: 1 }
 
-	// private gameState:WholeFkingGameState = {
-	// 	players:[]
-	// };
-	// your game local state
-	// orchestrates rendering
-	// orchestrates storing the local game world
-	// exposes functions that can be called in response to server messages
 	constructor() {
-
-		// need to handle this differently later
-		this.player = new Player(true)
 		this.arena = new Arena(1200, 720); // small room
-		this.objects = [this.arena, this.player];
 		this.room = new Room(); // render players
 
 
@@ -53,35 +58,30 @@ export class Game {
 			handleInputs: (inputs) => {
 				this.conn.send('input', inputs);
 			},
-			period: SERVER_GAME_TICK,
+			// period: SERVER_GAME_TICK,
 		});
 		this.inputListener.listen();
 	}
 
 	updateGameState(gameState: WholeFkingGameState) {
-		// this.gameState = gameState
-		// bro is a dunder fan (double underscore)
+		// Instantiate objects for newly appearing updates from the server
 		this.__debugText = JSON.stringify(gameState, null, 2)
-		// console.log('gamer state',gameState)
-		// TODO: assign things from gameState into Game properties
-
 		for (const playerUpdate of gameState.players.values()) {
-			if (this.allPlayers.has(playerUpdate.id)) {
-				this.allPlayers.get(playerUpdate.id)?.updatePlayerState(playerUpdate)
+			if (this.players.has(playerUpdate.id)) {
+				this.players.get(playerUpdate.id)?.update(playerUpdate);
+			} else {
+				const newPlayer = new Player(playerUpdate);
+				this.players.set(playerUpdate.id, newPlayer)
 			}
-			else if (playerUpdate.id != this.id) {
-				const newPlayer = new Player(false)
-				newPlayer.updatePlayerState(playerUpdate)
-				this.allPlayers.set(playerUpdate.id, newPlayer)
-			}
-			else {
-				this.player.updatePlayerState(playerUpdate)
-				// this.allPlayers.set(playerUpdate.id, this.player)
+			
+			if (playerUpdate.id === this.id) {
+				this.currPlayerState = playerUpdate
 			}
 		}
 
 		const newMeatballs = new Map<number, ClientMeatball>()
 		for (const meatball of gameState.meatballs) {
+			if (!this.meatballs.get(meatball.id)) this.playAudioAtPosition('baaa', meatball.x, meatball.y);
 			let existing = this.meatballs.get(meatball.id) ?? new ClientMeatball()
 			existing.state = meatball
 			newMeatballs.set(meatball.id, existing)
@@ -116,15 +116,34 @@ export class Game {
 		this.id = id
 	}
 
+	// abstract playing a sound at a position in the world, with panning and volume based on distance from player
+	playAudioAtPosition(name: string, x: number, y: number, detectableDistance: number = 500,  playSoundOptions?: PlaySoundOptions) {
+		// get x position of item on screen for audio panning
+		const pan = (x - this.camera.x) / (this.arena.width / 2);
+		// get distance of item from player for audio volume
+		const distance = Math.sqrt((x - this.camera.x) ** 2 + (y - this.camera.y) ** 2);
+		const volume = Math.max(0, 1 - distance / detectableDistance) * (playSoundOptions?.volume ?? 1);
+		audio.play(name, { ...playSoundOptions, pan, volume });
+	}
+
+	// callback function to play a footstep sound inside Player class
+	footstepSoundCallback = (x: number, y: number) => {
+		this.playAudioAtPosition('footstep', x, y);
+	}
 
 	// width, height = screen size (useful for centering things)
 	render(canvas: Canvas) {
-		const targetZoom = this.player.isAsleep() ? 5 : 1;
-		this.camera.x += (this.player.x - this.camera.x) * 0.2;
-		this.camera.y += (this.player.y - this.camera.y) * 0.2;
-		this.camera.scale += (targetZoom - this.camera.scale) * 0.2;
+		// if (this.id == -1) return
+		
+		const player = this.currPlayerState
+		if (player ) {
+			const targetZoom = player.timeSinceLastInput > SLEEP_TIME ? 5 : 1;
+			this.camera.x += (player.x - this.camera.x) * 0.2;
+			this.camera.y += (player.y - this.camera.y) * 0.2;
+			this.camera.scale += (targetZoom - this.camera.scale) * 0.2;
+		}
 
-		const screenShake = this.explosions.values().reduce((cum, curr) => cum + (1 - Math.min(1, curr.progress * 2) ** 0.3) * 5, 0)
+		const screenShake = this.explosions.values().reduce((cum, curr) => cum + (1 - Math.min(1, curr.progress * 2) ** 0.3) * 5, 0) ?? 0
 
 		const { c } = canvas;
 		c.save();
@@ -163,13 +182,11 @@ export class Game {
 		this.paintLines(c);
 
 		render(canvas, [
-			this.player,
-			...this.allPlayers.values(),
+			...this.players.values(),
 			...this.meatballs.values(),
 			...this.corpses.values(),
 			...this.things.values().map(thing => new ThingRenderer(thing)),
-			...this.explosions.values(),
-			// ...this. //what is this???
+			...this.explosions.values()
 		])
 
 		c.strokeStyle = 'red'

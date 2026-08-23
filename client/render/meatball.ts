@@ -11,7 +11,7 @@ const frames = await loadFrames([
 export class ClientMeatball implements RenderableObject {
     state?: MeatBall
 
-    get y() { return this.state?.y ?? 0 }
+    get index() { return this.state?.y ?? 0 }
 
     renderShadow({ c }: Canvas): void {
         if (!this.state) return

@@ -22,8 +22,8 @@ export const playerSchema = z.object({
   baaing: z.string(),
   connected: z.boolean(),
   timeSinceLastInput:z.number(),
-  hp: z.number(),
-  
+  healthpercent: z.number(),
+  thought: z.string(),
   maxHp: z.number(),
   lines: z.array(lineSchema),
   collied: z.boolean()

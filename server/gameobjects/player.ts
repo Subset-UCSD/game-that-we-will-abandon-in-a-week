@@ -12,7 +12,7 @@ const LINE_MAX_AGE = 10_000
 
 export class Player implements GameObject {
   inputs: Inputs;
-  max_speed: number = 100;
+  max_speed: number = 5;
   position: Vec2 = { x: (Math.random()-0.5) * 1000, y: (Math.random()-0.5) * 1000 };
   velocity: Vec2 = { x: 0, y: 0 };
   id;
@@ -71,11 +71,13 @@ export class Player implements GameObject {
     return {...this.position, x_vel: this.velocity.x, y_vel: this.velocity.y, id: this.id, baaing:this.thought,
       facingLeft:this.facingLeft,
       connected: this.connected,
-      timeSinceLastInput:Date.now()- this.lastInputTime,
-      hp: this.hp,
+      // round down to nearest second because client doesnt need that much granularity
+      timeSinceLastInput:Math.floor((Date.now()- this.lastInputTime) / 1000) * 1000,
+      healthpercent: this.hp,
       maxHp: MAX_HP,
       lines: this.lines.map(({start,end,committed}) => ({start,end,age:committed?Math.min(1, Math.max(0, (Date.now() - (committed + LINE_START_AGE)) / LINE_MAX_AGE)) : null})),
-      collied: this.collied
+      collied: this.collied,
+      thought: this.thought
     };
   }
 
@@ -85,10 +87,10 @@ export class Player implements GameObject {
 
   tick() {
     if (this.velocity.x != 0)
-      this.position.x += this.velocity.x  / Math.hypot(this.velocity.x, this.velocity.y)
+      this.position.x += (this.velocity.x  / Math.hypot(this.velocity.x, this.velocity.y)) * this.max_speed
 
     if (this.velocity.y != 0)
-      this.position.y += this.velocity.y / Math.hypot(this.velocity.x , this.velocity.y)
+      this.position.y += (this.velocity.y / Math.hypot(this.velocity.x , this.velocity.y)) * this.max_speed
 
     if (this.hp <= 0) {
       this.hp = MAX_HP

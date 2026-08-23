@@ -2,6 +2,12 @@
 
 // AudioContext = new AudioContext();
 
+export type PlaySoundOptions = {
+	volume?: number;       // 0 to 1
+	pan?: number;          // -1 to 1
+	playbackRate?: number;
+};
+
 const MUTE_STORAGE_KEY = "sound-muted";
 
 // preload sound effects and handle sound playing
@@ -9,7 +15,7 @@ export class AudioManager {
     private context?: AudioContext;
     private masterGain?: GainNode;
     // preloaded sounds
-    private buffers = new Map<string, AudioBuffer>();
+    private buffers = new Map<string, AudioBuffer[]>();
 
     // sound controls
     private muted = localStorage.getItem(MUTE_STORAGE_KEY) === 'true';
@@ -41,24 +47,90 @@ export class AudioManager {
     }
 
     unlockOnFirstInteraction() {
-        // TODO: remove the event listeners
         const unlock = () => {
             void this.unlock();
+
+            removeEventListener("pointerdown", unlock);
+            removeEventListener("keydown", unlock);
         };
 
-        // TODO: add event listeners
+        document.addEventListener("pointerdown", unlock);
+		document.addEventListener("keydown", unlock);
     }
 
     // fetch sounds to buffers
-    async preload(sounds: Record<string, string>) {
+    async preload(sounds: Record<string, string | string[]>) {
         const context = this.getContext();
 
-        for (const [name, url] of Object.entries(sounds)) {
-            const response = await fetch(url);
-            const arrayBuffer = await response.arrayBuffer();
-            const audioBuffer = await context.decodeAudioData(arrayBuffer);
-            this.buffers.set(name, audioBuffer);
-        }
+        // fetch all sounds in parallel
+        await Promise.all(
+            Object.entries(sounds).map(async ([name, source]) => {
+                const urls = Array.isArray(source) ? source : [source];
+
+                // i love parallelization
+                const buffers = await Promise.all(
+                    urls.map(async (url) => {
+                        const response = await fetch(url);
+
+                        if (!response.ok) {
+                            console.error(`Failed to load sound ${name} from ${url}`);
+                        }
+
+                        const arrayBuffer = await response.arrayBuffer();
+                        const audioBuffer = await context.decodeAudioData(arrayBuffer);
+                        return audioBuffer;
+                    })
+                );
+
+                this.buffers.set(name, buffers);
+            })
+        );
     }
 
+    play(name: string, options: PlaySoundOptions = {}) {
+        // assume that PlaySoundOptions has valid values if provided, eg. panner is between -1 and 1
+        const context = this.getContext();
+        const variations = this.buffers.get(name);
+        if (!variations?.length || context.state !== 'running') return;
+
+        const buffer = variations[Math.floor(Math.random() * variations.length)];
+
+        const source = context.createBufferSource();
+        const gain = context.createGain();
+        const panner = context.createStereoPanner();
+
+        source.buffer = buffer;
+        source.playbackRate.value = options.playbackRate ?? 1;
+        gain.gain.value = options.volume ?? 1;
+        panner.pan.value = options.pan ?? 0;
+
+        source.connect(panner);
+        panner.connect(gain);
+        gain.connect(this.masterGain!);
+
+        source.start();
+    }
+
+    setMuted(muted: boolean) {
+        this.muted = muted;
+        localStorage.setItem(MUTE_STORAGE_KEY, String(muted));
+        this.updateMasterVolume();
+    }
+
+    // im imagining a button that toggles the muted state
+    toggleMuted() {
+        this.setMuted(!this.muted);
+    }
+
+    // for UI
+    isMuted() {
+        return this.muted;
+    }
+
+    setVolume(volume: number) {
+        this.volume = Math.max(0, Math.min(1, volume));
+        this.updateMasterVolume();
+    }
 }
+
+export const audio = new AudioManager();

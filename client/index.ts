@@ -1,10 +1,9 @@
 import { defaultInputs, keymap } from "@common/input";
 import { InputListener} from "./input-listener";
 import { SERVER_GAME_TICK } from "@common";
-import {Connection} from './connection'
+import {Connection} from './net/connection'
 import {Game} from './game'
 import {Canvas} from './render'
-import {audio} from './audio'
 
 using canvas = new Canvas()
 const c = canvas.context

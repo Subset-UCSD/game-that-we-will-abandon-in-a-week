@@ -51,7 +51,7 @@ const resolved = new Map(await Promise.all(thingsToRender.entries().map(async ([
 export class BasicRenderer<T extends {id:number;x:number;y:number}>  implements RenderableObject {
   renderType: Renderable
   thing: T
-  get y () { return this.thing.y }
+  get index () { return this.thing.y }
 
   constructor (renderType: Renderable, thing: T) {
     this.renderType = renderType
@@ -64,7 +64,7 @@ export class BasicRenderer<T extends {id:number;x:number;y:number}>  implements 
 
     const {frames,timePerFrame=1000,imageSize,scale=1,offsetY=0} = rendered
     const frame = frames[Math.floor(Date.now() / (timePerFrame + (this.thing.id * Math.PI) % 50)) % frames.length]
-     c.drawImage(frame, this.thing.x - imageSize.width * scale/2, this.y-imageSize.height*scale + offsetY*scale, imageSize.width * scale, imageSize.height*scale);
+     c.drawImage(frame, this.thing.x - imageSize.width * scale/2, this.index-imageSize.height*scale + offsetY*scale, imageSize.width * scale, imageSize.height*scale);
   }
 
 

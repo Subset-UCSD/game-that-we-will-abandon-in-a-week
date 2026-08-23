@@ -1,15 +1,16 @@
 import { WebSocket } from "ws";
-import { ClientMessage } from "@common/messages";
+import { ClientMessage, PartialFkingGameStateMessage } from "@common/messages";
 import { SESSION_KEY_NUM_BYTES } from "@common/session";
 import { Seed, Corpse, Explosion, StaticThing, Meatball, Player, SEED_COOLDOWN } from "@server/gameobjects";
 import { send } from "./net/send";
 import { subVec, vecLength, WholeFkingGameState, GameObject, vecLengthSquared, vec2 } from "@common";
 import { Collider } from "./collision";
+import { generateDiffPayload } from "@common/json-optimizer";
 
 // ALL OF THE GAME LOGIC
 export class Game {
   private players: Map<string, Player> = new Map();
-  private connections: Map<string, WebSocket> = new Map();
+  private connections: Map<string, { socket: WebSocket, lastSentGameStateVersionId?: string }> = new Map();
   private idForConnection: Map<WebSocket, string> = new Map();
   private joinedSockets: Set<WebSocket> = new Set();
   private gameObjects: GameObject[] = [
@@ -18,6 +19,7 @@ export class Game {
     new StaticThing({ type: 'techbro', x: -50, y: -120 }),
   ];
   private colliders: Collider[] = [];
+  private lastSentGameState?: { gameState: WholeFkingGameState, versionId: string }
 
   constructor() { }
 
@@ -32,9 +34,10 @@ export class Game {
       for (const [id2, player2] of this.players.entries()) {
         if (id1 == id2) continue;
         const mtv = player1.collider.collide(player2.collider);
-        player1.velocity = vec2(0,0)
         if (mtv.x != 0 && mtv.y != 0) {
           player1.collied = true
+          console.log("collided")
+          player1.velocity = vec2(0,0)
         }
          player1.collied = false
       }
@@ -68,10 +71,32 @@ export class Game {
 
     // Send all of the clients the state of the world
 
+    const versionId = crypto.randomUUID()
     const gameState = this.getWorldState();
+    let partialGameStateMessage: PartialFkingGameStateMessage['value'] | undefined
     for (const conn of this.connections.values()) {
-      send(conn, "game-state", gameState);
+      if (this.lastSentGameState && conn.lastSentGameStateVersionId === this.lastSentGameState.versionId) {
+        if (!partialGameStateMessage) {
+          const keyState = ['x', 'y']
+          const partial = generateDiffPayload(this.lastSentGameState.gameState, gameState, keyState)
+          partialGameStateMessage = {
+            expectedPreviousVersionId: this.lastSentGameState.versionId,
+            newVersionId: versionId,
+            keyState: partial ? keyState : undefined,
+            gameState: partial,
+          }
+        }
+        send(conn.socket, "partial-game-state", partialGameStateMessage);
+      } else {
+        send(conn.socket, "game-state", {
+          versionId,
+          // sent_because: `prev: conn ${conn.lastSentGameStateVersionId} global ${this.lastSentGameState?.versionId}`,
+          gameState
+        });
+      }
+      conn.lastSentGameStateVersionId = versionId
     }
+    this.lastSentGameState = { gameState, versionId }
   }
 
   getWorldState(): WholeFkingGameState {
@@ -108,20 +133,20 @@ export class Game {
 
         if (sessionId && this.players.has(sessionId)) {
           // Reconnecting player, kill their old socket
-          const oldSocket = this.connections.get(sessionId);
+          const oldSocket = this.connections.get(sessionId)?.socket;
           if (oldSocket && oldSocket.readyState === oldSocket.OPEN) {
             oldSocket.close();
             this.joinedSockets.delete(oldSocket);
           }
           // Set new connection data
-          this.connections.set(sessionId, ws);
+          this.connections.set(sessionId, {socket:ws});
           this.idForConnection.set(ws, sessionId);
           this.joinedSockets.add(ws);
           player = this.players.get(sessionId)!;
           console.log("welcome existing user", sessionId.slice(0, 8));
         } else {
           sessionId = crypto.getRandomValues(new Uint8Array(SESSION_KEY_NUM_BYTES)).toHex();
-          this.connections.set(sessionId, ws);
+          this.connections.set(sessionId, {socket:ws});
           this.idForConnection.set(ws, sessionId);
           this.joinedSockets.add(ws);
           player = new Player(this);
@@ -148,6 +173,21 @@ export class Game {
           return;
         }
         player.setInputs(msg.value);
+        break
+      }
+      case 'please-send-full-game-state': {
+        const sessionId = this.idForConnection.get(ws);
+        if (!sessionId) {
+          console.error('who dis', msg)
+          break
+        }
+        const conn = this.connections.get(sessionId)
+        if (!conn) {
+          console.error('who dis (2)', msg, sessionId)
+          break
+        }
+        conn.lastSentGameStateVersionId = undefined
+        break
       }
     }
   }
@@ -242,8 +282,11 @@ export class Game {
 
   handleDisconnect(ws: WebSocket) {
     // bro idk
+    this.joinedSockets.delete(ws)
     const sessionId = this.idForConnection.get(ws);
+    this.idForConnection.delete(ws)
     if (!sessionId) return console.log('someone left but we dont know who they are');
+    this.connections.delete(sessionId)
     const player = this.players.get(sessionId);
     if (!player) return console.log('someone left but they dont have a player for some reason', sessionId.slice(0, 8));
     player.connected = false;

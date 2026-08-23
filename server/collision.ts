@@ -46,9 +46,8 @@ const getAxes = (edges: Vec2[]): Vec2[] => {
 
 // Get the ratio of p1 on the line to point 2
 // assumes points are on the same line
-const ratioOfDistances = (p1: Vec2, p2: Vec2): number => {
-    return vecLength(p1) / vecLength(p2)
-    
+const isP2FurtherPoint = (p1: Vec2, p2: Vec2, axis: Vec2): boolean => {
+    return dot(p1, axis) < dot(p2, axis)
 }
 
 // find the 2 points on the projection that are in the shadow of the shape
@@ -62,11 +61,10 @@ const projShape = (corners: Vec2[], axis:Vec2): Vec2[] => {
     
     for (const corner of corners.slice(2)) {
         const testPoint = projVec(corner, axis)
-        const t_start = ratioOfDistances(subVec(endPoint,testPoint), subVec(endPoint,startPoint))
-        if (t_start < 0)
+        if (!isP2FurtherPoint(subVec(endPoint,testPoint), subVec(endPoint,startPoint), axis))
             startPoint = testPoint
-        const t_end = ratioOfDistances(subVec(startPoint, testPoint), subVec(startPoint,endPoint))
-        if (t_end > 1)
+        
+        if (!isP2FurtherPoint(subVec(startPoint, testPoint), subVec(startPoint,endPoint), axis))
             endPoint = testPoint
         
     }
@@ -94,20 +92,12 @@ const SATSolver = (polygonCollider1: PloygonCollider, polygonCollider2: PloygonC
         
         //check non overlap in projects
         // if one axis has two projections that don't overlap, then garenteed to not collide!
-        // !(start_1 <= end_2 && start_2 <= end_1)
+        // !(start_1 <= end_2 && start_2 <= end_1) <- if something doesn't overlap
+        const start1_less_end2 = isP2FurtherPoint(start_1, end_2, axis)
+        const start2_less_end1 = isP2FurtherPoint(start_2, end_1, axis)
+        console.log(start1_less_end2, start2_less_end1)
 
-        //TEMP DOES NOT WORK
-        const some_small_number = vec2(-1000, -1000)
-       
-        const t1 = ratioOfDistances(subVec(some_small_number, start_1), subVec(some_small_number,end_2))
-        const t2 = ratioOfDistances(subVec(some_small_number, start_2), subVec(some_small_number, end_1))
-        
-        // the distance from the origin to start_1 was less than to end_2
-        // and vice versa for t2
-        // THEN OVERLAP
-
-        //otherwise no overlap
-        if (!((t1 < 1) && (t2 < 1))) {
+        if (!(start1_less_end2 && start2_less_end1)) {
             return [false, 0, vec2(0,0)]
         } else {
             const overlapAmount = Math.min(
@@ -341,7 +331,7 @@ export class CapsuleCollider implements Collider {
 
     const nearestSpinePoint = {
       x: startCap.center.x + spine.x * t,
-      y: startCap.center.y + spine.y * 2,
+      y: startCap.center.y + spine.y * t,
     };
 
     // move from spine to target pt by one radius
