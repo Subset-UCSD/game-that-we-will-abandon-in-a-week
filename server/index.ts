@@ -3,13 +3,14 @@ import { WebSocketServer } from "ws";
 import express from "express";
 import {join} from "path";
 import { Game } from "@server/game";
-import { type ClientMassage, clientMassage } from "@common/messages";
+import { type ClientMessage, clientMessage } from "@common/messages";
 import { prettifyError } from 'zod'
 import {SERVER_GAME_TICK} from '@common'
 
 
 if (process.argv.length !== 3) {
   console.error('usage: node dist/server.js <port>')
+  process.exit(1)
 }
 const [,, port] = process.argv;
 
@@ -34,15 +35,15 @@ wss.on("connection", (ws) => {
     try {
       jason = JSON.parse(msg.toString());
     } catch (e) {
-      console.error("erm buddy your massage is shit THAT is not jason: ", e,);
-      console.error('massage', msg)
+      console.error("erm buddy your message is shit THAT is not jason: ", e,);
+      console.error('message', msg)
       return;
     }
-    const result = clientMassage.safeParse(jason)
+    const result = clientMessage.safeParse(jason)
     if (result.success){
-    game.handleMassage(ws, result.data);
+    game.handleMessage(ws, result.data);
   } else {
-    console.error("erm buddy your massage is shit", );
+    console.error("erm buddy your message is shit", );
     console.dir(result.error.issues, {depth:null})
     console.dir(jason, {depth:null})
       return;
@@ -60,6 +61,7 @@ server.listen({port:+port}, () => {
 while (true) {
 
   game.loop()
+  game.broadcastState()
 
   await new Promise(resolve => setTimeout(resolve, SERVER_GAME_TICK))
 }

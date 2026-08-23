@@ -35,6 +35,14 @@ export const explosionSchema = z.object({
 });
 export type Explosion = z.infer<typeof explosionSchema>;
 
+export const seedSchema = z.object({
+  id: playerIdSchema,
+  x: z.number(),
+  y: z.number(),
+  growthStage: z.number()
+});
+export type Seed = z.infer<typeof seedSchema>;
+
 export const thingSchema = z.strictObject({
   id: playerIdSchema,
   x: z.number(),

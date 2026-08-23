@@ -24,4 +24,6 @@ export class Explosion implements GameObject {
   serialize(): ExplosionType {
     return this.publicState;
   }
+
+  get radius () {return this.publicState.radius}
 }

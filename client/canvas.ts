@@ -20,7 +20,7 @@ export class Canvas {
             throw new Error('holy fuck')
         }
         return context
-    })(this.canvas.getContext('2d'))
+    })(this.canvas.getContext('2d', {alpha:false}))
     /** alias for `context` */
     get c () { return this.context}
     /** width of canvas, in pixels */

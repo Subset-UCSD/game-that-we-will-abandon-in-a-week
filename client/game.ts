@@ -11,6 +11,7 @@ import {ClientMeatball} from './meatball'
 import { render } from "./render";
 import { ThingRenderer } from "./thing-renderer";
 import {ClientCorps} from './courpse'
+import { ClientExplosion } from "./explosion";
 
 
 export class Game {
@@ -20,6 +21,7 @@ export class Game {
 	private allPlayers: Map<number, Player> = new Map();
 	private meatballs = new Map<number, ClientMeatball> ()
 	private corpses = new Map<number, ClientCorps> ()
+	private explosions = new Map<number, ClientExplosion> ()
 	private arena;
 	private objects;
 	private room;
@@ -35,7 +37,7 @@ export class Game {
 	// your game local state
 	// orchestrates rendering
 	// orchestrates storing the local game world
-	// exposes functions that can be called in response to server massages
+	// exposes functions that can be called in response to server messages
 	constructor() {
 		
 		// need to handle this differently later
@@ -98,6 +100,14 @@ export class Game {
 			newCorpses.set(meatball.id, existing)
 		}
 		this.corpses = newCorpses
+
+		
+		for (const plosion of gameState.explosions) {
+			if (!this.explosions.has(plosion.id)) {
+				this.explosions.set(plosion.id, new ClientExplosion(plosion))
+			}
+		}
+		this.explosions = new Map(this.explosions.entries().filter(([, plosion]) => !plosion.shouldDie))
 	}
 
 	setCurrPlayerId(id: number) {
@@ -112,6 +122,8 @@ export class Game {
 		this.camera.y += (this.player.y - this.camera.y) * 0.2
 		this.camera.scale += (targetZoom - this.camera.scale) * 0.2
 
+		const screenShake = this.explosions.values().reduce((cum, curr) => cum + (1 - Math.min(1, curr.progress * 2)**0.3) * 5, 0)
+
 
 		const {c} = canvas
 		c.save()
@@ -124,6 +136,10 @@ export class Game {
 			-this.camera.x, // + canvas.width/ 2, 
 			-this.camera.y, // + canvas.height/ 2, 
 		)
+		const screenShakeAngle = Math.random() * 2 * Math.PI
+		if (screenShake > 0) {
+			c.translate(Math.cos(screenShakeAngle) * screenShake, Math.sin(screenShakeAngle) * screenShake)
+		}
 
 
 		// TODO: draw game state
@@ -131,6 +147,12 @@ export class Game {
 		this.arena.render(canvas)
 
 
+	c.fillStyle = 'black'
+	c.fillText('fuck', 50, -100)
+	c.fillText('press W A S D to move', 50, -50)
+	c.fillText('press B to ?',  - 300,  - 20)
+
+	
 
 		c.fillStyle = 'black'
 		const lines = this.__debugText.split('\n')
@@ -145,6 +167,7 @@ export class Game {
 			...this.meatballs.values(),
 			...this.corpses.values(),
 			...this.things.values().map(thing => new ThingRenderer(thing)),
+			...this.explosions.values(),
 		])
 
 		c.restore()

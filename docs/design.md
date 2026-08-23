@@ -2,6 +2,8 @@ previous game ideas: [https://typst.app/project/pFs5zfoqmEd46QIXKYDA0Q](https://
 
 ## game play ideas: what are players doing
 
+### as of 8/22 i think we are going to do something similar to vampire survivor roguelite
+
 ### vampires versus peta
 
 BEST IDEA EVER pretty fucking difficult we will get sued

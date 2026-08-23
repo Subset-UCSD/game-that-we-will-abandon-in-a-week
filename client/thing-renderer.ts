@@ -11,7 +11,8 @@ type RegisteredThing = {
   /** applied BEFORE scale (so basically height of transparent pixels at bottom of original texture) */
   offsetY?: number
 }
-const thingsToRender = new Map<SerializedThing['type'], Promise<RegisteredThing>>([
+type Renderable = SerializedThing['type']
+const thingsToRender = new Map<Renderable, Promise<RegisteredThing>>([
   ['tree', Promise.all([
     './assets/treee.png',
   ].values().map(url => fetch(url).then((r) => r.blob()).then(createImageBitmap))).then((frames):RegisteredThing => ({
@@ -44,32 +45,42 @@ const thingsToRender = new Map<SerializedThing['type'], Promise<RegisteredThing>
 ])
 const resolved = new Map(await Promise.all(thingsToRender.entries().map(async ([key,vallue])=>[key,await vallue] as const)))
 
-export class ThingRenderer  implements RenderableObject {
-  #thing: SerializedThing
-  get y () { return this.#thing.y }
+/**
+ * a stateless renderer for objects that don't move
+ */
+export class BasicRenderer<T extends {id:number;x:number;y:number}>  implements RenderableObject {
+  renderType: Renderable
+  thing: T
+  get y () { return this.thing.y }
 
-  constructor (thing: SerializedThing) {
-    this.#thing = thing
+  constructor (renderType: Renderable, thing: T) {
+    this.renderType = renderType
+    this.thing = thing
   }
   
   render ({c}: Canvas) {
-    const rendered = resolved.get(this.#thing.type)
+    const rendered = resolved.get(this.renderType)
     if (!rendered) return
 
     const {frames,timePerFrame=1000,imageSize,scale=1,offsetY=0} = rendered
-    const frame = frames[Math.floor(Date.now() / (timePerFrame + (this.#thing.id * Math.PI) % 50)) % frames.length]
-     c.drawImage(frame, this.#thing.x - imageSize.width * scale/2, this.y-imageSize.height*scale + offsetY*scale, imageSize.width * scale, imageSize.height*scale);
+    const frame = frames[Math.floor(Date.now() / (timePerFrame + (this.thing.id * Math.PI) % 50)) % frames.length]
+     c.drawImage(frame, this.thing.x - imageSize.width * scale/2, this.y-imageSize.height*scale + offsetY*scale, imageSize.width * scale, imageSize.height*scale);
   }
 
 
   renderShadow({c}: Canvas): void {
-    const rendered = resolved.get(this.#thing.type)
+    const rendered = resolved.get(this.renderType)
     if (!rendered) return
 
     const {imageSize,scale=1,shadowScale=1} = rendered
     const width = imageSize.width * scale * shadowScale
-    c.moveTo(this.#thing.x+width/2, this.#thing.y)
-    c.ellipse(this.#thing.x, this.#thing.y, width/2, width/10, 0, 0, Math.PI*2)
+    c.moveTo(this.thing.x+width/2, this.thing.y)
+    c.ellipse(this.thing.x, this.thing.y, width/2, width/10, 0, 0, Math.PI*2)
   }
 }
 
+export class ThingRenderer extends BasicRenderer<SerializedThing> {
+  constructor (thing: SerializedThing) {
+    super(thing.type, thing)
+  }
+}

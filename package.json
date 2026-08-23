@@ -5,7 +5,7 @@
   "main": "index.js",
   "scripts": {
     "start": "node dist/server.js 6767",
-    "start:watch": "mkdir -p dist && touch dist/server.js && node --watch --watch-path=dist/server.js --watch-preserve-output  dist/server.js 6769",
+    "start:watch": "node ensure-dist-server.js && node --watch --watch-path=dist/server.js --watch-preserve-output  dist/server.js 6769",
     "build": "node ./esbuild.ts build",
     "build:watch": "node ./esbuild.ts serve",
     "dev": "run-p build:watch start:watch",

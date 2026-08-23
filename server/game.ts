@@ -1,13 +1,16 @@
-import { ClientMassage } from "@common/messages";
+import { ClientMessage } from "@common/messages";
 import { SESSION_KEY_NUM_BYTES } from "@common/session";
-import { Player } from "@server/player";
+import { Player } from "@server/gameobjects/player";
 import { WebSocket } from "ws";
 import { send } from "./net/send";
 import { WholeFkingGameState, GameObject } from "@common/game";
-import { Meatball } from "./meatball";
-import { Explosion } from "@server/explosion";
-import { StaticThing } from "./static-thing";
-import { Corpse } from "./coarpse";
+import { Meatball } from "./gameobjects/meatball";
+import { Explosion } from "@server/gameobjects/explosion";
+import { StaticThing } from "./gameobjects/static-thing";
+import { Corpse } from "./gameobjects/corpse";
+import { subVec, vecLength } from "@common";
+import { Collider } from "./collision";
+import { Seed } from "./gameobjects/seed";
 
 // ALL OF THE GAME LOGIC
 export class Game {
@@ -16,47 +19,53 @@ export class Game {
   private idForConnection: Map<WebSocket, string> = new Map();
   private joinedSockets: Set<WebSocket> = new Set();
   private gameObjects: GameObject[] = [
-    new StaticThing({type:'tree', x: -100, y: -100}),
-    new StaticThing({type:'campfire', x: -0, y: -100}),
-    new StaticThing({type:'techbro', x: -50, y: -120}),
+    new StaticThing({ type: 'tree', x: -100, y: -100 }),
+    new StaticThing({ type: 'campfire', x: -0, y: -100 }),
+    new StaticThing({ type: 'techbro', x: -50, y: -120 }),
   ];
-  private colliders: Colider[];
+  private colliders: Collider[] = [];
 
-  constructor() {}
+  constructor() { }
 
   public loop() {
     // process all of the inputs
     // tick the game world
 
-    for (const Colider of this.colliders) {
+    for (const collider of this.colliders) {
       for (const otherColider of this.colliders) {
-        if (Colider.collidesWith(otherColider)) {
-          // handle collision
-        }
+        // if (collider.collide()) {
+        //   //
+        // }
       }
     }
 
+    this.handlePlayerInputs();
 
     for (const meatball of this.gameObjects) {
       meatball.tick();
     }
     for (const meatball of this.gameObjects) {
       if (!meatball.shouldDelete || !(meatball instanceof Meatball)) continue;
+      const explosion = new Explosion({
+        duration: 20,
+        radius: 100,
+        x: meatball.publicState.x,
+        y: meatball.publicState.y,
+      })
       this.gameObjects.push(
-        new Explosion({
-          duration: 20,
-          radius: 20,
-          x: meatball.publicState.x,
-          y: meatball.publicState.y,
-        }),
+        explosion
       );
       const EXPLOSION_DAMAGE = 20;
       for (const [_, player] of this.players) {
-        player.setHp(player.getHp() - EXPLOSION_DAMAGE);
+        if (vecLength(subVec(player.getPosition(), meatball.publicState)) < explosion.radius) {
+          player.setHp(player.getHp() - EXPLOSION_DAMAGE);
+        }
       }
     }
     this.gameObjects = this.gameObjects.filter((mb) => !mb.shouldDelete);
-    // this.explosions = this.explosions.filter((ex) => !ex.shouldDelete);
+  }
+
+  broadcastState() {
 
     // Send all of the clients the state of the world
 
@@ -78,18 +87,18 @@ export class Game {
       explosions: this.gameObjects
         .filter((o) => o instanceof Explosion)
         .map((ex) => ex.serialize()),
-        things: this.gameObjects
+      things: this.gameObjects
         .filter((o) => o instanceof StaticThing)
         .map((ex) => ex.serialize()),
-        corpses: this.gameObjects
+      corpses: this.gameObjects
         .filter((o) => o instanceof Corpse)
         .map((ex) => ex.serialize()),
-        
+
     };
   }
 
-  handleMassage(ws: WebSocket, msg: ClientMassage) {
-    // Don't process massages from sockets who have not joined us yet
+  handleMessage(ws: WebSocket, msg: ClientMessage) {
+    // Don't process messages from sockets who have not joined us yet
     if (msg.type !== "join" && !this.joinedSockets.has(ws)) return;
 
     switch (msg.type) {
@@ -143,10 +152,64 @@ export class Game {
     }
   }
 
-  addGameObject (gameObject: GameObject) : void {
+  addGameObject(gameObject: GameObject): void {
     this.gameObjects.push(gameObject)
   }
 
+  handlePlayerInputs() {
+    for (const [_, player] of this.players) {
+      if (player.inputs.up) {
+        player.velocity.y = -player.max_speed
+      } else if (player.inputs.down) {
+        player.velocity.y = player.max_speed
+      } else {
+        player.velocity.y = 0
+      }
+
+      if (player.inputs.left) {
+        player.facingLeft = true
+        player.velocity.x = -player.max_speed
+      }
+      else if (player.inputs.right) {
+        player.facingLeft = false
+        player.velocity.x = player.max_speed
+      } else {
+        player.velocity.x = 0
+      }
+
+      if (player.inputs.baa) {
+        if (!player.wasBaaing) {
+
+          const thoughts = ['baa', 'hungy', 'beh']
+          player.thought = thoughts[Math.floor(Math.random() * thoughts.length)]
+
+          const angle = Math.random() * 2 * Math.PI
+          this.addGameObject(
+            new Meatball({
+              x: player.position.x + (player.facingLeft ? -1 : 1) * 15,
+              y: player.position.y,
+              xv: Math.cos(angle) * 5,
+              yv: (Math.sin(angle) * 5) / 2,
+              height: 42 - 15,
+              inithv: 5,
+            })
+          )
+          player.wasBaaing = true
+        }
+      } else {
+        player.thought = ''
+        player.wasBaaing = false
+      }
+      if (player.inputs.seed) {
+        this.addGameObject(new Seed({
+          growthStage: 0,
+          x: player.position.x,
+          y: player.position.y
+        }));
+        player.seedCooldownTicks = SEED_COOLDOWN;
+      }
+    }
+  }
 
   handleDisconnect(ws: WebSocket) {
     // bro idk

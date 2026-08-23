@@ -12,8 +12,8 @@ self.WebSocket = class FakeWebSocket {
     queueMicrotask(() => this.onopen?.())
   }
 
-  send (massage) {
-    worker.postMessage(massage)
+  send (message) {
+    worker.postMessage(message)
   }
 }
 
