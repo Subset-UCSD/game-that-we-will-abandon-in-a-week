@@ -3,7 +3,7 @@ import { WebSocketServer } from "ws";
 import express from "express";
 import {join} from "path";
 import { Game } from "@server/game";
-import { type ClientMessage, clientMessage } from "@common/messages";
+import { type ClientMassage, clientMassage } from "@common/messages";
 import { prettifyError } from 'zod'
 import {SERVER_GAME_TICK} from '@common'
 
@@ -30,21 +30,21 @@ const game = new Game();
 wss.on("connection", (ws) => {
   ws.on("message", (msg) => {
     
-    let json;
+    let jason;
     try {
-      json = JSON.parse(msg.toString());
+      jason = JSON.parse(msg.toString());
     } catch (e) {
-      console.error("erm buddy your message is shit THAT is not json: ", e,);
-      console.error('message', msg)
+      console.error("erm buddy your massage is shit THAT is not jason: ", e,);
+      console.error('massage', msg)
       return;
     }
-    const result = clientMessage.safeParse(json)
+    const result = clientMassage.safeParse(jason)
     if (result.success){
-    game.handleMessage(ws, result.data);
+    game.handleMassage(ws, result.data);
   } else {
-    console.error("erm buddy your message is shit", );
+    console.error("erm buddy your massage is shit", );
     console.dir(result.error.issues, {depth:null})
-    console.dir(json, {depth:null})
+    console.dir(jason, {depth:null})
       return;
   }
   });

@@ -14,3 +14,4 @@
 
 ## Random Ideas
 - Rivers
+- Fill codebase withe typos

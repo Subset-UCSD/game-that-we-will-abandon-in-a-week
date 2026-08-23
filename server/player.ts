@@ -3,14 +3,15 @@ import { Player as NetPlayer,GameObject } from "@common/game";
 import { Meatball } from './meatball';
 import { Game } from './game';
 import { Corpse } from './coarpse'
+import { Vec2,  } from "@common";
 
 const MAX_HP = 67;
 
 export class Player implements GameObject {
   private inputs: Inputs;
   private max_speed: number = 100;
-  private position: { x: number, y: number } = { x: (Math.random()-0.5) * 1000, y: (Math.random()-0.5) * 1000 };
-  private velocity: { x_vel: number, y_vel: number } = { x_vel: 0, y_vel: 0 };
+  private position: Vec2 = { x: (Math.random()-0.5) * 1000, y: (Math.random()-0.5) * 1000 };
+  private velocity: Vec2 = { x: 0, y: 0 };
   private id;
   private static next_id = 0;
   private game: Game
@@ -54,7 +55,7 @@ export class Player implements GameObject {
   }
 
   serialize(): NetPlayer {
-    return {...this.position, ...this.velocity, id: this.id, baaing:this.thought,
+    return {...this.position, x_vel: this.velocity.x, y_vel: this.velocity.y, id: this.id, baaing:this.thought,
       facingLeft:this.facingLeft,
       connected: this.connected,
       timeSinceLastInput:Date.now()- this.lastInputTime,
@@ -65,23 +66,23 @@ export class Player implements GameObject {
 
   handleInput(inputs: Inputs) {
     if (inputs.up) {
-      this.velocity.y_vel = -this.max_speed
+      this.velocity.y = -this.max_speed
     }
     else if (inputs.down) {
-      this.velocity.y_vel = this.max_speed
+      this.velocity.y = this.max_speed
     } else {
-      this.velocity.y_vel = 0
+      this.velocity.y = 0
     }
 
     if (inputs.left) {
       this.facingLeft = true
-      this.velocity.x_vel = -this.max_speed
+      this.velocity.x = -this.max_speed
     }
     else if (inputs.right) {
       this.facingLeft = false
-      this.velocity.x_vel = this.max_speed
+      this.velocity.x = this.max_speed
     } else {
-      this.velocity.x_vel = 0
+      this.velocity.x = 0
     }
 
     if (inputs.baa) {
@@ -111,11 +112,11 @@ export class Player implements GameObject {
   }
 
   tick() {
-    if (this.velocity.x_vel != 0)
-      this.position.x += this.velocity.x_vel  / Math.hypot(this.velocity.x_vel, this.velocity.y_vel)
+    if (this.velocity.x != 0)
+      this.position.x += this.velocity.x  / Math.hypot(this.velocity.x, this.velocity.y)
 
-    if (this.velocity.y_vel != 0)
-      this.position.y += this.velocity.y_vel / Math.hypot(this.velocity.x_vel , this.velocity.y_vel)
+    if (this.velocity.y != 0)
+      this.position.y += this.velocity.y / Math.hypot(this.velocity.x , this.velocity.y)
 
     if (this.hp <= 0) {
       this.hp = MAX_HP

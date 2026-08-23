@@ -3,17 +3,17 @@
  */
 
 import { Game } from "@server/game";
-import { clientMessage } from "@common/messages";
+import { clientMassage } from "@common/messages";
 import {SERVER_GAME_TICK} from '@common'
 
 const game = new Game();
 
 const ws = {
-  send: message => self.postMessage(message)
+  send: massage => self.postMessage(massage)
 }
 
 self.addEventListener('message', e => {
-  game.handleMessage(ws, clientMessage.parse(JSON.parse(e.data)));
+  game.handleMassage(ws, clientMassage.parse(JSON.parse(e.data)));
 })
 
 

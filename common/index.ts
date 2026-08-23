@@ -4,3 +4,4 @@ export * from "./session";
 export * from "./messages";
 export * from "./input";
 export * from "./game";
+export * from "./vector";

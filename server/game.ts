@@ -1,4 +1,4 @@
-import { ClientMessage } from "@common/messages";
+import { ClientMassage } from "@common/messages";
 import { SESSION_KEY_NUM_BYTES } from "@common/session";
 import { Player } from "@server/player";
 import { WebSocket } from "ws";
@@ -20,12 +20,22 @@ export class Game {
     new StaticThing({type:'campfire', x: -0, y: -100}),
     new StaticThing({type:'techbro', x: -50, y: -120}),
   ];
+  private colliders: Colider[];
 
   constructor() {}
 
   public loop() {
     // process all of the inputs
     // tick the game world
+
+    for (const Colider of this.colliders) {
+      for (const otherColider of this.colliders) {
+        if (Colider.collidesWith(otherColider)) {
+          // handle collision
+        }
+      }
+    }
+
 
     for (const meatball of this.gameObjects) {
       meatball.tick();
@@ -35,7 +45,7 @@ export class Game {
       this.gameObjects.push(
         new Explosion({
           duration: 20,
-          radius: 200,
+          radius: 20,
           x: meatball.publicState.x,
           y: meatball.publicState.y,
         }),
@@ -78,8 +88,8 @@ export class Game {
     };
   }
 
-  handleMessage(ws: WebSocket, msg: ClientMessage) {
-    // Don't process messages from sockets who have not joined us yet
+  handleMassage(ws: WebSocket, msg: ClientMassage) {
+    // Don't process massages from sockets who have not joined us yet
     if (msg.type !== "join" && !this.joinedSockets.has(ws)) return;
 
     switch (msg.type) {
