@@ -99,7 +99,7 @@ export class Player implements GameObject {
         facingLeft: this.facingLeft
       }))
       // TODO: respawn
-      this.position.x += 300;
+      this.position={ x: (Math.random()-0.5) * 1000, y: (Math.random()-0.5) * 1000 }
     }
     this.seedCooldownTicks = Math.max(this.seedCooldownTicks - 1, 0);
     this.collider.updateLocation(this.position)

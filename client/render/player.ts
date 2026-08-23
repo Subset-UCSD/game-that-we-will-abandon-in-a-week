@@ -6,7 +6,7 @@
 import { Canvas } from "./canvas";
 import { loadFrames } from "./frames";
 import { RenderableObject } from "./render";
-import { Player as NetPlayer } from "@common";
+import { Interpolator, Player as NetPlayer } from "@common";
 
 const { base, walking, think, sleep } = await loadFrames({
 	base: ["./assets/sheep.png", "./assets/sheep2.png"],
@@ -21,20 +21,27 @@ export const SLEEP_TIME = 10000;
 
 export class Player implements RenderableObject {
 	private props: NetPlayer;
-	get index() { return this.props.y };
+	private x: Interpolator<number>
+	private y: Interpolator<number>
+	get index() { return this.y.getValue() };
 
 	constructor(props: NetPlayer) {
 		this.props = props;
+		this.x = Interpolator.number(props.x)
+		this.y = Interpolator.number(props.x)
 	}
 
 	renderShadow({ c }: Canvas) {
-		const { x, y } = this.props;
+		const x = this.x.getValue()
+		const y = this.y.getValue()
 		c.moveTo(x + SHEEP_WIDTH * 0.4, y);
 		c.ellipse(x, y, SHEEP_WIDTH * 0.4, SHEEP_WIDTH * 0.08, 0, 0, Math.PI * 2);
 	}
 
 	render({ c }: Canvas): void {
-		const { id, x, y, x_vel, y_vel, facingLeft, timeSinceLastInput, healthpercent,maxHp, thought,connected } = this.props;
+		const x = this.x.getValue()
+		const y = this.y.getValue()
+		const { id, x_vel, y_vel, facingLeft, timeSinceLastInput, healthpercent,maxHp, thought,connected } = this.props;
 		const sleeping = timeSinceLastInput > SLEEP_TIME||!connected;;
 		/** in milliseconds */
 		const isMoving = Math.hypot(x_vel, y_vel) > 0.1
@@ -79,5 +86,7 @@ export class Player implements RenderableObject {
 
 	update(props: NetPlayer): void {
 		this.props = props;
+		this.x.setValue(props.x)
+		this.y.setValue(props.y)
 	}
 }

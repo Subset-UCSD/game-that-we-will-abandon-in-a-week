@@ -11,6 +11,7 @@ export const inputSchema = z.object({
 	jump: z.boolean(),
 	baa: z.boolean(),
 	paint: z.boolean(),
+	knife: z.boolean(),
 	seed: z.boolean()
 });
 
@@ -26,6 +27,7 @@ export const defaultInputs: Inputs = {
 	right: false,
 	baa: false,
 	paint: false,
+	knife: false,
 	seed: false
 } as const;
 
@@ -37,6 +39,7 @@ export const keymap = {
 	Space: "jump",
 	KeyB: "baa",
 	KeyP: "paint",
+	KeyK: 'knife',
 	KeyF: "seed",
 	0: "attack", // Left mouse button
 	2: "use", // Right mouse button

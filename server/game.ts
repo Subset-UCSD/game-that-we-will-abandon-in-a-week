@@ -34,10 +34,11 @@ export class Game {
       for (const [id2, player2] of this.players.entries()) {
         if (id1 == id2) continue;
         const mtv = player1.collider.collide(player2.collider);
-        if (mtv.x != 0 && mtv.y != 0) {
+        if (mtv.x != 0 || mtv.y != 0) {
           player1.collied = true
-          console.log("collided")
-          player1.velocity = vec2(0,0)
+          player1.velocity = mtv
+          console.log(player1.id, mtv)
+          break
         }
          player1.collied = false
       }

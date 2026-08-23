@@ -2,6 +2,7 @@ import { MeatBall } from '@common/game';
 import { Canvas } from './canvas';
 import { RenderableObject } from './render';
 import { loadFrames } from './frames';
+import { Interpolator } from '@common';
 
 const frames = await loadFrames([
     "./assets/meatball1.png",
@@ -9,22 +10,38 @@ const frames = await loadFrames([
 ]);
 
 export class ClientMeatball implements RenderableObject {
-    state?: MeatBall
+    #id?: number
+    #x?: Interpolator<number>
+    #y?: Interpolator<number>
+    #height?: Interpolator<number>
 
-    get index() { return this.state?.y ?? 0 }
+    get index() { return this.#y?.getValue() ?? 0 }
+
+    setState ({id,x,y,height}: MeatBall): void {
+        this.#id = id
+        this.#x ??= Interpolator.number(x)
+        this.#x.setValue(x)
+        this.#y ??= Interpolator.number(y)
+        this.#y.setValue(y)
+        this.#height ??= Interpolator.number(height)
+        this.#height.setValue(height)
+    }
 
     renderShadow({ c }: Canvas): void {
-        if (!this.state) return
-        const { x, y } = this.state
+        if (!this.#x || !this.#y) return
+        const x = this.#x.getValue()
+        const y = this.#y.getValue()
         c.moveTo(x + 5, y)
         c.ellipse(x, y, 5, 2, 0, 0, Math.PI * 2)
     }
 
     render({ c }: Canvas) {
-        if (!this.state) return
-        const frame = frames[Math.floor(Date.now() / (470 + (this.state.id * Math.PI) % 50)) % frames.length]
-        const { x, y, height } = this.state
-        const R = 7
+        if (this.#id === undefined || !this.#x || !this.#y || !this.#height) return
+        const x = this.#x.getValue()
+        const y = this.#y.getValue()
+        const height = this.#height.getValue()
+        const frame = frames[Math.floor(Date.now() / (470 + (this.#id * Math.PI) % 50)) % frames.length]
+        const R = 7 // radius (maybe)
         c.drawImage(frame, x - R, y - R - 3 - height, R * 2, R * 2)
     }
 }

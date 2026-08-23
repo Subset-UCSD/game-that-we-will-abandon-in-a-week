@@ -66,24 +66,28 @@ export class Game {
 	updateGameState(gameState: WholeFkingGameState) {
 		// Instantiate objects for newly appearing updates from the server
 		this.__debugText = JSON.stringify(gameState, null, 2)
+
+		const newPlayers = new Map<number, Player>()
 		for (const playerUpdate of gameState.players.values()) {
-			if (this.players.has(playerUpdate.id)) {
-				this.players.get(playerUpdate.id)?.update(playerUpdate);
+			const existing = this.players.get(playerUpdate.id)
+			if (existing) {
+				existing.update(playerUpdate);
+				newPlayers.set(playerUpdate.id, existing)
 			} else {
-				const newPlayer = new Player(playerUpdate);
-				this.players.set(playerUpdate.id, newPlayer)
+				newPlayers.set(playerUpdate.id, new Player(playerUpdate))
 			}
 			
 			if (playerUpdate.id === this.id) {
 				this.currPlayerState = playerUpdate
 			}
 		}
+		this.players = newPlayers
 
 		const newMeatballs = new Map<number, ClientMeatball>()
 		for (const meatball of gameState.meatballs) {
 			if (!this.meatballs.get(meatball.id)) this.playAudioAtPosition('baaa', meatball.x, meatball.y, 500, { playbackRate: 1 + Math.random() * 0.2 });
 			let existing = this.meatballs.get(meatball.id) ?? new ClientMeatball()
-			existing.state = meatball
+			existing.setState(meatball)
 			newMeatballs.set(meatball.id, existing)
 		}
 		this.meatballs = newMeatballs
@@ -92,11 +96,9 @@ export class Game {
 
 		const newSeeds = new Map<number, ClientSeed>();
 		for (const seed of gameState.seeds) {
-			let existing = this.seeds.get(seed.id) ?? new ClientSeed(seed);
-
+			newSeeds.set(seed.id, this.seeds.get(seed.id) ?? new ClientSeed(seed));
 		}
-		this.seeds = gameState.seeds;
-
+		this.seeds = newSeeds;
 
 		const newCorpses = new Map<number, ClientCorpse>()
 		for (const meatball of gameState.corpses) {
@@ -107,12 +109,12 @@ export class Game {
 		this.corpses = newCorpses
 
 
-		for (const plosion of gameState.explosions) {
-			if (!this.explosions.has(plosion.id)) {
-				this.explosions.set(plosion.id, new ClientExplosion(plosion))
+		for (const explosion of gameState.explosions) {
+			if (!this.explosions.has(explosion.id)) {
+				this.explosions.set(explosion.id, new ClientExplosion(explosion))
 			}
 		}
-		this.explosions = new Map(this.explosions.entries().filter(([, plosion]) => !plosion.shouldDie))
+		this.explosions = new Map(this.explosions.entries().filter(([, x]) => !x.shouldDie))
 
 		this.lines = gameState.players.values().flatMap(player => player.lines).toArray()
 
