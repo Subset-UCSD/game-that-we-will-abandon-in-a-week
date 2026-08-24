@@ -1,5 +1,6 @@
 import { Collider } from "@server/collision";
 import z from "zod";
+import { chunkMapSchema } from "./tiles";
 
 export const playerIdSchema = z.number();
 
@@ -94,6 +95,7 @@ export const wholeFkingGameState = z.object({
   corpses: z.array(corpseSchema),
   seeds: z.array(seedSchema),
   colliders: z.array(colliderSchema),//.optional(),
+  tiles: chunkMapSchema,
   // add to this when you want the client to know more about the game
 });
 export type WholeFkingGameState = z.infer<typeof wholeFkingGameState>;

@@ -3,7 +3,7 @@ import { Arena } from "./render/arena";
 import { Room } from "./render/room";
 import { Connection } from './net/connection'
 import { InputListener } from "./input-listener";
-import { addVec, isVecEq, SERVER_GAME_TICK,lerp } from "@common";
+import { addVec, isVecEq, SERVER_GAME_TICK,lerp, ChunkMap } from "@common";
 import { defaultInputs, keymap } from "@common/input";
 import { WholeFkingGameState, MeatBall, SerializedThing, Line, SerializedCollider, Player as NetPlayer } from '@common/game'
 import { ClientSeed, ClientExplosion, ClientCorpse, ThingRenderer, render, ClientMeatball, Canvas, SerializedThingWithAdditionalRenderProperties } from "./render"
@@ -11,6 +11,7 @@ import { audio, PlaySoundOptions } from '@client/audio/index';
 import { number } from "zod";
 import { DebugTileEditor } from "./debug/tile-editor";
 import { Pyramid as Cube } from "./render/3dObjects/3d";
+import { renderTiles } from "./tiles";
 
 audio.unlockOnFirstInteraction();
 audio.preload({
@@ -51,6 +52,7 @@ export class Game {
 	private lines: Line[] = []
 	private debugColldiers: SerializedCollider[] =[ ]
 	private currPlayerState?: NetPlayer;
+	private tiles: ChunkMap = {}
 
 	private camera: Camera = { x: 0, y: 0, scale: 1 }
 
@@ -76,7 +78,10 @@ export class Game {
 
 	updateGameState(gameState: WholeFkingGameState) {
 		// Instantiate objects for newly appearing updates from the server
-		this.__debugText = JSON.stringify(gameState, null, 2)
+		this.__debugText = JSON.stringify({
+			...gameState,
+			tiles: Object.fromEntries(Object.entries(gameState.tiles).map(([k,v]) => [k, `... ${v.reduce((cum , curr) => cum + +(curr !== null),0)} tile(s)`]))
+		}, null, 2)
 
 		const newPlayers = new Map<number, Player>()
 		for (const playerUpdate of gameState.players.values()) {
@@ -118,7 +123,7 @@ export class Game {
 			newCorpses.set(meatball.id, existing)
 		}
 		this.corpses = newCorpses
-		console.log("no restarts?")
+		// console.log("no restarts?")
 
 		for (const explosion of gameState.explosions) {
 			if (!this.explosions.has(explosion.id)) {
@@ -128,6 +133,7 @@ export class Game {
 		this.explosions = new Map(this.explosions.entries().filter(([, x]) => !x.shouldDie))
 
 		this.lines = gameState.players.values().flatMap(player => player.lines).toArray()
+		this.tiles = gameState.tiles
 
 		this.debugColldiers = gameState.colliders
 	}
@@ -185,6 +191,8 @@ export class Game {
 		// TODO: draw game state
 		this.room.render(canvas);
 		this.arena.render(canvas);
+
+		renderTiles(canvas, this.camera, this.tiles)
 
 		c.fillStyle = 'black';
 		c.fillText('fuck', 50, -100);
@@ -245,7 +253,10 @@ export class Game {
 			}
 		}
 
-		this.__debugTileEditor?.render(canvas, this.camera)
+		const change = this.__debugTileEditor?.render(canvas, this.camera)
+		if (change) {
+			this.conn.send('tile-edit', change)
+		}
 
 		c.restore()
 	}

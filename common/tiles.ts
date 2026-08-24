@@ -1,5 +1,8 @@
 import z from "zod"
 
+export const CHUNK_SIZE = 20
+
+
 /**
  * number of pixels per tile (we should adjust this once then never again)
  */
@@ -15,5 +18,5 @@ export type TileId = z.infer<typeof tileSchema>
 const chunkSchema = (z.array(tileSchema.nullable()))
 export type Chunk = z.infer<typeof chunkSchema>
 
-const chunkMapSchema = z.record(z.templateLiteral([z.number(),' ', z.number()]), chunkSchema)
+export const chunkMapSchema = z.record(z.templateLiteral([z.number(),' ', z.number()]), chunkSchema)
 export type ChunkMap = z.infer<typeof chunkMapSchema> 

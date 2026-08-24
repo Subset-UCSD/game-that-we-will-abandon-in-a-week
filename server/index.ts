@@ -7,7 +7,7 @@ import { type ClientMessage, clientMessage } from "@common/messages";
 import { prettifyError } from 'zod'
 import {SERVER_GAME_TICK} from '@common'
 import { deserializeTiles, serializeTiles } from "./tile-manager";
-import { readFile, writeFile } from "fs/promises";
+import { readFile, rename, writeFile } from "fs/promises";
 
 
 if (process.argv.length !== 3) {
@@ -30,8 +30,19 @@ app.get("/", (_, res) => {
 
 const tiles = deserializeTiles(await readFile('tiles.txt', 'utf-8')
   .catch(error => Error.isError(error) && 'code' in error && error.code === 'ENOENT' ? '' : Promise.reject(error)))
-const game = new Game(tiles, async tilesEdited => {
-  await writeFile('tiles.txt', serializeTiles(tilesEdited))
+  let debounceId: ReturnType<typeof setTimeout> | undefined
+const game = new Game(tiles,  tilesEdited => {
+  if (debounceId !== undefined) {
+    clearTimeout(debounceId)
+  }
+  debounceId = setTimeout(async () => {
+    debounceId = undefined
+    // too many writes were causing corruption issues i think
+    const fileName = `tiles-${Date.now()}.txt.tmp`
+    await writeFile(fileName, serializeTiles(tilesEdited))
+    await rename(fileName, 'tiles.txt')
+    console.log('saved tiles.txt')
+  }, 500)
 });
 
 wss.on("connection", (ws) => {

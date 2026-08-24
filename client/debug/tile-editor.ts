@@ -1,13 +1,13 @@
 import { Camera, Game } from "@client/game"
 import { Canvas } from "@client/render"
 import { addVec, scaleVec, subVec, Vec2 } from "@common"
-import { TILE_SIZE } from "@common/tiles"
+import { TILE_SIZE, TileId } from "@common/tiles"
 
 export class DebugTileEditor {
   #enabled = false
   #mouse?: Vec2
   #mouseInWorld?: Vec2
-  #mouseDown = false
+  #mouseDown ?: Set<`${number} ${number}`>
   
   constructor () {
     const button = Object.assign(document.createElement('button'), {
@@ -19,25 +19,26 @@ export class DebugTileEditor {
       this.#enabled = !this.#enabled
       if (!this.#enabled) {
         this.#mouse = undefined
-        this.#mouseDown = false
+        this.#mouseDown = undefined
       }
     })
 
     document.addEventListener('pointerdown', e => {
-      this.#mouseDown = true
+      if (!(e.target instanceof Element)|| !e.target.closest('canvas')) return
+      this.#mouseDown = new Set
     })
     document.addEventListener('pointerup', e => {
-      this.#mouseDown = false
+      this.#mouseDown = undefined
     })
     document.addEventListener('pointercancel', e => {
-      this.#mouseDown = false
+      this.#mouseDown = undefined
     })
     document.addEventListener('pointermove', e => {
       this.#mouse = { x: e.clientX, y: e.clientY }
     })
   }
 
-  render ({c,width,height}:Canvas, camera: Camera) {
+  render ({c,width,height}:Canvas, camera: Camera): Vec2 & { tile: TileId | null } | undefined {
     if (!this.#enabled) {
       return
     }    
@@ -53,30 +54,38 @@ export class DebugTileEditor {
         TILE_SIZE,
         TILE_SIZE,
       )
+      const key = `${this.#mouseInWorld.x} ${this.#mouseInWorld.y}` as const
+      if (this.#mouseDown && !this.#mouseDown.has(key)) {
+        this.#mouseDown.add(key)
+        return {
+          ...this.#mouseInWorld,
+          tile: 'temp_dirt'
+        }
+      }
     } else {
       this.#mouseInWorld = undefined
     }
 
-    const left = camera.x - width/camera.scale/2
-    const right = camera.x + width/camera.scale/2
-    const startX = Math.ceil((left) / TILE_SIZE)
-    const endX = Math.floor((right) / TILE_SIZE)
+    const left = camera.x - width/camera.scale/2 
+    const right = camera.x + width/camera.scale/2 
+    const startX = Math.ceil((left - TILE_SIZE/2) / TILE_SIZE)
+    const endX = Math.floor((right - TILE_SIZE/2) / TILE_SIZE)
 
-    const top = camera.y - height/camera.scale/2
-    const bottom = camera.y + height/camera.scale/2
-    const startY = Math.ceil((top) / TILE_SIZE) 
-    const endY = Math.floor((bottom) / TILE_SIZE) 
+    const top = camera.y - height/camera.scale/2 
+    const bottom = camera.y + height/camera.scale/2 
+    const startY = Math.ceil((top - TILE_SIZE/2) / TILE_SIZE) 
+    const endY = Math.floor((bottom - TILE_SIZE/2) / TILE_SIZE) 
     // console.log(startX,endX,startY,endY)
 
     c.strokeStyle = 'rgba(0, 0, 0, 0.1)'
     c.beginPath()
     for (let x = startX; x <= endX; x++) {
-      c.moveTo(x * TILE_SIZE, top)
-      c.lineTo(x * TILE_SIZE, bottom)
+      c.moveTo(x * TILE_SIZE + TILE_SIZE/2, top)
+      c.lineTo(x * TILE_SIZE + TILE_SIZE/2, bottom)
     }
     for (let y = startY; y <= endY; y++) {
-      c.moveTo(left, y*TILE_SIZE)
-      c.lineTo(right, y*TILE_SIZE)
+      c.moveTo(left, y*TILE_SIZE + TILE_SIZE/2)
+      c.lineTo(right, y*TILE_SIZE + TILE_SIZE/2)
     }
     c.stroke()
 
