@@ -13,6 +13,9 @@ const serverConfigPromise = esbuild.context({
 	format: "esm",
 	packages: isGitHubPages ? 'bundle' : "external",
 	entryPoints: [isGitHubPages ? 'server/gh-pages-preview-worker.js': "server/index.ts"],
+	define: {
+		IS_SERVING: isServe?'true':'false'
+	},
 });
 
 const clientConfigPromise = esbuild.context({

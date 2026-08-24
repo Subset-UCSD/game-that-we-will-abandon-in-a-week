@@ -8,6 +8,8 @@ import { defaultInputs, keymap } from "@common/input";
 import { WholeFkingGameState, MeatBall, SerializedThing, Line, SerializedCollider, Player as NetPlayer } from '@common/game'
 import { ClientSeed, ClientExplosion, ClientCorpse, ThingRenderer, render, ClientMeatball, Canvas, SerializedThingWithAdditionalRenderProperties } from "./render"
 import { audio, PlaySoundOptions } from '@client/audio/index';
+import { number } from "zod";
+import { DebugTileEditor } from "./debug/tile-editor";
 
 audio.unlockOnFirstInteraction();
 audio.preload({
@@ -24,6 +26,12 @@ audio.preload({
 		"./assets/sounds/baaa4.wav"
 	],
 });
+
+export type Camera = {
+	x: number
+	y: number
+	scale: number
+}
 
 export class Game {
 	private conn;
@@ -43,7 +51,9 @@ export class Game {
 	private debugColldiers: SerializedCollider[] =[ ]
 	private currPlayerState?: NetPlayer;
 
-	private camera = { x: 0, y: 0, scale: 1 }
+	private camera: Camera = { x: 0, y: 0, scale: 1 }
+
+	__debugTileEditor?: DebugTileEditor
 
 	constructor() {
 		this.arena = new Arena(1200, 720); // small room
@@ -227,6 +237,8 @@ export class Game {
 				}
 			}
 		}
+
+		this.__debugTileEditor?.render(canvas, this.camera)
 
 		c.restore()
 	}
