@@ -18,19 +18,12 @@ interface Renderable3DObject extends RenderableObject {
     vertrices: Vec3[];
     faces: number[][]; //triangle faces
     //unspoken rule of faces: the vertex at index 0, connects to index 1 and -1
+
+    texture?(c: CanvasRenderingContext2D, face_idx: number): void
     
 }
 
-class Texture3D {
-    constructor () {
-
-    }
-
-
-}
-
-
-export class Cube implements Renderable3DObject {
+class Polyhedron3D implements Renderable3DObject {
     index = 20;
     vertrices: Vec3[];
     faces:  number[][];
@@ -39,47 +32,42 @@ export class Cube implements Renderable3DObject {
     rotateY: number = 45;
     rotateZ: number = 0;
     
-    constructor() {
-        this.vertrices = [
-            vec3(0, 0 ,0), // 0
-            vec3(1, 0 ,0), // 1
-            vec3(1, 1 ,0), // 2
-            vec3(0, 1 ,0), // 3
-            vec3(0, 0 ,1), // 4
-            vec3(1, 0 ,1), // 5
-            vec3(1, 1 ,1), // 6
-            vec3(0, 1 ,1), // 7
-        ]
-        this.faces = [
-            [0, 1, 2, 3], //face 1
-            // [3, 0, 2],
-
-            [0, 3, 7, 4], //face 2
-            // [0, 7, 3],
-            
-            [0, 4, 5, 1], //face 3
-            // [4, 1, 0],
-
-            [7, 6, 5, 4], //face 4
-            // [5, 7, 6],
-
-            [1, 5, 6, 2], //face 5
-            // [2, 1, 6],
-
-            [3, 2, 6, 7], //face 5
-            // [7, 2, 6],
-        ]
+    constructor(vertrices:Vec3[], faces: number[][]) {
+       this.vertrices = vertrices
+       this.faces = faces
     }
 
+    // may need to become a input to the
+    texture(ctx: CanvasRenderingContext2D, face_idx: number): void {
+        ctx.fillStyle = "red";
+        ctx.fillRect(0, 0, 0.5, 0.5) 
+    }
 
+    applyTexture(ctx: CanvasRenderingContext2D, face_veterices:Vec3[], face_idx:number): void {
+        ctx.save()
+        const e = face_veterices[1].x;
+        const f = face_veterices[1].y; 
+        const a = (face_veterices[0].x - e)
+        const b = (face_veterices[0].y - f) ;
+        const c = (face_veterices[2].x - e);
+        const d = (face_veterices[2].y - f) ;
 
+        const textureMatrix = new DOMMatrix([ a, b, c, d, e, f ])
+
+        // c.fillRect("red")
+        ctx.setTransform(ctx.getTransform().multiply(textureMatrix));
+        this.texture(ctx, face_idx);
+        
+        ctx.setTransform(identity)
+        ctx.restore()
+    }
 
     render({c}: Canvas): void {
         const matrix = new DOMMatrix([1, 0, 0, 0, 0, 1, 0, 0, 0, 0, 1, 0, 0, 0, 0, 1]);
         matrix.rotateSelf(this.rotateX, this.rotateY, this.rotateZ)
-        matrix.scaleSelf(100, 100, 100)
-        // this.rotateX--;
-        // this.rotateY++;
+        matrix.scaleSelf(100, 100, 100)d
+        this.rotateX += 0.1;
+        this.rotateY -= 0.1;
         // this.rotateZ--;
 
 
@@ -117,27 +105,8 @@ export class Cube implements Renderable3DObject {
                 continue
             }
 
-
-            c.save()
-
-            const e = face_veterices[0].x;
-            const f = face_veterices[0].y; 
-            const a = (face_veterices[1].x - e)
-            const b = (face_veterices[1].y - f) ;
-            const c_ = (face_veterices[3].x - e);
-            const d = (face_veterices[3].y - f) ;
-
-            const textureMatrix = new DOMMatrix([ a, b, c_, d, e, f ])
-
-            // c.fillRect("red")
-            c.setTransform(c.getTransform().multiply(textureMatrix));
-            c.fillStyle = "red";
-            c.fillRect(0, 0, 1, 1) //TODO generalize the width heigh
-            
-            c.setTransform(identity)
-            c.restore()
-
-            
+            this.applyTexture(c, face_veterices, 0)
+                        
             // console.log(face, normal)
 
             for (const drawn_vertex of face_veterices) {
@@ -158,6 +127,98 @@ export class Cube implements Renderable3DObject {
     }
     
 }
+
+
+export const Cube = new Polyhedron3D(
+    //verticies
+    [
+        vec3(0, 0 ,0), // 0
+        vec3(1, 0 ,0), // 1
+        vec3(1, 1 ,0), // 2
+        vec3(0, 1 ,0), // 3
+        vec3(0, 0 ,1), // 4
+        vec3(1, 0 ,1), // 5
+        vec3(1, 1 ,1), // 6
+        vec3(0, 1 ,1), // 7
+    ],
+    //faces
+    [
+        [0, 1, 2, 3], //face 1
+        // [3, 0, 2],
+
+        [0, 3, 7, 4], //face 2
+        // [0, 7, 3],
+        
+        [0, 4, 5, 1], //face 3
+        // [4, 1, 0],
+
+        [7, 6, 5, 4], //face 4
+        // [5, 7, 6],
+
+        [1, 5, 6, 2], //face 5
+        // [2, 1, 6],
+
+        [3, 2, 6, 7], //face 5
+        // [7, 2, 6],
+    ]
+)
+
+
+/***
+ * The right hand rule points into the shape
+ * for what is considered clockwise
+ */
+
+export const Pyramid = new Polyhedron3D(
+    //verticies
+    [
+        vec3(0, 0 ,0), // 0
+        vec3(1, 0 ,0), // 1
+        vec3(0, 1 ,0), // 2
+        vec3(1, 1 ,0), // 3
+        vec3(0.5, 0.5 ,1), // 4
+    ],
+    //faces
+    [
+        [0, 2, 3, 1],
+        [0, 1, 4],
+        [0, 4, 2],
+        [1, 3, 4],
+        [3, 2, 4],
+    ]
+)
+
+
+
+//  this.vertrices = [
+        //     vec3(0, 0 ,0), // 0
+        //     vec3(1, 0 ,0), // 1
+        //     vec3(1, 1 ,0), // 2
+        //     vec3(0, 1 ,0), // 3
+        //     vec3(0, 0 ,1), // 4
+        //     vec3(1, 0 ,1), // 5
+        //     vec3(1, 1 ,1), // 6
+        //     vec3(0, 1 ,1), // 7
+        // ]
+        // this.faces = [
+        //     [0, 1, 2, 3], //face 1
+        //     // [3, 0, 2],
+
+        //     [0, 3, 7, 4], //face 2
+        //     // [0, 7, 3],
+            
+        //     [0, 4, 5, 1], //face 3
+        //     // [4, 1, 0],
+
+        //     [7, 6, 5, 4], //face 4
+        //     // [5, 7, 6],
+
+        //     [1, 5, 6, 2], //face 5
+        //     // [2, 1, 6],
+
+        //     [3, 2, 6, 7], //face 5
+        //     // [7, 2, 6],
+        // ]
 
 // class DiceD20 implements Renderable3DObject {
 //     index = 20;

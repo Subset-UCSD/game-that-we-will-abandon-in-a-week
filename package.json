@@ -5,7 +5,7 @@
   "main": "index.js",
   "scripts": {
     "start": "node dist/server.js 6767",
-    "start:watch": "nodemon --watch dist/server.js --exec 'node dist/server.js 6769'",
+    "start:watch": "nodemon --watch dist/server.js --exec \"node dist/server.js 6769\"",
     "build": "node ./esbuild.ts build",
     "build:watch": "node ./esbuild.ts serve",
     "dev": "run-p build:watch start:watch",

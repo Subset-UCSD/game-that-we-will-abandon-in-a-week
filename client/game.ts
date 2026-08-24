@@ -10,7 +10,7 @@ import { ClientSeed, ClientExplosion, ClientCorpse, ThingRenderer, render, Clien
 import { audio, PlaySoundOptions } from '@client/audio/index';
 import { number } from "zod";
 import { DebugTileEditor } from "./debug/tile-editor";
-import { Cube } from "./render/3dObjects/3d";
+import { Pyramid as Cube } from "./render/3dObjects/3d";
 
 audio.unlockOnFirstInteraction();
 audio.preload({
@@ -55,9 +55,6 @@ export class Game {
 	private camera: Camera = { x: 0, y: 0, scale: 1 }
 
 	__debugTileEditor?: DebugTileEditor
-
-	//temp
-	private Test3dShape = new Cube();
 
 	constructor() {
 		this.arena = new Arena(1200, 720); // small room
@@ -203,7 +200,7 @@ export class Game {
 
 
 		//temp test3D shape
-		this.Test3dShape.render(canvas)
+		Cube.render(canvas)
 
 
 		

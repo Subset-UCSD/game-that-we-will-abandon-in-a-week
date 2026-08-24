@@ -17,7 +17,7 @@ const { base, walking, think, sleep } = await loadFrames({
 
 export const SHEEP_WIDTH = 60;
 
-export const SLEEP_TIME = 10000;
+export const SLEEP_TIME = 10000000000000000;
 
 export class Player implements RenderableObject {
 	private props: NetPlayer;
