@@ -65,7 +65,7 @@ class Polyhedron3D implements Renderable3DObject {
     render({c}: Canvas): void {
         const matrix = new DOMMatrix([1, 0, 0, 0, 0, 1, 0, 0, 0, 0, 1, 0, 0, 0, 0, 1]);
         matrix.rotateSelf(this.rotateX, this.rotateY, this.rotateZ)
-        matrix.scaleSelf(100, 100, 100)d
+        matrix.scaleSelf(100, 100, 100)
         this.rotateX += 0.1;
         this.rotateY -= 0.1;
         // this.rotateZ--;
