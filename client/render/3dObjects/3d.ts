@@ -29,14 +29,14 @@ export class Cube implements Renderable3DObject {
     
     constructor() {
         this.vertrices = [
-            vec3(0, 0 ,0),
-            vec3(1, 0 ,0),
-            vec3(1, 1 ,0),
-            vec3(0, 1 ,0),
-            vec3(0, 0 ,1),
-            vec3(1, 0 ,1),
-            vec3(1, 1 ,1),
-            vec3(0, 1 ,1),
+            vec3(0, 0 ,0), // 0
+            vec3(1, 0 ,0), // 1
+            vec3(1, 1 ,0), // 2
+            vec3(0, 1 ,0), // 3
+            vec3(0, 0 ,1), // 4
+            vec3(1, 0 ,1), // 5
+            vec3(1, 1 ,1), // 6
+            vec3(0, 1 ,1), // 7
         ]
         this.faces = [
             [0, 1, 2, 3], //face 1
@@ -45,10 +45,10 @@ export class Cube implements Renderable3DObject {
             [0, 3, 7, 4], //face 2
             // [0, 7, 3],
             
-            [1, 5, 4, 0], //face 3
+            [0, 4, 5, 1], //face 3
             // [4, 1, 0],
 
-            [4, 5, 6, 7], //face 4
+            [7, 6, 5, 4], //face 4
             // [5, 7, 6],
 
             [1, 5, 6, 2], //face 5
@@ -82,12 +82,18 @@ export class Cube implements Renderable3DObject {
             const last_vec = face_veterices.at(-1)
             if (last_vec == null) {
                 throw new Error("How the fuck did you make a face without a single vertex"); 
-            }
-            const normal = cross_product(subVec3(face_veterices[2], face_veterices[1]), subVec3(face_veterices[0], face_veterices[1]))
+            } 
+            
+            const normal = cross_product(
+                subVec3(face_veterices[2], face_veterices[1]),
+                subVec3(face_veterices[0], face_veterices[1])
+            )
+           
             if (normal.z < 0) {
                 continue
             }
-            console.log(normal)
+            
+            console.log(face, normal)
 
             for (const drawn_vertex of face_veterices) {
                 // const vertex = this.vertrices.at(vertexIdx)
