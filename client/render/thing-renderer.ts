@@ -79,8 +79,41 @@ export class BasicRenderer<T extends {id:number;x:number;y:number}>  implements 
   }
 }
 
-export class ThingRenderer extends BasicRenderer<SerializedThing> {
-  constructor (thing: SerializedThing) {
+export type SerializedThingWithAdditionalRenderProperties = SerializedThing & {
+  canInteract: boolean
+}
+
+export class ThingRenderer extends BasicRenderer<SerializedThingWithAdditionalRenderProperties> {
+  constructor (thing: SerializedThingWithAdditionalRenderProperties) {
     super(thing.type, thing)
+  }
+
+  render (canvas: Canvas) {
+    super.render(canvas)
+    const {c} = canvas
+    const rendered = resolved.get(this.renderType)
+    if (!rendered) return
+    const {imageSize,scale=1,offsetY=0} = rendered
+    const {x, y, canInteract, hp, maxHp} = this.thing
+    const heightOffset = (offsetY - imageSize.height) * scale
+    if (canInteract) {
+      c.save()
+      c.lineWidth = 2
+      c.lineJoin = 'round'
+      c.strokeStyle = 'white'
+      c.strokeText('press SPACE to interact', x, y + heightOffset )
+      c.fillStyle = 'black'
+      c.fillText('press SPACE to interact', x, y + heightOffset )
+      c.restore()
+    }
+    if (hp !== undefined && maxHp !== undefined) {
+      const actualhealthpercent = hp / maxHp
+      if (actualhealthpercent < 1) {
+        c.fillStyle = '#ff025f'
+        c.fillRect(x - 20, y - 10 +heightOffset, 40 * (actualhealthpercent), 5)
+        c.strokeStyle = 'black'
+        c.strokeRect(x - 20.5, y - 10.8 +heightOffset, 41, 6)
+      }
+    }
   }
 }

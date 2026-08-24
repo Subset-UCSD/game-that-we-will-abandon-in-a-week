@@ -19,6 +19,7 @@ export class Player implements GameObject {
   static next_id = 0;
   game: Game
   wasBaaing = false
+  wasInteracting = false
   thought: string = ''
   hp: number = 67;
   facingLeft =false
@@ -29,6 +30,13 @@ export class Player implements GameObject {
   seedCooldownTicks = 0;
   collider: BoxCollider;
   collied: boolean = false;
+  /** 
+   * list of static thing IDs
+   * it's an array because you could be standing next to multiple interactive things
+   * not sure if we want it to be click or space (i think space makes more sense because you have to walk up to the object to interact)
+   * TODO: in that case we should change this to just a number
+   */
+  canInteractWith: number[] = []
  
   constructor(game: Game) {
     this.game = game
@@ -77,6 +85,7 @@ export class Player implements GameObject {
       maxHp: MAX_HP,
       lines: this.lines.map(({start,end,committed}) => ({start,end,age:committed?Math.min(1, Math.max(0, (Date.now() - (committed + LINE_START_AGE)) / LINE_MAX_AGE)) : null})),
       collied: this.collied,
+      canInteractWith: this.canInteractWith,
       thought: this.thought
     };
   }

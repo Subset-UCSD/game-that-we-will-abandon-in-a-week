@@ -26,6 +26,9 @@ export const playerSchema = z.object({
   thought: z.string(),
   maxHp: z.number(),
   lines: z.array(lineSchema),
+  canInteractWith: z.number().array(),
+  // wtf is "collied"
+  // like the dog ?
   collied: z.boolean()
 });
 export type Player = z.infer<typeof playerSchema>;
@@ -60,6 +63,9 @@ export const thingSchema = z.strictObject({
   x: z.number(),
   y: z.number(),
   type: z.literal(['tree','campfire','techbro']),
+  interactive: z.boolean().optional(),
+  hp: z.number().optional(),
+  maxHp: z.number().optional(),
 })
 export type SerializedThing = z.infer<typeof thingSchema>;
 

@@ -16,7 +16,7 @@ export class Game {
   private gameObjects: GameObject[] = [
     new StaticThing({ type: 'tree', x: -100, y: -100 }),
     new StaticThing({ type: 'campfire', x: -0, y: -100 }),
-    new StaticThing({ type: 'techbro', x: -50, y: -120 }),
+    new StaticThing({ type: 'techbro', x: -50, y: -120, interactive: true, hp: 10000, maxHp: 10000 }),
   ];
   private colliders: Collider[] = [];
   private lastSentGameState?: { gameState: WholeFkingGameState, versionId: string }
@@ -59,15 +59,29 @@ export class Game {
         explosion
       );
       const EXPLOSION_DAMAGE = 20;
-      for (const [_, player] of this.players) {
-        if (vecLength(subVec(player.getPosition(), meatball.publicState)) < explosion.radius) {
-          player.setHp(player.getHp() - EXPLOSION_DAMAGE);
+      for (const entity of this.gameObjects) {
+        if (entity instanceof Player) {
+          if (vecLength(subVec(entity.getPosition(), meatball.publicState)) < explosion.radius) {
+            entity.setHp(entity.getHp() - EXPLOSION_DAMAGE);
+          }
+          entity.lines = entity.lines.filter(x => 
+            vecLength(subVec(x.end, meatball.publicState)) >= explosion.radius ||
+            vecLength(subVec(x.start, meatball.publicState)) >= explosion.radius
+          );
+
+        } else if (entity instanceof StaticThing) {
+          if (vecLength(subVec(entity.position, meatball.publicState)) < explosion.radius) {
+            entity.takeDamageIfPossible(EXPLOSION_DAMAGE)
+          }
         }
-        player.lines = player.lines.filter(x => 
-          vecLength(subVec(x.end, meatball.publicState)) >= explosion.radius ||
-          vecLength(subVec(x.start, meatball.publicState)) >= explosion.radius
-        );
       }
+    }
+    // should this be in StaticThing.tick? StaticThing doesn't have access to players
+    const interactiveThings = this.gameObjects.values().filter(obj => obj instanceof StaticThing).filter(obj => obj.interactive).toArray()
+    for (const player of this.players.values()) {
+      const INTERACTION_RANGE = 30
+      // we might want the range to change depending on object size
+        player.canInteractWith = interactiveThings.values().filter(thing => vecLengthSquared(subVec(thing.position, player.getPosition())) <= INTERACTION_RANGE * INTERACTION_RANGE).map(thing => thing.id).toArray()
     }
     this.gameObjects = this.gameObjects.filter((mb) => !mb.shouldDelete);
   }
@@ -283,7 +297,26 @@ export class Game {
         }));
         player.seedCooldownTicks = SEED_COOLDOWN;
       }
+      if (player.inputs.interact) {
+        if (!player.wasInteracting) {
+          const target = player.canInteractWith[0]
+          if (target !== undefined) {
+            const thing = this.gameObjects.values().filter(o => o instanceof StaticThing).find(o => o.id === target)
+            if (thing) {
+              this.handlePlayerInteractingWithThing(player, thing)
+            }
+          }
+          player.wasInteracting = true
+        }
+      } else {
+        player.wasInteracting = false
+      }
     }
+  }
+
+  handlePlayerInteractingWithThing (player: Player, thing: StaticThing): void {
+    // TODO: how should we handle dialog? should tech bro extend StaticThing and implement a method with interaction logic?
+    // do we want to send a message to the client to render a dialog pop up, or to represent it as state? if latter, do we want to send this to everyone?
   }
 
   handleDisconnect(ws: WebSocket) {

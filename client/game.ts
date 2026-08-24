@@ -6,7 +6,7 @@ import { InputListener } from "./input-listener";
 import { addVec, isVecEq, SERVER_GAME_TICK,lerp } from "@common";
 import { defaultInputs, keymap } from "@common/input";
 import { WholeFkingGameState, MeatBall, SerializedThing, Line, SerializedCollider, Player as NetPlayer } from '@common/game'
-import { ClientSeed, ClientExplosion, ClientCorpse, ThingRenderer, render, ClientMeatball, Canvas } from "./render"
+import { ClientSeed, ClientExplosion, ClientCorpse, ThingRenderer, render, ClientMeatball, Canvas, SerializedThingWithAdditionalRenderProperties } from "./render"
 import { audio, PlaySoundOptions } from '@client/audio/index';
 
 audio.unlockOnFirstInteraction();
@@ -38,7 +38,7 @@ export class Game {
 	private room;
 	private __debugText: string = ''
 	private id = -1;
-	private things: SerializedThing[] = []
+	private things: SerializedThingWithAdditionalRenderProperties[] = []
 	private lines: Line[] = []
 	private debugColldiers: SerializedCollider[] =[ ]
 	private currPlayerState?: NetPlayer;
@@ -92,7 +92,7 @@ export class Game {
 		}
 		this.meatballs = newMeatballs
 
-		this.things = gameState.things
+		this.things = gameState.things.map(thing => ({...thing, canInteract: this.currPlayerState?.canInteractWith[0] === thing.id}))
 
 		const newSeeds = new Map<number, ClientSeed>();
 		for (const seed of gameState.seeds) {
