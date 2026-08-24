@@ -6,6 +6,9 @@ import { send } from "./net/send";
 import { subVec, vecLength, WholeFkingGameState, GameObject, vecLengthSquared, vec2 } from "@common";
 import { Collider } from "./collision";
 import { generateDiffPayload } from "@common/json-optimizer";
+import { ChunkEntryMap, setTile } from "./tile-manager";
+
+declare const IS_SERVING: boolean
 
 // ALL OF THE GAME LOGIC
 export class Game {
@@ -20,8 +23,13 @@ export class Game {
   ];
   private colliders: Collider[] = [];
   private lastSentGameState?: { gameState: WholeFkingGameState, versionId: string }
+  private tiles: ChunkEntryMap
+  private onTileEdit: (tiles: ChunkEntryMap) => Promise<void>
 
-  constructor() { }
+  constructor(tiles: ChunkEntryMap, onTileEdit: (tiles: ChunkEntryMap) => Promise<void>) { 
+    this.tiles = tiles
+    this.onTileEdit = onTileEdit
+  }
 
   public loop() {
     // process all of the inputs
@@ -207,6 +215,14 @@ export class Game {
           break
         }
         conn.lastSentGameStateVersionId = undefined
+        break
+      }
+      case 'tile-edit': {
+        if (!IS_SERVING) {
+          break
+        }
+        setTile(this.tiles, msg.value, msg.value.tile)
+         this.onTileEdit(this.tiles)
         break
       }
     }

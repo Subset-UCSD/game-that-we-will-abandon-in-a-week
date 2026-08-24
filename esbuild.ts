@@ -16,6 +16,9 @@ const serverConfigPromise = esbuild.context({
 	define: {
 		IS_SERVING: isServe?'true':'false'
 	},
+	loader: {
+		'.txt': 'text'
+	},
 });
 
 const clientConfigPromise = esbuild.context({

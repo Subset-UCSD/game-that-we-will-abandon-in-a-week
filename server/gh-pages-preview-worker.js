@@ -5,8 +5,10 @@
 import { Game } from "@server/game";
 import { clientMessage } from "@common/messages";
 import {SERVER_GAME_TICK} from '@common'
+import tiles from '../tiles.txt'
+import { deserializeTiles } from "./tile-manager";
 
-const game = new Game();
+const game = new Game(deserializeTiles(tiles), async () => {});
 
 const ws = {
   send: message => self.postMessage(message)

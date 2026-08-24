@@ -1,6 +1,7 @@
 import { Inputs, inputSchema } from "@common/input";
 import { wholeFkingGameState } from "@common/game";
 import z from "zod";
+import { tileSchema } from "./tiles";
 
 /**
  * Message schema helper. This returns a zod schema for message shape with a payload
@@ -23,6 +24,12 @@ export type InputMessage = z.infer<typeof inputMessage>;
 
 export const pleaseSendMeFullGameStateMessage = $message("please-send-full-game-state", z.null());
 
+export const tileEditMessage = $message("tile-edit", z.object({
+	x: z.number(),
+	y: z.number(),
+	tile: tileSchema.nullable(),
+}));
+
 export const joinMessage = $message("join", z.object({
 	sessionId: z.string().optional()
 }));
@@ -31,6 +38,7 @@ export type JoinMessage = z.infer<typeof joinMessage>;
 export const clientMessage = z.discriminatedUnion('type',[
 	inputMessage,
 	pleaseSendMeFullGameStateMessage,
+	tileEditMessage,
 	joinMessage
 ]);
 export type ClientMessage = z.infer<typeof clientMessage>;
