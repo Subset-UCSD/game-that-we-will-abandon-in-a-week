@@ -6,3 +6,4 @@ export * from "./input";
 export * from "./game";
 export * from "./vector";
 export * from "./interpolator";
+export * from './tiles'

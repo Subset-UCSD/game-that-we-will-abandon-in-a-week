@@ -4,6 +4,7 @@ import { SERVER_GAME_TICK } from "@common";
 import {Connection} from './net/connection'
 import {Game} from './game'
 import {Canvas} from './render'
+import { DebugTileEditor } from "./debug/tile-editor";
 
 using canvas = new Canvas()
 const c = canvas.context
@@ -12,7 +13,10 @@ document.body.append(canvas.canvas)
 
 const game = new Game();
 
-
+declare const IS_SERVING: boolean
+if (IS_SERVING) {
+	game.__debugTileEditor = new DebugTileEditor()
+}
 
 // Game loop
 while (true) {

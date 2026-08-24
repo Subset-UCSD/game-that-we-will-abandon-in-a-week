@@ -6,6 +6,8 @@ import { Game } from "@server/game";
 import { type ClientMessage, clientMessage } from "@common/messages";
 import { prettifyError } from 'zod'
 import {SERVER_GAME_TICK} from '@common'
+import { deserializeTiles, serializeTiles } from "./tile-manager";
+import { readFile, writeFile } from "fs/promises";
 
 
 if (process.argv.length !== 3) {
@@ -26,7 +28,11 @@ app.get("/", (_, res) => {
   res.sendFile(join(__dirname, "public/index.html"));
 });
 
-const game = new Game();
+const tiles = deserializeTiles(await readFile('tiles.txt', 'utf-8')
+  .catch(error => Error.isError(error) && 'code' in error && error.code === 'ENOENT' ? '' : Promise.reject(error)))
+const game = new Game(tiles, async tilesEdited => {
+  await writeFile('tiles.txt', serializeTiles(tilesEdited))
+});
 
 wss.on("connection", (ws) => {
   ws.on("message", (msg) => {
