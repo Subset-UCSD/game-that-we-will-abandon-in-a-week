@@ -10,6 +10,7 @@ import { ClientSeed, ClientExplosion, ClientCorpse, ThingRenderer, render, Clien
 import { audio, PlaySoundOptions } from '@client/audio/index';
 import { number } from "zod";
 import { DebugTileEditor } from "./debug/tile-editor";
+import { Cube } from "./render/3dObjects/3d";
 
 audio.unlockOnFirstInteraction();
 audio.preload({
@@ -54,6 +55,9 @@ export class Game {
 	private camera: Camera = { x: 0, y: 0, scale: 1 }
 
 	__debugTileEditor?: DebugTileEditor
+
+	//temp
+	private Test3dShape = new Cube();
 
 	constructor() {
 		this.arena = new Arena(1200, 720); // small room
@@ -117,7 +121,7 @@ export class Game {
 			newCorpses.set(meatball.id, existing)
 		}
 		this.corpses = newCorpses
-
+		console.log("no restarts?")
 
 		for (const explosion of gameState.explosions) {
 			if (!this.explosions.has(explosion.id)) {
@@ -196,6 +200,12 @@ export class Game {
 		for (const [i, line] of lines.entries()) {
 			canvas.context.fillText(line, 0, i * 10)
 		}
+
+
+		//temp test3D shape
+		this.Test3dShape.render(canvas)
+
+
 		
 		this.paintLines(c);
 
