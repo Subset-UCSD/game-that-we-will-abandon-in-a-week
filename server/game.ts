@@ -24,9 +24,9 @@ export class Game {
   private colliders: Collider[] = [];
   private lastSentGameState?: { gameState: WholeFkingGameState, versionId: string }
   private tiles: ChunkEntryMap
-  private onTileEdit: (tiles: ChunkEntryMap) => Promise<void>
+  private onTileEdit: (tiles: ChunkEntryMap) => void
 
-  constructor(tiles: ChunkEntryMap, onTileEdit: (tiles: ChunkEntryMap) => Promise<void>) { 
+  constructor(tiles: ChunkEntryMap, onTileEdit: (tiles: ChunkEntryMap) => void) { 
     this.tiles = tiles
     this.onTileEdit = onTileEdit
   }
@@ -147,6 +147,7 @@ export class Game {
         .map((ex) => ex.serialize()),
       seeds: this.gameObjects.filter(x => x instanceof Seed).map(x => x.serialize()),
       colliders: this.gameObjects.map(object => object.collider?.serialize()).filter(collider => collider !== undefined),
+      tiles: Object.fromEntries(this.tiles.entries().map(([key, {tiles}])=>[key, tiles])),
     };
   }
 
@@ -222,6 +223,7 @@ export class Game {
           break
         }
         setTile(this.tiles, msg.value, msg.value.tile)
+        // console.log(this.tiles)
          this.onTileEdit(this.tiles)
         break
       }
