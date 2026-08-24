@@ -5,7 +5,7 @@
   "main": "index.js",
   "scripts": {
     "start": "node dist/server.js 6767",
-    "start:watch": "node ensure-dist-server.js && node --watch --watch-path=dist/server.js --watch-preserve-output  dist/server.js 6769",
+    "start:watch": "nodemon --watch dist/server.js --exec 'node dist/server.js 6769'",
     "build": "node ./esbuild.ts build",
     "build:watch": "node ./esbuild.ts serve",
     "dev": "run-p build:watch start:watch",
@@ -26,6 +26,7 @@
     "@types/node": "^26.2.0",
     "@types/ws": "^8.18.1",
     "esbuild": "^0.28.2",
+    "nodemon": "^3.1.14",
     "npm-run-all2": "^9.0.3",
     "typescript": "^7.0.2"
   },
