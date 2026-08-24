@@ -1,3 +1,5 @@
+import { Expression, parse } from "./vector/expression_parser";
+
 export type Vec2 = { x: number, y: number };
 
 export type Vec3 = { x: number, y: number, z: number};
@@ -61,4 +63,88 @@ export const subVec3 = (a: Vec3, b:Vec3) => {
 		a.y - b.y,
 		a.z - b.z,
 	)
+}
+
+/**
+ * ev = eval vector expression
+ * @throws when you are bad!!
+ */
+export function ev (parts: TemplateStringsArray, ...values: (Vec2 | number)[]): Vec2 {
+	let fullString = ''
+	for (const [i, part] of parts.entries()) {
+		fullString += part
+		if (i < values.length) {
+			fullString += `${i}&`
+		}
+	}
+	const parsed = parse(fullString)
+	if (!parsed) {
+		throw new SyntaxError(`'${parsed}' is BAD expression`)
+	}
+	const result = evaluateExpression(values, parsed)
+	if (typeof result === 'number') {
+		throw new TypeError(`you somehow produced a number (${result})`)
+	}
+	return result
+}
+
+function evaluateExpression (values: (Vec2 | number)[], expression: Expression): Vec2 | number {
+	if ('op' in expression) {
+		const a = evaluateExpression(values, expression.a)
+		const b = evaluateExpression(values, expression.b)
+		switch (expression.op) {
+			case "+": {
+				if (typeof a !== 'number' && typeof b !== 'number') {
+					return addVec(a, b)
+				}
+				if (typeof a === 'number' && typeof b === 'number') {
+					return a + b
+				}
+				throw new Error('cannot add vector and number')
+			}
+			case "-": {
+				if (typeof a !== 'number' && typeof b !== 'number') {
+					return subVec(a, b)
+				}
+				if (typeof a === 'number' && typeof b === 'number') {
+					return a - b
+				}
+				throw new Error('cannot add vector and number')
+			}
+			case "*": {
+				if (typeof a === 'number' && typeof b === 'number') {
+					return a * b
+				}
+				if (typeof a !== 'number' && typeof b === 'number') {
+					return scaleVec(a, b)
+				}
+				if (typeof a === 'number' && typeof b !== 'number') {
+					return scaleVec(b, a)
+				}
+				throw new Error('cannot multiply vectors, too ambiguous')
+			}
+			case "/": {
+				if (typeof a === 'number' && typeof b === 'number') {
+					return a / b
+				}
+				if (typeof a !== 'number' && typeof b === 'number') {
+					return scaleVec(a, 1/b)
+				}
+				if (typeof a === 'number' && typeof b !== 'number') {
+					return scaleVec(b, 1/a)
+				}
+				throw new Error('cannot divide vectors')
+			}
+			case ".": {
+				if (typeof a !== 'number' && typeof b !== 'number') {
+					return dot(a, b)
+				}
+				throw new Error('cannot dot anything but vectors')
+			}
+		}
+	} else if ('value' in expression) {
+		return expression.value
+	} else {
+		return values[expression.reference]
+	}
 }

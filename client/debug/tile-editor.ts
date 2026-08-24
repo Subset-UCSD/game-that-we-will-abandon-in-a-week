@@ -1,6 +1,6 @@
 import { Camera, Game } from "@client/game"
 import { Canvas } from "@client/render"
-import { addVec, scaleVec, subVec, Vec2 } from "@common"
+import { addVec, ev, scaleVec, subVec, Vec2 } from "@common"
 import { TILE_SIZE, TileId } from "@common/tiles"
 
 export class DebugTileEditor {
@@ -45,7 +45,7 @@ export class DebugTileEditor {
 
 
     if (this.#mouse) {
-      const mouseInWorld = addVec(scaleVec(subVec(this.#mouse, { x: width/2, y: height/2 }), 1 / camera.scale), camera)
+      const mouseInWorld = ev`(${this.#mouse} - ${{ x: width/2, y: height/2 }}) / ${camera.scale} + ${camera}`
       this.#mouseInWorld = {x:Math.floor(mouseInWorld.x / TILE_SIZE),y: Math.floor(mouseInWorld.y / TILE_SIZE)}
       c.fillStyle = 'rgba(255, 255, 255, 0.1)'
       c.fillRect(
