@@ -181,18 +181,29 @@ tileTR===null
       }
       
 if (!drew) {
-
-      // TODO: draw quadrants or something
-      
-      c.fillStyle = 'blue'
-      c.fillRect(
-        ...vecToArray(ev`(${tileCoord} + ${vec2(0.2)}) * ${TILE_SIZE} + ${vec2(TILE_SIZE / 2)}`),
-        ...vecToArray(vec2(TILE_SIZE * 0.6)),
-      )
-      c.strokeRect(
-        ...vecToArray(tileBase),
-        ...vecToArray(vec2(TILE_SIZE)),
-      )
+        for (const [i, tile] of [tileBR,tileBL,tileTL,tileTR].entries()) {
+          if (tile===null) continue
+          const offset = offsets[i]
+          const indiv = individualTileTextures.get(tile)
+        if (!indiv) continue
+        if (indiv.type === 'color') {
+          c.fillStyle = indiv.color
+          c.fillRect(
+            ...vecToArray(ev`${tileBase} + ${offset} * ${TILE_SIZE / 2}`),
+            ...vecToArray(vec2(TILE_SIZE/2)),
+          )
+        } else if (indiv.type === 'tilemap') {
+          c.drawImage(
+            indiv.image,
+            ...vecToArray(ev`${
+              vecMap2(vec2(indiv.tileSize), pairTilePositions[indiv.side === 'bl' ? '::' : '  '], (a, b) => a * b)
+            } + ${offset} * ${indiv.tileSize / 2}`),
+            ...vecToArray(vec2(indiv.tileSize / 2)),
+            ...vecToArray(ev`${tileBase} + ${offset} * ${TILE_SIZE / 2}`),
+            ...vecToArray(vec2(TILE_SIZE/2)),
+          )
+        }
+        }
 }
 
       }

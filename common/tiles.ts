@@ -9,11 +9,13 @@ export const CHUNK_SIZE = 20
 export const TILE_SIZE = 40
 
 export const tileSchema = z.literal([
-  'temp_dirt',
-  'temp_water',
   'dirt',
   'grass',
   'bad_wall',
+
+  // legacy
+  'temp_dirt',
+  'temp_water',
 ])
 
 export type TileId = z.infer<typeof tileSchema>
