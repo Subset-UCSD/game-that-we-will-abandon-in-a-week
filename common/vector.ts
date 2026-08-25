@@ -4,7 +4,7 @@ export type Vec2 = { x: number, y: number };
 
 export type Vec3 = { x: number, y: number, z: number};
 
-export const vec2 = (x: number, y: number): Vec2 => ({ x, y });
+export const vec2 = (x = 0, y = x): Vec2 => ({ x, y });
 
 
 export const vec3 = (x: number, y: number, z: number): Vec3 => ({ x, y, z });
@@ -27,6 +27,11 @@ export const vecLengthSquared = ({ x, y }: Vec2): number => x * x + y * y;
 export const normalize = (v: Vec2): Vec2 => scaleVec(v, 1/vecLength(v));
 
 export const ortho =  ({ x, y }: Vec2): Vec2 => vec2(-y, x);
+
+export const vecMap1 = ({x, y}: Vec2, mapFn: (n: number) => number): Vec2 => ({ x: mapFn(x), y: mapFn(y) })
+export const vecMap2 = (a: Vec2, b: Vec2, mapFn: (a: number, b: number) => number): Vec2 => ({ x: mapFn(a.x, b.x), y: mapFn(a.y, b.y) })
+
+export const vecToArray = ({x,y}: Vec2): [x: number, y: number] => [x, y]
 
 // let it be known:
 //   the produce was once
@@ -65,19 +70,22 @@ export const subVec3 = (a: Vec3, b:Vec3) => {
 	)
 }
 
+const cache = new WeakMap<TemplateStringsArray, Expression | null>()
 /**
  * ev = eval vector expression
  * @throws when you are bad!!
  */
 export function ev (parts: TemplateStringsArray, ...values: (Vec2 | number)[]): Vec2 {
-	let fullString = ''
-	for (const [i, part] of parts.entries()) {
-		fullString += part
-		if (i < values.length) {
-			fullString += `${i}&`
+	const parsed = cache.getOrInsertComputed(parts, () => {
+		let fullString = ''
+		for (const [i, part] of parts.entries()) {
+			fullString += part
+			if (i < values.length) {
+				fullString += `${i}&`
+			}
 		}
-	}
-	const parsed = parse(fullString)
+		return parse(fullString)
+	})
 	if (!parsed) {
 		throw new SyntaxError(`'${parsed}' is BAD expression`)
 	}

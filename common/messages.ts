@@ -25,8 +25,8 @@ export type InputMessage = z.infer<typeof inputMessage>;
 export const pleaseSendMeFullGameStateMessage = $message("please-send-full-game-state", z.null());
 
 export const tileEditMessage = $message("tile-edit", z.object({
-	x: z.number(),
-	y: z.number(),
+	vecs: z.object({x: z.number(),
+		y: z.number(),}).array(),
 	tile: tileSchema.nullable(),
 }));
 

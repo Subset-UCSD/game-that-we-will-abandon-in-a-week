@@ -1,8 +1,191 @@
-import { addVec, CHUNK_SIZE, ChunkMap, scaleVec, TILE_SIZE, TileId, Vec2 } from "@common";
+import { addVec, CHUNK_SIZE, ChunkMap, ev,  scaleVec, TILE_SIZE, TileId, vec2, Vec2, vecMap1, vecMap2, vecToArray } from "@common";
 import { Canvas } from "./render";
 import { Camera } from "./game";
 
+type TileRegistryEntry =
+  | { tile: TileId, color: string }
+  | { bl: TileId, mid: TileId, path: string }
+
+// Register your tile textures here
+const tileRegistry: TileRegistryEntry[] = [
+  { tile: 'temp_dirt', color: 'brown' },
+  { bl: 'grass', mid: 'dirt', path: 'assets/tilesets/grass-path/janky-grass-path.png' },
+]
+
+type IndividualTile = { type: 'color', color: string } | { type: 'tilemap', side: 'bl' | 'mid', image: ImageBitmap; tileSize: number }
+const individualTileTextures = new Map<TileId, IndividualTile>()
+const pairTileTextures = new Map<TileId, Map<TileId, { image: ImageBitmap; tileSize: number }>>()
+const promises: Promise<void>[] = []
+for (const entry of tileRegistry) {
+  promises.push((async () => {
+    if ('color' in entry) {
+      individualTileTextures.set(entry.tile, {type:'color',color:entry.color})
+      return
+    }
+    const image = await fetch(entry.path).then(r => r.blob()).then(createImageBitmap)
+    const tileSize =32
+    individualTileTextures.set(entry.bl, { type: 'tilemap', side: 'bl', image, tileSize })
+    individualTileTextures.set(entry.mid, { type: 'tilemap', side: 'mid', image, tileSize })
+    pairTileTextures.getOrInsertComputed(entry.bl, () => new Map()).set(entry.mid, {image,tileSize})
+  })())
+}
+await Promise.all(promises)
+
+
+const pairTilePositions = {
+  "':": vec2(0, 0),
+  ".'": vec2(0, 1),
+  ":.": vec2(0, 2),
+  "::": vec2(0, 3),
+  ": ": vec2(1, 0),
+  "' ": vec2(1, 1),
+  "..": vec2(1, 2),
+  ":'": vec2(1, 3),
+  " '": vec2(2, 0),
+  "  ": vec2(2, 1),
+  ". ": vec2(2, 2),
+  "'.": vec2(2, 3),
+  "''": vec2(3, 0),
+  " .": vec2(3, 1),
+  " :": vec2(3, 2),
+  ".:": vec2(3, 3),
+}
+
+
+function getTile (tiles: ChunkMap, coord: Vec2): TileId | null {
+  const chunkCoord = vecMap1(coord, c => Math.floor(c / CHUNK_SIZE))
+  const localCoord = vecMap1(coord, c => (c % CHUNK_SIZE + CHUNK_SIZE) % CHUNK_SIZE)
+  return tiles[`${chunkCoord.x} ${chunkCoord.y}`]?.[localCoord.y * CHUNK_SIZE + localCoord.x] ?? null
+}
+
+
+// this is kinda inefficient but whatever
+// if we wanted speed we'd use webgl
+
 export function renderTiles (canvas: Canvas, camera: Camera, tiles: ChunkMap): void {
+  // TEMP: for debugging
+  // renderTilesOld(canvas, camera, tiles)
+
+
+  const {width,height,c} = canvas
+
+  const left = camera.x - width/camera.scale/2 
+    const right = camera.x + width/camera.scale/2 
+    const startX = Math.floor((left - TILE_SIZE/2) / TILE_SIZE)
+    const endX = Math.ceil((right - TILE_SIZE/2) / TILE_SIZE)
+
+    const top = camera.y - height/camera.scale/2 
+    const bottom = camera.y + height/camera.scale/2 
+    const startY = Math.floor((top - TILE_SIZE/2) / TILE_SIZE) 
+    const endY = Math.ceil((bottom - TILE_SIZE/2) / TILE_SIZE) 
+
+  const screenSize = {x:width,y: height}
+  const screenStart = ev`${camera} - ${screenSize} / ${camera.scale} / 2`
+  const screenEnd = ev`${camera} + ${screenSize} / ${camera.scale} / 2`
+  const tileStart = vecMap1(screenStart, coord => Math.floor((coord - TILE_SIZE/2) / TILE_SIZE))
+  const tileEnd = vecMap1(screenEnd, coord => Math.ceil((coord - TILE_SIZE/2) / TILE_SIZE))
+
+      c.strokeStyle = 'blue'
+      // TEMP: remove +/- 1
+    for (let y = tileStart.y+1; y < tileEnd.y-1; y++)
+    for (let x = tileStart.x+1; x < tileEnd.x-1; x++) {
+  const tileCoord = { x, y }
+      // c.fillRect(
+      //   (x + 0.2) * TILE_SIZE+TILE_SIZE/2,
+      //   (y + 0.2) * TILE_SIZE+TILE_SIZE/2,
+      //   TILE_SIZE*0.6,
+      //   TILE_SIZE*0.6,
+      // )
+      // c.strokeRect(
+      //   (x ) * TILE_SIZE+TILE_SIZE/2,
+      //   (y ) * TILE_SIZE+TILE_SIZE/2,
+      //   TILE_SIZE,
+      //   TILE_SIZE,
+      // )
+
+      const tileBR = getTile(tiles, tileCoord)
+      const tileBL = getTile(tiles, addVec(tileCoord, vec2(-1, 0)))
+      const tileTL = getTile(tiles, addVec(tileCoord, vec2(-1, -1)))
+      const tileTR = getTile(tiles, addVec(tileCoord, vec2(0, -1)))
+      const allTiles = new Set([
+        tileBR,
+tileBL,
+tileTL,
+tileTR,
+      ].filter(x => x !== null))
+      if (allTiles.size === 0) {
+        continue
+      } 
+      tilePair: if (allTiles.size === 2) {
+        const [a, b] = allTiles
+        let pairImage, bl
+        pairImage = pairTileTextures.get(a)?.get(b)
+        if (pairImage) {
+          bl = a
+        } else {
+          pairImage = pairTileTextures.get(b)?.get(a)
+          if (pairImage) {
+            bl = b
+          } else {
+            break tilePair
+          }
+        }
+        c.drawImage(
+            pairImage.image,
+            ...vecToArray(vecMap2(vec2(pairImage.tileSize), pairTilePositions[
+              `${
+(tileBL === bl ? (tileTL === bl ? ':' : '.') : (tileTL === bl ? "'" : ' ' ) )
+              }${
+(tileBR === bl ? (tileTR === bl ? ':' : '.') : (tileTR === bl ? "'" : ' ' ) ) 
+              }` 
+            ], (a, b) => a * b)),
+            ...vecToArray(vec2(pairImage.tileSize)),
+            ...vecToArray(ev`${tileCoord} * ${TILE_SIZE} + ${vec2(TILE_SIZE / 2)}`),
+            ...vecToArray(vec2(TILE_SIZE)),
+          )
+          continue
+      }
+      if (allTiles.size === 1) {
+        const [tile] = allTiles
+        const indiv = individualTileTextures.get(tile)
+        if (!indiv) {
+          continue
+        }
+        if (indiv.type === 'color') {
+          c.fillStyle = indiv.color
+          c.fillRect(
+            ...vecToArray(ev`${tileCoord} * ${TILE_SIZE} + ${vec2(TILE_SIZE / 2)}`),
+            ...vecToArray(vec2(TILE_SIZE)),
+          )
+        } else if (indiv.type === 'tilemap') {
+          c.drawImage(
+            indiv.image,
+            ...vecToArray(vecMap2(vec2(indiv.tileSize), pairTilePositions[indiv.side === 'bl' ? '::' : '  '], (a, b) => a * b)),
+            ...vecToArray(vec2(indiv.tileSize)),
+            ...vecToArray(ev`${tileCoord} * ${TILE_SIZE} + ${vec2(TILE_SIZE / 2)}`),
+            ...vecToArray(vec2(TILE_SIZE)),
+          )
+        }
+        continue
+      }
+      
+      // TODO: draw quadrants or something
+      c.fillStyle = 'blue'
+      c.fillRect(
+        ...vecToArray(ev`(${tileCoord} + ${vec2(0.2)}) * ${TILE_SIZE} + ${vec2(TILE_SIZE / 2)}`),
+        ...vecToArray(vec2(TILE_SIZE * 0.6)),
+      )
+      c.strokeRect(
+        ...vecToArray(ev`(${tileCoord}) * ${TILE_SIZE} + ${vec2(TILE_SIZE / 2)}`),
+        ...vecToArray(vec2(TILE_SIZE)),
+      )
+    }
+    // TEMP
+    c.strokeStyle = 'red'
+    c.strokeRect(left+TILE_SIZE, top+TILE_SIZE, right - left - 2*TILE_SIZE, bottom-top - 2*TILE_SIZE)
+}
+
+export function renderTilesOld (canvas: Canvas, camera: Camera, tiles: ChunkMap): void {
   const {width,height} = canvas
   const left = camera.x - width/camera.scale/2
       const right = camera.x + width/camera.scale/2
