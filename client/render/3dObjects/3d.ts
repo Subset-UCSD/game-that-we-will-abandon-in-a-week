@@ -39,8 +39,28 @@ class Polyhedron3D implements Renderable3DObject {
 
     // may need to become a input to the
     texture(ctx: CanvasRenderingContext2D, face_idx: number): void {
+       
+        ctx.strokeStyle = "blue";
+        ctx.font = "bold 0.4px serif";
+        
+        // ctx.fillRect(0, 0, 0.75, 0.75) 
+        ctx.beginPath();
+        ctx.moveTo(0, 1);
+        ctx.lineTo(1, 0);
+        ctx.lineTo(0, 0);
+        ctx.closePath();
+
+        // // the outline
+        ctx.lineWidth = 0.01;
+        ctx.strokeStyle = '#666666';
+        ctx.stroke();
+
+        // the fill color
+        ctx.fillStyle = "#FFCC00";
+        ctx.fill();
+
         ctx.fillStyle = "red";
-        ctx.fillRect(0, 0, 0.5, 0.5) 
+        ctx.fillText((face_idx + 1).toString(), 0.2, 0.4)
     }
 
     applyTexture(ctx: CanvasRenderingContext2D, face_veterices:Vec3[], face_idx:number): void {
@@ -75,6 +95,7 @@ class Polyhedron3D implements Renderable3DObject {
 
         c.beginPath();
         let frist = true
+        let face_index = 0
         for (const face of this.faces){
             const face_veterices: Vec3[] = []
             for (const vertexIdx of face) {
@@ -101,11 +122,14 @@ class Polyhedron3D implements Renderable3DObject {
 
            
            
-            if (normal.z < 0) {
+            if (normal.z > 0) {
+                face_index += 1
                 continue
+
             }
 
-            this.applyTexture(c, face_veterices, 0)
+            this.applyTexture(c, face_veterices, face_index)
+            face_index += 1
                         
             // console.log(face, normal)
 
@@ -189,45 +213,46 @@ export const Pyramid = new Polyhedron3D(
 )
 
 
+const GOLDEN_RATIO = (1 + Math.sqrt(5)) / 2
 
-//  this.vertrices = [
-        //     vec3(0, 0 ,0), // 0
-        //     vec3(1, 0 ,0), // 1
-        //     vec3(1, 1 ,0), // 2
-        //     vec3(0, 1 ,0), // 3
-        //     vec3(0, 0 ,1), // 4
-        //     vec3(1, 0 ,1), // 5
-        //     vec3(1, 1 ,1), // 6
-        //     vec3(0, 1 ,1), // 7
-        // ]
-        // this.faces = [
-        //     [0, 1, 2, 3], //face 1
-        //     // [3, 0, 2],
-
-        //     [0, 3, 7, 4], //face 2
-        //     // [0, 7, 3],
-            
-        //     [0, 4, 5, 1], //face 3
-        //     // [4, 1, 0],
-
-        //     [7, 6, 5, 4], //face 4
-        //     // [5, 7, 6],
-
-        //     [1, 5, 6, 2], //face 5
-        //     // [2, 1, 6],
-
-        //     [3, 2, 6, 7], //face 5
-        //     // [7, 2, 6],
-        // ]
-
-// class DiceD20 implements Renderable3DObject {
-//     index = 20;
-//     vertrices: Vec3[];
-//     edges:  Vec3[];
-//     constructor() {
-
-//     }
-
-//     render(canvas: Canvas): void {
-//     }
-// }
+export const D20 = new Polyhedron3D(
+    //verticies
+    [
+        vec3(0, 1, GOLDEN_RATIO), // 0
+        vec3(0, -1, GOLDEN_RATIO), // 1
+        vec3(0, 1 , - GOLDEN_RATIO), // 2
+        vec3(0, -1 , - GOLDEN_RATIO), // 3
+        vec3(1, GOLDEN_RATIO, 0), // 4
+        vec3(-1, GOLDEN_RATIO, 0), // 5
+        vec3(1, -GOLDEN_RATIO, 0), // 6
+        vec3(-1, -GOLDEN_RATIO, 0), // 7
+        vec3(GOLDEN_RATIO, 0, 1), // 8
+        vec3(-GOLDEN_RATIO, 0, 1), // 9
+        vec3(GOLDEN_RATIO, 0, -1), // 10
+        vec3(-GOLDEN_RATIO, 0, -1), // 11
+        
+    ],
+    //faces
+    [
+        [0, 5, 4], //1
+        [0, 9, 5], //2
+        [0, 4, 8], //3
+        [0, 8, 1], //4
+        [0, 1, 9], //5
+        [2, 4, 5], //6
+        [2, 5, 11],//7
+        [2, 11, 3],//8
+        [2, 3, 10],//9
+        [2, 10, 4],//10
+        [3, 7, 6],//11
+        [3, 6, 10],//12
+        [3, 11, 7], //13
+        [7, 9, 1],  //14
+        [7, 1, 6],  //15
+        [1, 8, 6], //16
+        [4, 10, 8], //17
+        [5, 9, 11], //18
+        [11, 9 , 7], //19
+        [6, 8, 10], //20
+    ]
+)

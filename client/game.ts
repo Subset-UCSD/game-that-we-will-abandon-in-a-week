@@ -10,7 +10,7 @@ import { ClientSeed, ClientExplosion, ClientCorpse, ThingRenderer, render, Clien
 import { audio, PlaySoundOptions } from '@client/audio/index';
 import { number } from "zod";
 import { DebugTileEditor } from "./debug/tile-editor";
-import { Pyramid as Cube } from "./render/3dObjects/3d";
+import { D20 as Cube } from "./render/3dObjects/3d";
 import { renderTiles } from "./tiles";
 
 audio.unlockOnFirstInteraction();
