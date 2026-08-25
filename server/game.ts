@@ -222,7 +222,9 @@ export class Game {
         if (!IS_SERVING) {
           break
         }
-        setTile(this.tiles, msg.value, msg.value.tile)
+        for (const vec of msg.value.vecs) {
+          setTile(this.tiles, vec, msg.value.tile)
+        }
         // console.log(this.tiles)
          this.onTileEdit(this.tiles)
         break

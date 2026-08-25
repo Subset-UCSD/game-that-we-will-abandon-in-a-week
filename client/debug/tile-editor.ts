@@ -1,20 +1,54 @@
 import { Camera, Game } from "@client/game"
 import { Canvas } from "@client/render"
-import { addVec, scaleVec, subVec, Vec2 } from "@common"
-import { TILE_SIZE, TileId } from "@common/tiles"
+import { addVec, ev, scaleVec, subVec, vec2, Vec2 } from "@common"
+import { TILE_SIZE, TileId, tileSchema } from "@common/tiles"
 
 export class DebugTileEditor {
   #enabled = false
   #mouse?: Vec2
   #mouseInWorld?: Vec2
   #mouseDown ?: Set<`${number} ${number}`>
+  #radius = 0
+  #tile: TileId | null = 'dirt'
   
   constructor () {
-    const button = Object.assign(document.createElement('button'), {
+    const wrapper = Object.assign(document.createElement('div'), {
       className: 'debug-tile-editor',
+    })
+
+    
+    
+    const slider = Object.assign(document.createElement('input'), {
+      type: 'range',
+      min: 0,
+      max: 5,
+      value: 0
+    })
+    wrapper.append(slider)
+    slider.addEventListener('input', () => {
+      this.#radius = slider.valueAsNumber
+    })
+    
+    const select = document.createElement('select')
+      select.append(Object.assign(document.createElement('option'),{
+        textContent:'V O I D',
+        value:''
+      }))
+    for (const option of tileSchema.values ) {
+      select.append(Object.assign(document.createElement('option'),{
+        textContent:option,
+        value:option
+      }))
+    }
+    select.value = this.#tile ?? ''
+    wrapper.append(select)
+    select.addEventListener('change', () => {
+      this.#tile = select.value === '' ? null : tileSchema.parse(select.value)
+    })
+
+    const button = Object.assign(document.createElement('button'), {
       textContent: 'toggle tile editing'
     })
-    document.body.append(button)
     button.addEventListener('click', () => {
       this.#enabled = !this.#enabled
       if (!this.#enabled) {
@@ -22,6 +56,10 @@ export class DebugTileEditor {
         this.#mouseDown = undefined
       }
     })
+
+
+    
+    wrapper.append(button)
 
     document.addEventListener('pointerdown', e => {
       if (!(e.target instanceof Element)|| !e.target.closest('canvas')) return
@@ -36,32 +74,47 @@ export class DebugTileEditor {
     document.addEventListener('pointermove', e => {
       this.#mouse = { x: e.clientX, y: e.clientY }
     })
+
+    
+    document.body.append(wrapper)
   }
 
-  render ({c,width,height}:Canvas, camera: Camera): Vec2 & { tile: TileId | null } | undefined {
+  render ({c,width,height}:Canvas, camera: Camera): { vecs: Vec2[], tile: TileId | null } | undefined {
     if (!this.#enabled) {
       return
     }    
 
 
     if (this.#mouse) {
-      const mouseInWorld = addVec(scaleVec(subVec(this.#mouse, { x: width/2, y: height/2 }), 1 / camera.scale), camera)
-      this.#mouseInWorld = {x:Math.floor(mouseInWorld.x / TILE_SIZE),y: Math.floor(mouseInWorld.y / TILE_SIZE)}
+      const mouseInWorld = ev`(${this.#mouse} - ${{ x: width/2, y: height/2 }}) / ${camera.scale} + ${camera}`
+      this.#mouseInWorld = {x:Math.floor(mouseInWorld.x / TILE_SIZE) ,y: Math.floor(mouseInWorld.y / TILE_SIZE) }
       c.fillStyle = 'rgba(255, 255, 255, 0.1)'
       c.fillRect(
-        this.#mouseInWorld.x * TILE_SIZE,
-        this.#mouseInWorld.y * TILE_SIZE,
-        TILE_SIZE,
-        TILE_SIZE,
+        (this.#mouseInWorld.x - this.#radius) * TILE_SIZE,
+        (this.#mouseInWorld.y - this.#radius) * TILE_SIZE,
+        TILE_SIZE * (this.#radius * 2 + 1),
+        TILE_SIZE * (this.#radius * 2 + 1),
       )
-      const key = `${this.#mouseInWorld.x} ${this.#mouseInWorld.y}` as const
-      if (this.#mouseDown && !this.#mouseDown.has(key)) {
-        this.#mouseDown.add(key)
+      if (this.#mouseDown){
+      const vecs: Vec2[] = []
+      for (let x = -this.#radius; x <= this.#radius; x++)
+      for (let y = -this.#radius; y <= this.#radius; y++) {
+    const sum = addVec(this.#mouseInWorld,{x,y})
+    if (!this.#mouseDown.has(`${sum.x} ${sum.y}`))
+        vecs.push(sum)
+    }
+      // const key = `${this.#mouseInWorld.x} ${this.#mouseInWorld.y}` as const
+      if (vecs.length) {
+        for (const {x,y} of vecs) {
+          this.#mouseDown.add(`${x} ${y}`)
+        }
+          
         return {
-          ...this.#mouseInWorld,
-          tile: 'temp_dirt'
+          vecs,
+          tile: this.#tile,
         }
       }
+    }
     } else {
       this.#mouseInWorld = undefined
     }

@@ -11,6 +11,9 @@ export const TILE_SIZE = 40
 export const tileSchema = z.literal([
   'temp_dirt',
   'temp_water',
+  'dirt',
+  'grass',
+  'bad_wall',
 ])
 
 export type TileId = z.infer<typeof tileSchema>

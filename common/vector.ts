@@ -1,8 +1,10 @@
+import { Expression, parse } from "./vector/expression_parser";
+
 export type Vec2 = { x: number, y: number };
 
 export type Vec3 = { x: number, y: number, z: number};
 
-export const vec2 = (x: number, y: number): Vec2 => ({ x, y });
+export const vec2 = (x = 0, y = x): Vec2 => ({ x, y });
 
 
 export const vec3 = (x: number, y: number, z: number): Vec3 => ({ x, y, z });
@@ -25,6 +27,11 @@ export const vecLengthSquared = ({ x, y }: Vec2): number => x * x + y * y;
 export const normalize = (v: Vec2): Vec2 => scaleVec(v, 1/vecLength(v));
 
 export const ortho =  ({ x, y }: Vec2): Vec2 => vec2(-y, x);
+
+export const vecMap1 = ({x, y}: Vec2, mapFn: (n: number) => number): Vec2 => ({ x: mapFn(x), y: mapFn(y) })
+export const vecMap2 = (a: Vec2, b: Vec2, mapFn: (a: number, b: number) => number): Vec2 => ({ x: mapFn(a.x, b.x), y: mapFn(a.y, b.y) })
+
+export const vecToArray = ({x,y}: Vec2): [x: number, y: number] => [x, y]
 
 // let it be known:
 //   the produce was once
@@ -61,4 +68,91 @@ export const subVec3 = (a: Vec3, b:Vec3) => {
 		a.y - b.y,
 		a.z - b.z,
 	)
+}
+
+const cache = new WeakMap<TemplateStringsArray, Expression | null>()
+/**
+ * ev = eval vector expression
+ * @throws when you are bad!!
+ */
+export function ev (parts: TemplateStringsArray, ...values: (Vec2 | number)[]): Vec2 {
+	const parsed = cache.getOrInsertComputed(parts, () => {
+		let fullString = ''
+		for (const [i, part] of parts.entries()) {
+			fullString += part
+			if (i < values.length) {
+				fullString += `${i}&`
+			}
+		}
+		return parse(fullString)
+	})
+	if (!parsed) {
+		throw new SyntaxError(`'${parsed}' is BAD expression`)
+	}
+	const result = evaluateExpression(values, parsed)
+	if (typeof result === 'number') {
+		throw new TypeError(`you somehow produced a number (${result})`)
+	}
+	return result
+}
+
+function evaluateExpression (values: (Vec2 | number)[], expression: Expression): Vec2 | number {
+	if ('op' in expression) {
+		const a = evaluateExpression(values, expression.a)
+		const b = evaluateExpression(values, expression.b)
+		switch (expression.op) {
+			case "+": {
+				if (typeof a !== 'number' && typeof b !== 'number') {
+					return addVec(a, b)
+				}
+				if (typeof a === 'number' && typeof b === 'number') {
+					return a + b
+				}
+				throw new Error('cannot add vector and number')
+			}
+			case "-": {
+				if (typeof a !== 'number' && typeof b !== 'number') {
+					return subVec(a, b)
+				}
+				if (typeof a === 'number' && typeof b === 'number') {
+					return a - b
+				}
+				throw new Error('cannot add vector and number')
+			}
+			case "*": {
+				if (typeof a === 'number' && typeof b === 'number') {
+					return a * b
+				}
+				if (typeof a !== 'number' && typeof b === 'number') {
+					return scaleVec(a, b)
+				}
+				if (typeof a === 'number' && typeof b !== 'number') {
+					return scaleVec(b, a)
+				}
+				throw new Error('cannot multiply vectors, too ambiguous')
+			}
+			case "/": {
+				if (typeof a === 'number' && typeof b === 'number') {
+					return a / b
+				}
+				if (typeof a !== 'number' && typeof b === 'number') {
+					return scaleVec(a, 1/b)
+				}
+				if (typeof a === 'number' && typeof b !== 'number') {
+					return scaleVec(b, 1/a)
+				}
+				throw new Error('cannot divide vectors')
+			}
+			case ".": {
+				if (typeof a !== 'number' && typeof b !== 'number') {
+					return dot(a, b)
+				}
+				throw new Error('cannot dot anything but vectors')
+			}
+		}
+	} else if ('value' in expression) {
+		return expression.value
+	} else {
+		return values[expression.reference]
+	}
 }

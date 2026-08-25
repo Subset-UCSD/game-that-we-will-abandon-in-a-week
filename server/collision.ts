@@ -1,4 +1,4 @@
-import { Vec2, vec2, rotate, ortho, normalize, subVec, dot, scaleVec, vecLength, SerializedCollider } from '@common'
+import { Vec2, vec2, rotate, ortho, normalize, subVec, dot, scaleVec, vecLength, SerializedCollider, ev } from '@common'
 import test from 'node:test';
 
 export interface Collider {
@@ -26,7 +26,7 @@ const getEdges = (vec_list: Vec2[]): Vec2[] => {
   for (let i = 0; i < vec_list.length; i++) {
     const p1 = vec_list[i]
     const p2 = vec_list[i + 1 < vec_list.length ? i + 1 : 0]
-    edges.push(subVec(p1, p2))
+    edges.push(ev`${p1} - ${p2}`)
   }
 
   return edges
@@ -52,7 +52,7 @@ const isP2FurtherPoint = (p1: Vec2, p2: Vec2, axis: Vec2): boolean => {
 }
 
 // find the 2 points on the projection that are in the shadow of the shape
-const projVec = (p: Vec2, axis: Vec2): Vec2 => { return scaleVec(axis, dot(p, axis) / dot(axis, axis)) }
+const projVec = (p: Vec2, axis: Vec2): Vec2 => { return ev`${axis} * (${p} . ${axis}) / (${axis} . ${axis})` }
 
 const projShape = (corners: Vec2[], axis: Vec2): Vec2[] => {
   // each of these points are on the line of the axis at the origin
@@ -106,8 +106,8 @@ const SATSolver = (polygonCollider1: PolygonCollider, polygonCollider2: PolygonC
       return [false, 0, vec2(0, 0)]
     } else {
       const overlapAmount = Math.min(
-        vecLength(subVec(start_2, end_1)),
-        vecLength(subVec(start_1, end_2))
+        vecLength(ev`${start_2} - ${end_1}`),
+        vecLength(ev`${start_1} - ${end_2}`)
       )
 
       if (overlapAmount < smallestOverlapAmount) {
@@ -331,8 +331,8 @@ export class CapsuleCollider implements Collider {
 
     // first find closest point on spine
     // clamp projection for rod and balls
-    const spine = subVec(endCap.center, startCap.center);
-    const fromStart = subVec(point, startCap.center);
+    const spine = ev`${endCap.center} - ${startCap.center}`;
+    const fromStart = ev`${point} - ${startCap.center}`;
 
     const spineLengthSquared = spine.x * spine.x + spine.y * spine.y;
 
@@ -346,7 +346,7 @@ export class CapsuleCollider implements Collider {
 
     // move from spine to target pt by one radius
     // this is the nearest pt on capsule outer surface
-    const outward = subVec(point, nearestSpinePoint);
+    const outward = ev`${point} - ${nearestSpinePoint}`;
     const outwardLength = Math.hypot(outward.x, outward.y);
 
     if (outwardLength > 0) {
