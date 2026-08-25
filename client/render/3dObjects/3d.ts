@@ -40,24 +40,28 @@ class Polyhedron3D implements Renderable3DObject {
     // may need to become a input to the
     texture(ctx: CanvasRenderingContext2D, face_idx: number): void {
        
-        ctx.strokeStyle = "blue";
+        // ctx.strokeStyle = "blue";
         ctx.font = "bold 0.4px serif";
         
-        // ctx.fillRect(0, 0, 0.75, 0.75) 
-        ctx.beginPath();
-        ctx.moveTo(0, 1);
-        ctx.lineTo(1, 0);
-        ctx.lineTo(0, 0);
-        ctx.closePath();
+        // // ctx.fillRect(0, 0, 0.75, 0.75) 
+        ctx.lineWidth = 0.01;
+        // ctx.strokeStyle = "blue 0.1"
+        // // ctx.beginPath();
+        // ctx.moveTo(0, 1);
+        // ctx.lineTo(1, 0);
+        // ctx.lineTo(0, 0);
+        // ctx.lineTo(0, 1);
+        // // ctx.closePath();
+        // ctx.stroke();
 
         // // the outline
-        ctx.lineWidth = 0.01;
-        ctx.strokeStyle = '#666666';
-        ctx.stroke();
+        
+        // ctx.strokeStyle = '#666666';
+        // ctx.stroke();
 
-        // the fill color
-        ctx.fillStyle = "#FFCC00";
-        ctx.fill();
+        // // the fill color
+        // ctx.fillStyle = "#FFCC00";
+        // ctx.fill();
 
         ctx.fillStyle = "red";
         ctx.fillText((face_idx + 1).toString(), 0.2, 0.4)
@@ -83,9 +87,12 @@ class Polyhedron3D implements Renderable3DObject {
     }
 
     render({c}: Canvas): void {
+        c.save()
+        c.lineWidth = 0.1; 
+        c.strokeStyle = "red";
         const matrix = new DOMMatrix([1, 0, 0, 0, 0, 1, 0, 0, 0, 0, 1, 0, 0, 0, 0, 1]);
         matrix.rotateSelf(this.rotateX, this.rotateY, this.rotateZ)
-        matrix.scaleSelf(100, 100, 100)
+        matrix.scaleSelf(10, 10, 10)
         this.rotateX += 0.1;
         this.rotateY -= 0.1;
         // this.rotateZ--;
@@ -147,7 +154,7 @@ class Polyhedron3D implements Renderable3DObject {
             frist = true
            
         }
-        // c.restore()
+        c.restore()
     }
     
 }

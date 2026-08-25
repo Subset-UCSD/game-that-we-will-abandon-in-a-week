@@ -10,6 +10,7 @@ export class DebugTileEditor {
   #mouseDown ?: Set<`${number} ${number}`>
   #radius = 0
   #tile: TileId | null = 'dirt'
+  isRenderCollider = false
   
   constructor () {
     const wrapper = Object.assign(document.createElement('div'), {
@@ -51,6 +52,7 @@ export class DebugTileEditor {
     })
     button.addEventListener('click', () => {
       this.#enabled = !this.#enabled
+      this.isRenderCollider = !this.isRenderCollider 
       if (!this.#enabled) {
         this.#mouse = undefined
         this.#mouseDown = undefined
