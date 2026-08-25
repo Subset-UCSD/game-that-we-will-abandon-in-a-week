@@ -11,6 +11,7 @@ const tileRegistry: TileRegistryEntry[] = [
   { tile: 'temp_dirt', color: '#473327' },
   { tile: 'temp_water', color: '#23457a' },
   { bl: 'grass', mid: 'dirt', path: 'assets/tilesets/grass-path/janky-grass-path.png' },
+  { bl: 'grass', mid: 'bad_wall', path: 'assets/tilesets/crappy-wall.png' },
 ]
 
 type IndividualTile = { type: 'color', color: string } | { type: 'tilemap', side: 'bl' | 'mid', image: ImageBitmap; tileSize: number }
@@ -75,6 +76,7 @@ export function renderTiles (canvas: Canvas, camera: Camera, tiles: ChunkMap): v
 
 
   const {width,height,c} = canvas
+  c.imageSmoothingEnabled  = false
 
   const left = camera.x - width/camera.scale/2 
     const right = camera.x + width/camera.scale/2 
@@ -213,6 +215,9 @@ if (!drew) {
     // TEMP
     // c.strokeStyle = 'red'
     // c.strokeRect(left+TILE_SIZE, top+TILE_SIZE, right - left - 2*TILE_SIZE, bottom-top - 2*TILE_SIZE)
+
+    
+  c.imageSmoothingEnabled  = true
 }
 
 export function renderTilesOld (canvas: Canvas, camera: Camera, tiles: ChunkMap): void {

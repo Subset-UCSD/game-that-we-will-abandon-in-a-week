@@ -13,6 +13,7 @@ export const tileSchema = z.literal([
   'temp_water',
   'dirt',
   'grass',
+  'bad_wall',
 ])
 
 export type TileId = z.infer<typeof tileSchema>
