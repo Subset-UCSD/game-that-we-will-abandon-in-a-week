@@ -55,6 +55,7 @@ export class Game {
 	private tiles: ChunkMap = {}
 
 	private camera: Camera = { x: 0, y: 0, scale: 1 }
+	private __debugShouldRenderColliders = false
 
 	__debugTileEditor?: DebugTileEditor
 
@@ -223,7 +224,8 @@ export class Game {
 			...this.seeds.values()
 		])
 
-		c.strokeStyle = 'red'
+		if (this.__debugShouldRenderColliders) {
+			c.strokeStyle = 'red'
 		for (const collider of this.debugColldiers) {
 			switch (collider.type) {
 				case 'box': {
@@ -251,6 +253,7 @@ export class Game {
 					break
 				}
 			}
+		}
 		}
 
 		const change = this.__debugTileEditor?.render(canvas, this.camera)

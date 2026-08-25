@@ -8,7 +8,8 @@ type TileRegistryEntry =
 
 // Register your tile textures here
 const tileRegistry: TileRegistryEntry[] = [
-  { tile: 'temp_dirt', color: 'brown' },
+  { tile: 'temp_dirt', color: '#473327' },
+  { tile: 'temp_water', color: '#23457a' },
   { bl: 'grass', mid: 'dirt', path: 'assets/tilesets/grass-path/janky-grass-path.png' },
 ]
 
@@ -51,12 +52,18 @@ const pairTilePositions = {
   ".:": vec2(3, 3),
 }
 
+const offsets = [vec2(1), vec2(0, 1),
+vec2(0, 0),
+vec2(1, 0)]
 
+// according to chrome performance tab, the cum performance impact of this function (because it's called so often)
+// is almost as bad as drawImage
 function getTile (tiles: ChunkMap, coord: Vec2): TileId | null {
   const chunkCoord = vecMap1(coord, c => Math.floor(c / CHUNK_SIZE))
   const localCoord = vecMap1(coord, c => (c % CHUNK_SIZE + CHUNK_SIZE) % CHUNK_SIZE)
   return tiles[`${chunkCoord.x} ${chunkCoord.y}`]?.[localCoord.y * CHUNK_SIZE + localCoord.x] ?? null
 }
+
 
 
 // this is kinda inefficient but whatever
@@ -85,11 +92,13 @@ export function renderTiles (canvas: Canvas, camera: Camera, tiles: ChunkMap): v
   const tileStart = vecMap1(screenStart, coord => Math.floor((coord - TILE_SIZE/2) / TILE_SIZE))
   const tileEnd = vecMap1(screenEnd, coord => Math.ceil((coord - TILE_SIZE/2) / TILE_SIZE))
 
+// HELP!! 🚨🚨 can someone format this file pleasee
+
       c.strokeStyle = 'blue'
-      // TEMP: remove +/- 1
-    for (let y = tileStart.y+1; y < tileEnd.y-1; y++)
-    for (let x = tileStart.x+1; x < tileEnd.x-1; x++) {
+    for (let y = tileStart.y; y < tileEnd.y; y++)
+    for (let x = tileStart.x; x < tileEnd.x; x++) {
   const tileCoord = { x, y }
+  const tileBase = (ev`${tileCoord} * ${TILE_SIZE} + ${vec2(TILE_SIZE / 2)}`)
       // c.fillRect(
       //   (x + 0.2) * TILE_SIZE+TILE_SIZE/2,
       //   (y + 0.2) * TILE_SIZE+TILE_SIZE/2,
@@ -103,19 +112,42 @@ export function renderTiles (canvas: Canvas, camera: Camera, tiles: ChunkMap): v
       //   TILE_SIZE,
       // )
 
-      const tileBR = getTile(tiles, tileCoord)
-      const tileBL = getTile(tiles, addVec(tileCoord, vec2(-1, 0)))
-      const tileTL = getTile(tiles, addVec(tileCoord, vec2(-1, -1)))
-      const tileTR = getTile(tiles, addVec(tileCoord, vec2(0, -1)))
+      const [tileBR,tileBL,tileTL,tileTR,] = offsets.map(o => getTile(tiles, addVec(tileCoord, o)))
       const allTiles = new Set([
-        tileBR,
-tileBL,
-tileTL,
-tileTR,
+        tileBR,tileBL,tileTL,tileTR,
       ].filter(x => x !== null))
+      const hasVoid = tileBR===null||
+tileBL===null||
+tileTL===null||
+tileTR===null
       if (allTiles.size === 0) {
         continue
       } 
+      else
+      if (allTiles.size === 1) {
+        const [tile] = allTiles
+        const indiv = individualTileTextures.get(tile)
+        if (indiv) {
+        if (indiv.type === 'color') {
+          c.fillStyle = indiv.color
+          c.fillRect(
+            ...vecToArray(tileBase),
+            ...vecToArray(vec2(TILE_SIZE)),
+          )
+        } else if (indiv.type === 'tilemap') {
+          c.drawImage(
+            indiv.image,
+            ...vecToArray(vecMap2(vec2(indiv.tileSize), pairTilePositions[indiv.side === 'bl' ? '::' : '  '], (a, b) => a * b)),
+            ...vecToArray(vec2(indiv.tileSize)),
+            ...vecToArray(tileBase),
+            ...vecToArray(vec2(TILE_SIZE)),
+          )
+        }
+        }
+      } else {
+
+
+      let drew = false
       tilePair: if (allTiles.size === 2) {
         const [a, b] = allTiles
         let pairImage, bl
@@ -140,49 +172,47 @@ tileTR,
               }` 
             ], (a, b) => a * b)),
             ...vecToArray(vec2(pairImage.tileSize)),
-            ...vecToArray(ev`${tileCoord} * ${TILE_SIZE} + ${vec2(TILE_SIZE / 2)}`),
+            ...vecToArray(tileBase),
             ...vecToArray(vec2(TILE_SIZE)),
           )
-          continue
-      }
-      if (allTiles.size === 1) {
-        const [tile] = allTiles
-        const indiv = individualTileTextures.get(tile)
-        if (!indiv) {
-          continue
-        }
-        if (indiv.type === 'color') {
-          c.fillStyle = indiv.color
-          c.fillRect(
-            ...vecToArray(ev`${tileCoord} * ${TILE_SIZE} + ${vec2(TILE_SIZE / 2)}`),
-            ...vecToArray(vec2(TILE_SIZE)),
-          )
-        } else if (indiv.type === 'tilemap') {
-          c.drawImage(
-            indiv.image,
-            ...vecToArray(vecMap2(vec2(indiv.tileSize), pairTilePositions[indiv.side === 'bl' ? '::' : '  '], (a, b) => a * b)),
-            ...vecToArray(vec2(indiv.tileSize)),
-            ...vecToArray(ev`${tileCoord} * ${TILE_SIZE} + ${vec2(TILE_SIZE / 2)}`),
-            ...vecToArray(vec2(TILE_SIZE)),
-          )
-        }
-        continue
+          drew = true
       }
       
+if (!drew) {
+
       // TODO: draw quadrants or something
+      
       c.fillStyle = 'blue'
       c.fillRect(
         ...vecToArray(ev`(${tileCoord} + ${vec2(0.2)}) * ${TILE_SIZE} + ${vec2(TILE_SIZE / 2)}`),
         ...vecToArray(vec2(TILE_SIZE * 0.6)),
       )
       c.strokeRect(
-        ...vecToArray(ev`(${tileCoord}) * ${TILE_SIZE} + ${vec2(TILE_SIZE / 2)}`),
+        ...vecToArray(tileBase),
         ...vecToArray(vec2(TILE_SIZE)),
       )
+}
+
+      }
+
+
+      if (hasVoid) {
+        c.strokeStyle = 'red'
+        c.beginPath()
+        for (const [i, thing] of [tileBR,tileBL,tileTL,tileTR].entries()) {
+          if (thing!==null) continue
+          const offset = offsets[i]
+          c.moveTo(...vecToArray(ev`${tileBase} + ${offset} * ${TILE_SIZE / 2}`))
+          c.lineTo(...vecToArray(ev`${tileBase} + ${offset} * ${TILE_SIZE / 2} + ${vec2(TILE_SIZE / 2)}`))
+        }
+        c.stroke()
+      }
+
+
     }
     // TEMP
-    c.strokeStyle = 'red'
-    c.strokeRect(left+TILE_SIZE, top+TILE_SIZE, right - left - 2*TILE_SIZE, bottom-top - 2*TILE_SIZE)
+    // c.strokeStyle = 'red'
+    // c.strokeRect(left+TILE_SIZE, top+TILE_SIZE, right - left - 2*TILE_SIZE, bottom-top - 2*TILE_SIZE)
 }
 
 export function renderTilesOld (canvas: Canvas, camera: Camera, tiles: ChunkMap): void {
