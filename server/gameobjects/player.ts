@@ -41,8 +41,10 @@ export class Player implements GameObject {
    * TODO: in that case we should change this to just a number
    */
   canInteractWith: number[] = []
-private   knifeState = { angle: 0, radius: 0 }
-knivesInside = new Set<GameObject>
+  roomId: string = 'base';
+  wasTeleporting = false;
+  private knifeState = { angle: 0, radius: 0 }
+  knivesInside = new Set<GameObject>
  
   constructor(game: Game) {
     this.game = game
@@ -82,7 +84,7 @@ knivesInside = new Set<GameObject>
   }
 
   serialize(): NetPlayer {
-    return {...this.position, x_vel: this.velocity.x, y_vel: this.velocity.y, id: this.id, baaing:this.thought,
+    return {...this.position, x_vel: this.velocity.x, y_vel: this.velocity.y, id: this.id, roomId: this.roomId, baaing:this.thought,
       facingLeft:this.facingLeft,
       connected: this.connected,
       // round down to nearest second because client doesnt need that much granularity

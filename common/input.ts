@@ -12,7 +12,9 @@ export const inputSchema = z.object({
 	baa: z.boolean(),
 	paint: z.boolean(),
 	knife: z.boolean(),
-	seed: z.boolean()
+	seed: z.boolean(),
+	teleport: z.boolean(),
+	debug: z.boolean()
 });
 
 export type Inputs = z.infer<typeof inputSchema>;
@@ -28,7 +30,9 @@ export const defaultInputs: Inputs = {
 	baa: false,
 	paint: false,
 	knife: false,
-	seed: false
+	seed: false,
+	teleport: false,
+	debug: false
 } as const;
 
 export const keymap = {
@@ -41,6 +45,8 @@ export const keymap = {
 	KeyP: "paint",
 	KeyK: 'knife',
 	KeyF: "seed",
+	KeyM: "teleport",
+	F3: "debug",
 	0: "attack", // Left mouse button
 	2: "use", // Right mouse button
 } satisfies Record<string | number, keyof Inputs>;

@@ -15,7 +15,10 @@
     - corekeeper style
 
 ### HL Implementation plan
-0. combat system (unordered)
+1. event system (refactor)
+    a. movement
+    b. damage
+2. combat system (unordered)
     a. enemy
     b. enemy generation system
     c. miniboss and boss
@@ -23,14 +26,15 @@
         - depends on colliders
     e. consumables
     f. weapons
-1. room system
+3. room system
     a. having different room where players only see each other in the same room
-2. party system 
+4. party system 
     a. during an embark you can only see other party members
     b. system for roguelike during embark (consider things like one member died in a room)
-3. room generation system
-4. resources system
-5. unlockable system
+5. room generation system
+6. resources system
+7. unlockable system
+8. interactable system
 
 ### Tangent ideas
 1. overarching story design

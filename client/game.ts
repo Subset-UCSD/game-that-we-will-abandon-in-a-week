@@ -47,6 +47,8 @@ export class Game {
 	// private objects;
 	private room;
 	private __debugText: string = ''
+	private debugInfoVisible = false
+	private wasDebugKeyPressed = false
 	private id = -1;
 	private things: SerializedThingWithAdditionalRenderProperties[] = []
 	private lines: Line[] = []
@@ -70,6 +72,10 @@ export class Game {
 			keymap: keymap,
 			handleInputs: (inputs) => {
 				this.conn.send('input', inputs);
+				if (inputs.debug && !this.wasDebugKeyPressed) {
+					this.debugInfoVisible = !this.debugInfoVisible;
+				}
+				this.wasDebugKeyPressed = inputs.debug;
 			},
 			// period: SERVER_GAME_TICK,
 		});
@@ -277,6 +283,13 @@ export class Game {
 		}
 
 		c.restore()
+
+		if (this.debugInfoVisible && player) {
+			c.fillStyle = 'black';
+			c.fillText(`player: ${player.id}`, 10, 20);
+			c.fillText(`room: ${player.roomId}`, 10, 35);
+			c.fillText(`position: ${player.x.toFixed(1)}, ${player.y.toFixed(1)}`, 10, 50);
+		}
 	}
 
 	private	paintLines(c: CanvasRenderingContext2D) {
