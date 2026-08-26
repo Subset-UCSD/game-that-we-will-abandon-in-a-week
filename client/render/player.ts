@@ -18,7 +18,6 @@ const { base, walking, think, sleep, knife: [knife] } = await loadFrames({
 
 export const SHEEP_WIDTH = 60;
 
-export const SLEEP_TIME = 60_000;
 
 export class Player implements RenderableObject {
 	private props: NetPlayer;
@@ -46,10 +45,10 @@ export class Player implements RenderableObject {
 	render({ c }: Canvas): void {
 		const x = this.x.getValue()
 		const y = this.y.getValue()
-		const { id, x_vel, y_vel, facingLeft, timeSinceLastInput, healthpercent,maxHp, thought,connected,
+		const { id, x_vel, y_vel, facingLeft, probablyafk, healthpercent,maxHp, thought,connected,
 			knifeAngle,knifeRadius,
 		 } = this.props;
-		const sleeping = timeSinceLastInput > SLEEP_TIME||!connected;;
+		const sleeping = probablyafk||!connected;;
 		/** in milliseconds */
 		const isMoving = Math.hypot(x_vel, y_vel) > 0.1
 		const TIME_PER_FRAME = (sleeping ? 770 : isMoving ? 50 : 500) + (id * Math.PI) % 50

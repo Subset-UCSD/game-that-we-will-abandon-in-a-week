@@ -7,7 +7,6 @@ type TileRegistryEntry =
   | { bl: TileId, mid: TileId, path: string }
 
 // Register your tile textures here
-// last one has precedence
 const tileRegistry: TileRegistryEntry[] = [
   { tile: 'temp_dirt', color: '#473327' },
   { tile: 'temp_water', color: '#23457a' },
@@ -29,8 +28,8 @@ for (const entry of tileRegistry) {
     }
     const image = await fetch(entry.path).then(r => r.blob()).then(createImageBitmap)
     const tileSize =32
-    individualTileTextures.set(entry.bl, { type: 'tilemap', side: 'bl', image, tileSize })
-    individualTileTextures.set(entry.mid, { type: 'tilemap', side: 'mid', image, tileSize })
+    individualTileTextures.getOrInsert(entry.bl, { type: 'tilemap', side: 'bl', image, tileSize })
+    individualTileTextures.getOrInsert(entry.mid, { type: 'tilemap', side: 'mid', image, tileSize })
     pairTileTextures.getOrInsertComputed(entry.bl, () => new Map()).set(entry.mid, {image,tileSize})
   })())
 }
@@ -73,7 +72,7 @@ function getTile (tiles: ChunkMap, coord: Vec2): TileId | null {
 // this is kinda inefficient but whatever
 // if we wanted speed we'd use webgl
 
-export function renderTiles (canvas: Canvas, camera: Camera, tiles: ChunkMap): void {
+export function renderTiles (canvas: Canvas, camera: Camera, tiles: ChunkMap,enableDebug=false): void {
   // TEMP: for debugging
   // renderTilesOld(canvas, camera, tiles)
 
@@ -184,6 +183,7 @@ tileTR===null
       }
       
 if (!drew) {
+  let hasTile = false
         for (const [i, tile] of [tileBR,tileBL,tileTL,tileTR].entries()) {
           if (tile===null) continue
           const offset = offsets[i]
@@ -196,6 +196,7 @@ if (!drew) {
             ...vecToArray(vec2(TILE_SIZE/2)),
           )
         } else if (indiv.type === 'tilemap') {
+          hasTile = true
           c.drawImage(
             indiv.image,
             ...vecToArray(ev`${
@@ -207,12 +208,23 @@ if (!drew) {
           )
         }
         }
+        if (hasTile && enableDebug) {
+          c.strokeStyle = 'blue'
+        c.beginPath()
+          c.moveTo(...vecToArray(ev`${tileBase} + ${vec2(TILE_SIZE, 0)}`))
+          c.lineTo(...vecToArray(ev`${tileBase} + ${vec2(0, TILE_SIZE)}`))
+          c.moveTo(...vecToArray(ev`${tileBase} + ${vec2(TILE_SIZE/2, 0)}`))
+          c.lineTo(...vecToArray(ev`${tileBase} + ${vec2(0, TILE_SIZE/2)}`))
+          c.moveTo(...vecToArray(ev`${tileBase} + ${vec2(TILE_SIZE/2, TILE_SIZE)}`))
+          c.lineTo(...vecToArray(ev`${tileBase} + ${vec2(TILE_SIZE, TILE_SIZE/2)}`))
+        c.stroke()
+        }
 }
 
       }
 
 
-      if (hasVoid) {
+      if (hasVoid&&enableDebug) {
         c.strokeStyle = 'red'
         c.beginPath()
         for (const [i, thing] of [tileBR,tileBL,tileTL,tileTR].entries()) {

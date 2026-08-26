@@ -11,6 +11,9 @@ const MAX_HP = 67;
 const LINE_START_AGE = 5_000
 const LINE_MAX_AGE = 10_000
 
+ const SLEEP_TIME = 60_000;
+
+
 export class Player implements GameObject {
   inputs: Inputs;
   max_speed: number = 5;
@@ -83,7 +86,8 @@ knivesInside = new Set<GameObject>
       facingLeft:this.facingLeft,
       connected: this.connected,
       // round down to nearest second because client doesnt need that much granularity
-      timeSinceLastInput:Math.floor((Date.now()- this.lastInputTime) / 1000) * 1000,
+      // nvm
+      probablyafk:((Date.now()- this.lastInputTime) / 1000) * 1000 > SLEEP_TIME,
       healthpercent: this.hp,
       maxHp: MAX_HP,
       lines: this.lines.map(({start,end,committed}) => ({start,end,age:committed?Math.min(1, Math.max(0, (Date.now() - (committed + LINE_START_AGE)) / LINE_MAX_AGE)) : null})),

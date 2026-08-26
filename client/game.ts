@@ -1,4 +1,4 @@
-import { Player, SLEEP_TIME } from "@client/render/player";
+import { Player,  } from "@client/render/player";
 import { Arena } from "./render/arena";
 import { Room } from "./render/room";
 import { Connection } from './net/connection'
@@ -164,7 +164,7 @@ export class Game {
 		
 		const player = this.currPlayerState
 		if (player ) {
-			const targetZoom = player.timeSinceLastInput > SLEEP_TIME ? 5 : 1;
+			const targetZoom = player.probablyafk ? 5 : 1;
 			this.camera.x += (player.x - this.camera.x) * 0.2;
 			this.camera.y += (player.y - this.camera.y) * 0.2;
 			this.camera.scale += (targetZoom - this.camera.scale) * 0.2;
@@ -173,6 +173,12 @@ export class Game {
 		const screenShake = this.explosions.values().reduce((cum, curr) => cum + (1 - Math.min(1, curr.progress * 2) ** 0.3) * 5, 0) ?? 0
 
 		const { c } = canvas;
+
+
+
+	c.fillStyle = this.__debugTileEditor?.isRenderCollider? 'rgba(40, 50, 50, 1)':'black'
+	c.fillRect(0, 0, canvas.width, canvas.height)
+
 		c.save();
 		c.translate(
 			canvas.width / 2,
@@ -193,7 +199,7 @@ export class Game {
 		// this.room.render(canvas);
 		// this.arena.render(canvas);
 
-		renderTiles(canvas, this.camera, this.tiles)
+		renderTiles(canvas, this.camera, this.tiles,this.__debugTileEditor?.isRenderCollider)
 
 		c.fillStyle = 'black';
 		c.fillText('fuck', 50, -100);

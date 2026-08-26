@@ -25,8 +25,6 @@ while (true) {
 
 
 	// TEMP: just for demo purposes, please ignore
-	c.fillStyle = 'rgba(40, 150, 50, 1)'
-	c.fillRect(0, 0, canvas.width, canvas.height)
 
 
 

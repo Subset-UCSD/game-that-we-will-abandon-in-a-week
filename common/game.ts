@@ -24,7 +24,7 @@ export const playerSchema = z.object({
   facingLeft:z.boolean(),
   baaing: z.string(),
   connected: z.boolean(),
-  timeSinceLastInput:z.number(),
+  probablyafk:z.boolean(),
   healthpercent: z.number(),
   thought: z.string(),
   maxHp: z.number(),

@@ -145,23 +145,33 @@ export class Game {
 
     // Send all of the clients the state of the world
 
-    const versionId = crypto.randomUUID()
+    let versionId:string = crypto.randomUUID()
     // some classes return objects then proceed to mutate them, so deep clone them before they get the chance
     const gameState = structuredClone(this.getWorldState());
+    const keyState = ['x', 'y']
     let partialGameStateMessage: PartialFkingGameStateMessage['value'] | undefined
+    if (this.lastSentGameState){
+          const partial = generateDiffPayload(this.lastSentGameState.gameState, gameState, keyState)
+          if (partial !== undefined) {
+            partialGameStateMessage = {
+              expectedPreviousVersionId: this.lastSentGameState.versionId,
+              newVersionId: versionId,
+              keyState: partial ? keyState : undefined,
+              gameState: partial,
+            }
+
+          } else {
+            // it's the same game state so dont bump version
+            versionId = this.lastSentGameState.versionId
+          }
+}
+
     for (const conn of this.connections.values()) {
       if (this.lastSentGameState && conn.lastSentGameStateVersionId === this.lastSentGameState.versionId) {
-        if (!partialGameStateMessage) {
-          const keyState = ['x', 'y']
-          const partial = generateDiffPayload(this.lastSentGameState.gameState, gameState, keyState)
-          partialGameStateMessage = {
-            expectedPreviousVersionId: this.lastSentGameState.versionId,
-            newVersionId: versionId,
-            keyState: partial ? keyState : undefined,
-            gameState: partial,
-          }
+        if (partialGameStateMessage) {
+          send(conn.socket, "partial-game-state", partialGameStateMessage);
+
         }
-        send(conn.socket, "partial-game-state", partialGameStateMessage);
       } else {
         send(conn.socket, "game-state", {
           versionId,
