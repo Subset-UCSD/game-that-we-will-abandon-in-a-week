@@ -91,6 +91,7 @@ class Polyhedron3D implements Renderable3DObject {
         c.lineWidth = 0.1; 
         c.strokeStyle = "red";
         const matrix = new DOMMatrix([1, 0, 0, 0, 0, 1, 0, 0, 0, 0, 1, 0, 0, 0, 0, 1]);
+        matrix.translateSelf(0, Math.sin(Date.now() / 800) * 2, 0) // sean you can comment this out if you want
         matrix.rotateSelf(this.rotateX, this.rotateY, this.rotateZ)
         matrix.scaleSelf(10, 10, 10)
         this.rotateX += 0.1;

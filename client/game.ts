@@ -80,6 +80,7 @@ export class Game {
 		// Instantiate objects for newly appearing updates from the server
 		this.__debugText = JSON.stringify({
 			...gameState,
+			players: gameState.players.map(p => ({...p,lines:`... ${p.lines.length} line(s)`})),
 			tiles: Object.fromEntries(Object.entries(gameState.tiles).map(([k,v]) => [k, `... ${v.reduce((cum , curr) => cum + +(curr !== null),0)} tile(s)`]))
 		}, null, 2)
 
@@ -189,8 +190,8 @@ export class Game {
 
 
 		// TODO: draw game state
-		this.room.render(canvas);
-		this.arena.render(canvas);
+		// this.room.render(canvas);
+		// this.arena.render(canvas);
 
 		renderTiles(canvas, this.camera, this.tiles)
 
@@ -226,9 +227,18 @@ export class Game {
 		if (this.__debugTileEditor != null && this.__debugTileEditor.isRenderCollider) {
 			c.strokeStyle = 'red'
 		for (const collider of this.debugColldiers) {
+			console.log(collider.type)
 			switch (collider.type) {
 				case 'box': {
 					c.strokeRect(collider.x, collider.y, collider.width, collider.height)
+					break
+				}
+				case 'circle': {
+					c.beginPath()
+					c.arc(collider.x, collider.y, collider.radius, 0, 2 * Math.PI)
+					c.closePath()
+					c.stroke()
+					
 					break
 				}
 				case 'capsule': {

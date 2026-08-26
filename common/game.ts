@@ -13,6 +13,8 @@ const lineSchema = z.object({
 })
 export type Line = z.infer<typeof lineSchema>
 
+export const KNIFE_OFFSET_Y = -20
+
 export const playerSchema = z.object({
   id: playerIdSchema,
   x: z.number(),
@@ -28,6 +30,8 @@ export const playerSchema = z.object({
   maxHp: z.number(),
   lines: z.array(lineSchema),
   canInteractWith: z.number().array(),
+  knifeRadius: z.number(),
+  knifeAngle: z.number(),
   // wtf is "collied"
   // like the dog ?
   collied: z.boolean()
@@ -82,6 +86,7 @@ export type SerializedCorpse = z.infer<typeof corpseSchema>;
 
 const colliderSchema = z.discriminatedUnion('type', [
   z.object({type:z.literal('box'),x:z.number(),y:z.number(),width:z.number(),height:z.number()}),
+  z.object({type:z.literal('circle'),x:z.number(),y:z.number(),radius:z.number()}),
   z.object({type:z.literal('capsule'),x:z.number(),y:z.number(),width:z.number(),height:z.number()}),
 ])
 export type SerializedCollider = z.infer<typeof colliderSchema>

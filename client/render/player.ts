@@ -6,13 +6,14 @@
 import { Canvas } from "./canvas";
 import { loadFrames } from "./frames";
 import { RenderableObject } from "./render";
-import { Interpolator, Player as NetPlayer } from "@common";
+import { Interpolator, KNIFE_OFFSET_Y, lerpAngle, Player as NetPlayer } from "@common";
 
-const { base, walking, think, sleep } = await loadFrames({
+const { base, walking, think, sleep, knife: [knife] } = await loadFrames({
 	base: ["./assets/sheep.png", "./assets/sheep2.png"],
 	walking: ["./assets/sheep-walk1.png", "./assets/sheep-walk2.png"],
 	think: ["./assets/think1.png", "./assets/think2.png"],
-	sleep: ["./assets/sheep-sleep1.png", "./assets/sheep-sleep2.png"]
+	sleep: ["./assets/sheep-sleep1.png", "./assets/sheep-sleep2.png"],
+	knife: ['./assets/dager.png']
 } as const);
 
 export const SHEEP_WIDTH = 60;
@@ -23,12 +24,16 @@ export class Player implements RenderableObject {
 	private props: NetPlayer;
 	private x: Interpolator<number>
 	private y: Interpolator<number>
+	private knifeAngle: Interpolator<number>
+	private knifeRadius: Interpolator<number>
 	get index() { return this.y.getValue() };
 
 	constructor(props: NetPlayer) {
 		this.props = props;
 		this.x = Interpolator.number(props.x)
-		this.y = Interpolator.number(props.x)
+		this.y = Interpolator.number(props.y)
+		this.knifeRadius = Interpolator.number(props.knifeRadius)
+		this.knifeAngle = new Interpolator(props.knifeAngle, lerpAngle)
 	}
 
 	renderShadow({ c }: Canvas) {
@@ -41,7 +46,9 @@ export class Player implements RenderableObject {
 	render({ c }: Canvas): void {
 		const x = this.x.getValue()
 		const y = this.y.getValue()
-		const { id, x_vel, y_vel, facingLeft, timeSinceLastInput, healthpercent,maxHp, thought,connected } = this.props;
+		const { id, x_vel, y_vel, facingLeft, timeSinceLastInput, healthpercent,maxHp, thought,connected,
+			knifeAngle,knifeRadius,
+		 } = this.props;
 		const sleeping = timeSinceLastInput > SLEEP_TIME||!connected;;
 		/** in milliseconds */
 		const isMoving = Math.hypot(x_vel, y_vel) > 0.1
@@ -50,6 +57,20 @@ export class Player implements RenderableObject {
 		const frame = framesList[Math.floor(Date.now() / TIME_PER_FRAME) % framesList.length]
 		// changed to be in handleInput, so we keep old direction if we stop moving
 		// const shouldFlipX = this.x_vel < 0
+
+		
+
+		// const knifeRadius = this.knifeRadius.getValue()
+		// const knifeAngle = this.knifeAngle.getValue()
+		if (knifeRadius > 0) {
+			c.save()
+			c.translate(x, y+KNIFE_OFFSET_Y)
+			c.rotate(knifeAngle)
+			const KNIFE_WIDTH = 20
+			const KNIFE_HEIGHT = 15
+			c.drawImage(knife, -KNIFE_WIDTH/2,  knifeRadius, KNIFE_WIDTH, KNIFE_HEIGHT);
+			c.restore()
+		}
 
 		const TIME_PER_FRAME_THOUGHT = 600
 		const frameThought = think[Math.floor(Date.now() / (TIME_PER_FRAME_THOUGHT + (id * Math.PI) % 50)) % think.length]
@@ -88,5 +109,7 @@ export class Player implements RenderableObject {
 		this.props = props;
 		this.x.setValue(props.x)
 		this.y.setValue(props.y)
+		this.knifeAngle.setValue(props.knifeAngle)
+		this.knifeRadius.setValue(props.knifeRadius)
 	}
 }

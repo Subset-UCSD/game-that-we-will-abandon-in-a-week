@@ -11,10 +11,23 @@ import { SERVER_GAME_TICK } from "@common"
  */
 export const lerp = (a: number, b: number, progress: number) => a + (b - a) * progress
 
-export const lerpAngle = (a: number, b: number, progress: number) => {
-  a = (a % (2 * Math.PI) + a) % (2 * Math.PI)
-  b = (b % (2 * Math.PI) + b) % (2 * Math.PI)
-  // TODO
+const twopi = 2 * Math.PI
+/** interpolate the closer way */
+export const lerpAngle = (a: number, b: number, progress: number) :number=> {
+  a = (a % (twopi) + twopi) % (twopi)
+  b = (b % (twopi) + twopi) % (twopi)
+  // is it faster to go through 2pi?
+  const candidate1 = Math.abs(a - b)
+  const candidate2 = Math.abs(a + twopi - b)
+  const candidate3 = Math.abs(a - (b + twopi))
+  const min = Math.min(candidate1, candidate2, candidate3)
+  if (min === candidate2) {
+    return lerp(a + twopi, b, progress)
+  }
+   if (min === candidate3) {
+    return lerp(a , b+ twopi, progress)
+  }
+  return lerp(a , b, progress)
 }
 
 /**

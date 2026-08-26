@@ -50,3 +50,10 @@ http-server public -c-1 -s
         |- arena.ts
     |- player.ts
 ```
+
+# Higher Level Overview
+
+```
+/root
+|- game! :)
+```

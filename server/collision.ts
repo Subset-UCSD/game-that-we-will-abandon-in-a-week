@@ -1,4 +1,4 @@
-import { Vec2, vec2, rotate, ortho, normalize, subVec, dot, scaleVec, vecLength, SerializedCollider, ev } from '@common'
+import { Vec2, vec2, rotate, ortho, normalize, subVec, dot, scaleVec, vecLength, SerializedCollider, ev, vecMap2, vecLengthSquared } from '@common'
 import test from 'node:test';
 
 export interface Collider {
@@ -13,36 +13,40 @@ export interface Collider {
   onCollide(cb: () => void): void;
   updateLocation(center: Vec2): void;
   serialize(): SerializedCollider
+  /** 😳 */
+  isInsideMe (point: Vec2): boolean
 }
 
-export interface PolygonCollider extends Collider {
-  center: Vec2;
+export interface SATCollider extends Collider {
+    center: Vec2;
+    getAxes(otherCollider: SATCollider): Vec2[]
+    projShape(axis: Vec2): Vec2[] 
+}
+
+export interface PolygonCollider extends SATCollider {
   getCorners(): Vec2[]
+  getEdges(): Vec2[]
 }
 
-// get all unnormalized edge vectors in a ploygon
-const getEdges = (vec_list: Vec2[]): Vec2[] => {
-  const edges: Vec2[] = [];
-  for (let i = 0; i < vec_list.length; i++) {
-    const p1 = vec_list[i]
-    const p2 = vec_list[i + 1 < vec_list.length ? i + 1 : 0]
-    edges.push(ev`${p1} - ${p2}`)
-  }
+// // get all unnormalized edge vectors in a ploygon
+// const getEdges = (vec_list: Vec2[]): Vec2[] => {
+  
+// }
 
-  return edges
-}
-
-// the axes in SAT to test are the normal of the edges
-const getAxes = (edges: Vec2[]): Vec2[] => {
-  // const edges = getEdges(polygonCollider1.getCorners())
-  const axes: Vec2[] = []
-  for (const edge of edges) {
-    axes.push(normalize(ortho(edge)))
-  }
-  return axes
-}
+// // the axes in SAT to test are the normal of the edges
+// const getAxes = (edges: Vec2[]): Vec2[] => {
+//   // const edges = getEdges(polygonCollider1.getCorners())
+//   const axes: Vec2[] = []
+//   for (const edge of edges) {
+//     axes.push(normalize(ortho(edge)))
+//   }
+//   return axes
+// }
 
 //TODO: FIND A POINT FURTHER DOWN RELATIVE TO ANOTHER POINT
+
+// find the 2 points on the projection that are in the shadow of the shape
+const projVec = (p: Vec2, axis: Vec2): Vec2 => { return ev`${axis} * (${p} . ${axis}) / (${axis} . ${axis})` }
 
 
 // Get the ratio of p1 on the line to point 2
@@ -51,36 +55,20 @@ const isP2FurtherPoint = (p1: Vec2, p2: Vec2, axis: Vec2): boolean => {
   return dot(p1, axis) <= dot(p2, axis)
 }
 
-// find the 2 points on the projection that are in the shadow of the shape
-const projVec = (p: Vec2, axis: Vec2): Vec2 => { return ev`${axis} * (${p} . ${axis}) / (${axis} . ${axis})` }
-
-const projShape = (corners: Vec2[], axis: Vec2): Vec2[] => {
-  // each of these points are on the line of the axis at the origin
-  let startPoint: Vec2 = projVec(corners[0], axis)
-  let endPoint: Vec2 = projVec(corners[1], axis)
-
-  for (const corner of corners.slice(2)) {
-    const testPoint = projVec(corner, axis)
-    if (isP2FurtherPoint(testPoint, startPoint, axis))
-      startPoint = testPoint
-
-    if (!isP2FurtherPoint(testPoint, endPoint, axis))
-      endPoint = testPoint
-
-  }
-  return [startPoint, endPoint]
-}
-
-
 //https://dyn4j.org/2010/01/sat/ <- algorithm to detect collisons in convex polygon
 // Nolan is a roman
 /** sats lover */
-const SATSolver = (polygonCollider1: PolygonCollider, polygonCollider2: PolygonCollider): [isColliding: boolean, overlapAmount: number, direction: Vec2] => {
-  const corners1 = polygonCollider1.getCorners()
-  const corners2 = polygonCollider2.getCorners()
+const SATSolver = (collider1: SATCollider, collider2: SATCollider): [isColliding: boolean, overlapAmount: number, direction: Vec2] => {
+  // const corners1 = polygonCollider1.getCorners()
+  // const corners2 = polygonCollider2.getCorners()
+  // getEdges(corners1)
+  // getEdges(corners2)
+
 
   // The normals of the Shape
-  const axes = [...getAxes(getEdges(corners1)), ...getAxes(getEdges(corners2))]
+  const axes = [
+    ...collider1.getAxes(collider2), 
+    ...collider2.getAxes(collider1)]
 
   let smallestOverlapAmount = Infinity;
   let mtvAxis = axes[0];
@@ -91,8 +79,10 @@ const SATSolver = (polygonCollider1: PolygonCollider, polygonCollider2: PolygonC
   for (const axis of axes) {
     // console.log(check, axis)
     check++
-    const [start_1, end_1] = projShape(corners1, axis)
-    const [start_2, end_2] = projShape(corners2, axis)
+    // const [start_1, end_1] = projShape(corners1, axis)
+    // const [start_2, end_2] = projShape(corners2, axis)
+    const [start_1, end_1] = collider1.projShape(axis)
+    const [start_2, end_2] = collider2.projShape(axis)
 
     //check non overlap in projects
     // if one axis has two projections that don't overlap, then garenteed to not collide!
@@ -119,13 +109,12 @@ const SATSolver = (polygonCollider1: PolygonCollider, polygonCollider2: PolygonC
 
   //TODO redo this to retrofit the logic
   // Force two things to bonuce off each other
-  if (isP2FurtherPoint(polygonCollider1.center, polygonCollider2.center, mtvAxis)) {
+  if (isP2FurtherPoint(collider1.center, collider2.center, mtvAxis)) {
     smallestOverlapAmount *= -1
   }
 
   return [true, smallestOverlapAmount, mtvAxis]
 }
-
 
 
 // question: do we need a distinction between objects that cant be moved vs entities that would be walking into these objects | yes
@@ -138,6 +127,8 @@ export class BoxCollider implements PolygonCollider {
   private x: number
   private y: number
   center: Vec2;
+  debug = false;
+  mask = 0;
 
   constructor(x: number, y: number, width: number, height: number, radians = 0) {
     this.x = x
@@ -158,27 +149,54 @@ export class BoxCollider implements PolygonCollider {
     ]
   }
 
+  getEdges(): Vec2[] {
+    const vec_list = this.corners
+    const edges: Vec2[] = [];
+    for (let i = 0; i < vec_list.length; i++) {
+      const p1 = vec_list[i]
+      const p2 = vec_list[i + 1 < vec_list.length ? i + 1 : 0]
+      edges.push(ev`${p1} - ${p2}`)
+    }
+    return edges
+  }
 
-  collide(Collider: Collider): Vec2 {
-    if (Collider instanceof BoxCollider) {
-      const [isColliding, overlapAmount, direction] = SATSolver(this, Collider);
-      return scaleVec(direction, overlapAmount)
+  getAxes(otherCollider: SATCollider): Vec2[] {
+    const edges = this.getEdges()
+    const axes: Vec2[] = []
+    for (const edge of edges) {
+      axes.push(normalize(ortho(edge)))
+    }
+    return axes
+  }
+
+  projShape(axis: Vec2): Vec2[] {
+    const corners = this.corners
+    // each of these points are on the line of the axis at the origin
+    let startPoint: Vec2 = projVec(corners[0], axis)
+    let endPoint: Vec2 = projVec(corners[1], axis)
+
+    for (const corner of corners.slice(2)) {
+      const testPoint = projVec(corner, axis)
+      if (isP2FurtherPoint(testPoint, startPoint, axis))
+        startPoint = testPoint
+
+      if (!isP2FurtherPoint(testPoint, endPoint, axis))
+        endPoint = testPoint
 
     }
-    if (Collider instanceof CircleCollider) {
-      // todo
-      return { x: 0, y: 0 };
-    }
-    if (Collider instanceof CapsuleCollider) {
-      // todo
-      return { x: 0, y: 0 };
-    }
-    throw "shitass";
+    return [startPoint, endPoint]
   }
 
 
-  debug = false;
-  mask = 0;
+  collide(collider: Collider): Vec2 {
+    if ("getCorners" in collider) {
+      const ploygonCollider = collider as PolygonCollider
+      const [isColliding, overlapAmount, direction] = SATSolver(this, ploygonCollider);
+      return scaleVec(direction, overlapAmount)
+    }
+    
+    throw "shitass";
+  }
   getNearestPoint(point: Vec2): Vec2 {
     throw new Error('Method not implemented.');
   }
@@ -197,18 +215,67 @@ export class BoxCollider implements PolygonCollider {
     return { type: 'box', x: this.x - this.width / 2, y: this.y - this.height / 2, width: this.width, height: this.height }
   }
 
+  isInsideMe(point: Vec2): boolean {
+     return this.x - this.width  / 2 <= point.x && point.x <= this.x + this.width  / 2
+        &&  this.y - this.height / 2 <= point.y && point.y <= this.y + this.height / 2
+  }
+
 }
 
-export class CircleCollider implements Collider {
-  constructor(x: number, y: number, width: number, height: number) {
 
-  }
-  collide(collider: Collider) {
-    return { x: 0, y: 0 }
-  }
-
+export class CircleCollider implements SATCollider {
+  center: Vec2;
   debug = false;
   mask = 0;
+  radius = 1;
+
+
+  constructor(x: number, y: number, radius: number) {
+    this.center = vec2(x, y)
+    this.radius = radius
+  }
+
+  isInsideMe(point: Vec2): boolean {
+    throw new Error('Method not implemented.');
+  }
+  
+  collide(collider: Collider) {
+    if ("getAxes" in collider) {
+      const ploygonCollider = collider as PolygonCollider
+      const [isColliding, overlapAmount, direction] = SATSolver(this, ploygonCollider);
+      return scaleVec(direction, overlapAmount)
+    }
+    
+    throw "shitass";
+  }
+
+  getAxes(otherCollider: SATCollider): Vec2[] {
+    if ("getCorners" in otherCollider) {
+      const ploygonCollider = otherCollider as PolygonCollider
+      const corners = ploygonCollider.getCorners()
+      
+      let min_distance = Number.MAX_SAFE_INTEGER
+      let min_idx = -1
+      for (let i = 0; i<corners.length; i++) {
+        const distance = vecLength(ev`${corners[i]}-${this.center}`)
+        if (distance < min_distance) {
+          min_distance = distance
+          min_idx = i
+        }
+      }
+      return [normalize(ev`${this.center} - ${corners[min_idx]}`)]
+    }
+
+    return [normalize(ev`${this.center} - ${otherCollider.center}`)]
+  }
+
+  projShape(axis: Vec2): Vec2[] {
+    return [
+      ev`${this.center} - (${axis} * ${this.radius})`,
+      ev`${this.center} + (${axis} * ${this.radius})`,
+    ]
+  }
+
   getNearestPoint(point: Vec2): Vec2 {
     throw new Error('Method not implemented.');
   }
@@ -216,12 +283,12 @@ export class CircleCollider implements Collider {
     throw new Error('Method not implemented.');
   }
 
-  updateLocation(point: Vec2): void {
-    throw new Error('Method not implemented.');
+  updateLocation(center: Vec2): void {
+    this.center = center
   }
 
   serialize(): SerializedCollider {
-    throw new Error('Method not implemented.');
+    return { type: 'circle', x: this.center.x, y: this.center.y, radius: this.radius }
   }
 }
 
@@ -323,6 +390,21 @@ export class CapsuleCollider implements Collider {
           radius,
         },
       ];
+  }
+  isInsideMe(point: Vec2): boolean {
+    if (this.center.x - this.body.width /2 <= point.x && point.x <= this.center.x + this.body.width /2
+     && this.center.y - this.body.height/2 <= point.y && point.y <= this.center.y + this.body.height/2
+    ) {
+      return true
+    }
+    const horizontal =this.body. width >=this.body. height;
+    const centers = horizontal
+      ? [vec2(this.center.x - this.body.width /2, this.center.y), vec2(this.center.x + this.body.width /2, this.center.y)]
+      : [vec2(this.center.x, this.center.y - this.body.height/2), vec2(this.center.x, this.center.y + this.body.height/2)]
+      const radius = horizontal
+        ? this.body.height/2: this.body.width /2
+        // : 
+        return centers.some(center => vecLengthSquared(subVec(center,point)) <= radius)
   }
 
   getNearestPoint(point: Vec2): Vec2 {

@@ -1,10 +1,10 @@
 import { WebSocket } from "ws";
-import { ClientMessage, PartialFkingGameStateMessage } from "@common/messages";
+import { ClientMessage, PartialFkingGameStateMessage, Particle } from "@common/messages";
 import { SESSION_KEY_NUM_BYTES } from "@common/session";
 import { Seed, Corpse, Explosion, StaticThing, Meatball, Player, SEED_COOLDOWN } from "@server/gameobjects";
 import { send } from "./net/send";
 import { subVec, vecLength, WholeFkingGameState, GameObject, vecLengthSquared, vec2 } from "@common";
-import { Collider } from "./collision";
+import { BoxCollider, Collider } from "./collision";
 import { generateDiffPayload } from "@common/json-optimizer";
 import { ChunkEntryMap, setTile } from "./tile-manager";
 import { Room } from "./gamelogic/room";
@@ -20,7 +20,9 @@ export class Game {
   private gameObjects: GameObject[] = [
     new StaticThing({ type: 'tree', x: -100, y: -100 }),
     new StaticThing({ type: 'campfire', x: -0, y: -100 }),
-    new StaticThing({ type: 'techbro', x: -50, y: -120, interactive: true, hp: 10000, maxHp: 10000 }),
+    new StaticThing({ type: 'techbro', x: -50, y: -120, interactive: true, hp: 10000, maxHp: 10000,
+      collider: new BoxCollider(-50, -130, 20, 20)
+     }),
   ];
   private rooms: Map<string, Room> = new Map([
     ["base", { id: "base", x: 0, y: 0 }],
@@ -30,6 +32,7 @@ export class Game {
   private lastSentGameState?: { gameState: WholeFkingGameState, versionId: string }
   private tiles: ChunkEntryMap
   private onTileEdit: (tiles: ChunkEntryMap) => void
+  private particleQueue: Particle[] = []
 
   constructor(tiles: ChunkEntryMap, onTileEdit: (tiles: ChunkEntryMap) => void) { 
     this.tiles = tiles
@@ -91,10 +94,54 @@ export class Game {
     }
     // should this be in StaticThing.tick? StaticThing doesn't have access to players
     const interactiveThings = this.gameObjects.values().filter(obj => obj instanceof StaticThing).filter(obj => obj.interactive).toArray()
+    // const knives = this.players.values()
+    // .flatMap(player => {
+    //   const vec = player.getKnifeLocation()
+    //   return vec ? [{ knife: vec, player }] : []
+    // }).toArray()
     for (const player of this.players.values()) {
       const INTERACTION_RANGE = 30
       // we might want the range to change depending on object size
         player.canInteractWith = interactiveThings.values().filter(thing => vecLengthSquared(subVec(thing.position, player.getPosition())) <= INTERACTION_RANGE * INTERACTION_RANGE).map(thing => thing.id).toArray()
+
+
+        //
+        const KNIFE_DAMAGE = 5.5 // as proclaimed by nick
+        const knife = player.getKnifeLocation()
+        if (knife) {
+          for (const entity of this.gameObjects) {
+            if (player===entity)continue
+        if (entity instanceof Player) {
+          if (entity.collider.isInsideMe(knife)) {
+            if (!player.knivesInside.has(entity)) {
+              player.knivesInside.add(entity)
+              entity.setHp(entity.getHp() - KNIFE_DAMAGE);
+              this.particleQueue.push({color:[6, .89,.36],count:20,x:knife.x,y:knife.y,})
+            }
+          } else {
+            player.knivesInside.delete(entity)
+          }
+
+        } else if (entity instanceof StaticThing) {
+          if (entity.collider){
+          if (entity.collider?.isInsideMe(knife)) {
+            if (!player.knivesInside.has(entity)) {
+              player.knivesInside.add(entity)
+              entity.takeDamageIfPossible(KNIFE_DAMAGE)
+              this.particleQueue.push({color:[6, .89,.36],count:20,x:knife.x,y:knife.y,})
+            }
+          } else {
+            player.knivesInside.delete(entity)
+          }}
+        }
+      }
+        }
+        // for (const {knife, player: other} of knives) {
+        //   if (player === other)continue
+        //     if (player.collider.isInsideMe(knife)) {
+        //       player.setHp(player.getHp() - KNIFE_DAMAGE);
+        //     }
+        // }
     }
     this.gameObjects = this.gameObjects.filter((mb) => !mb.shouldDelete);
   }
@@ -128,8 +175,16 @@ export class Game {
         });
       }
       conn.lastSentGameStateVersionId = versionId
+
+      if (this.particleQueue.length > 0) {
+        send(conn.socket,'particles', this.particleQueue)
+      }
     }
     this.lastSentGameState = { gameState, versionId }
+    if (this.particleQueue.length > 0) {
+
+      this.particleQueue = []
+    }
   }
 
   getWorldState(): WholeFkingGameState {

@@ -1,10 +1,11 @@
 import { defaultInputs, Inputs } from "@common/input";
-import { Player as NetPlayer,GameObject } from "@common/game";
+import { Player as NetPlayer,GameObject, KNIFE_OFFSET_Y } from "@common/game";
 import { Game } from '@server/game';
-import { subVec, Vec2 } from "@common";
+import { ev, subVec, vec2, Vec2 } from "@common";
 import { Corpse } from './corpse'
 import { Meatball } from './meatball';
 import { BoxCollider } from "@server/collision";
+import { number } from "zod";
 
 const MAX_HP = 67;
 const LINE_START_AGE = 5_000
@@ -39,6 +40,8 @@ export class Player implements GameObject {
   canInteractWith: number[] = []
   roomId: string = 'base';
   wasTeleporting = false;
+  private knifeState = { angle: 0, radius: 0 }
+  knivesInside = new Set<GameObject>
  
   constructor(game: Game) {
     this.game = game
@@ -88,6 +91,8 @@ export class Player implements GameObject {
       lines: this.lines.map(({start,end,committed}) => ({start,end,age:committed?Math.min(1, Math.max(0, (Date.now() - (committed + LINE_START_AGE)) / LINE_MAX_AGE)) : null})),
       collied: this.collied,
       canInteractWith: this.canInteractWith,
+      knifeRadius: +this.knifeState.radius.toFixed(3),
+      knifeAngle: this.knifeState.angle,
       thought: this.thought
     };
   }
@@ -114,11 +119,30 @@ export class Player implements GameObject {
     }
     this.seedCooldownTicks = Math.max(this.seedCooldownTicks - 1, 0);
     this.collider.updateLocation(subVec(this.position, {x:0,y:10}))
+    const MAX_RADIUS = 25
+    if (this.inputs.knife) {
+      this.knifeState.radius += (MAX_RADIUS - this.knifeState.radius) * 0.3
+    } else if (this.knifeState.radius > 0) {
+      this.knifeState.radius += (MAX_RADIUS * 1.5 - this.knifeState.radius) * -0.3
+      if (this.knifeState.radius < 0) {
+         this.knifeState.radius = 0
+      }
+    }
+    if (this.knifeState.radius > 0) {
+      this.knifeState.angle += -0.2
+    }
   }
   setHp(hp: number) {
     this.hp = hp;
   }
   getHp() {
     return this.hp;
+  }
+
+  getKnifeLocation (): Vec2 | null {
+    if (this.knifeState.radius < 10) {
+      return null
+    }
+    return ev`${this.position} + ${vec2(0, KNIFE_OFFSET_Y)} + ${vec2(Math.cos(this.knifeState.angle), Math.sin(this.knifeState.angle))} * ${this.knifeState.radius}`
   }
 }

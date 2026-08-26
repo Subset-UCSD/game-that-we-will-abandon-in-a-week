@@ -9,7 +9,7 @@ export class DebugTileEditor {
   #mouseInWorld?: Vec2
   #mouseDown ?: Set<`${number} ${number}`>
   #radius = 0
-  #tile: TileId | null = 'dirt'
+  #tile: TileId | null = 'grass'
   isRenderCollider = false
   
   constructor () {
