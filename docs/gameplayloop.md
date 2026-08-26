@@ -22,6 +22,7 @@
     d. damage and health
         - depends on colliders
     e. consumables
+    f. weapons
 1. room system
     a. having different room where players only see each other in the same room
 2. party system 
@@ -34,3 +35,7 @@
 ### Tangent ideas
 1. overarching story design
 2. dialogue system design
+3. decoration system
+
+### Anticipated roadblocks
+- performance with high amount of colliders/objects
