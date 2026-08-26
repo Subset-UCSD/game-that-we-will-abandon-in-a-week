@@ -83,6 +83,16 @@ export const corpseSchema = z.strictObject({
 })
 export type SerializedCorpse = z.infer<typeof corpseSchema>;
 
+export const d20schema = z.strictObject({
+  x: z.number(),
+  y: z.number(),
+  x_vel: z.number(),
+  y_vel: z.number(),
+  radius: z.number(),
+  value: z.number(),
+})
+export type D20Schema = z.infer<typeof d20schema>;
+
 
 const colliderSchema = z.discriminatedUnion('type', [
   z.object({type:z.literal('box'),x:z.number(),y:z.number(),width:z.number(),height:z.number()}),
@@ -99,6 +109,7 @@ export const wholeFkingGameState = z.object({
   things: z.array(thingSchema),
   corpses: z.array(corpseSchema),
   seeds: z.array(seedSchema),
+  d20:  z.array(d20schema),
   colliders: z.array(colliderSchema),//.optional(),
   tiles: chunkMapSchema,
   // add to this when you want the client to know more about the game
@@ -111,4 +122,6 @@ export interface GameObject {
   tick(): void;
   serialize(): unknown;
 }
+
+
 

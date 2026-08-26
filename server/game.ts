@@ -7,6 +7,7 @@ import { subVec, vecLength, WholeFkingGameState, GameObject, vecLengthSquared, v
 import { BoxCollider, Collider } from "./collision";
 import { generateDiffPayload } from "@common/json-optimizer";
 import { ChunkEntryMap, setTile } from "./tile-manager";
+import { D20 } from "./gameobjects/d20";
 
 declare const IS_SERVING: boolean
 
@@ -27,6 +28,7 @@ export class Game {
   private lastSentGameState?: { gameState: WholeFkingGameState, versionId: string }
   private tiles: ChunkEntryMap
   private onTileEdit: (tiles: ChunkEntryMap) => void
+  private d20 =  new D20()
 
   constructor(tiles: ChunkEntryMap, onTileEdit: (tiles: ChunkEntryMap) => void) { 
     this.tiles = tiles
@@ -190,6 +192,7 @@ export class Game {
         .filter((o) => o instanceof Corpse)
         .map((ex) => ex.serialize()),
       seeds: this.gameObjects.filter(x => x instanceof Seed).map(x => x.serialize()),
+      d20: [this.d20.serialize()],
       colliders: this.gameObjects.map(object => object.collider?.serialize()).filter(collider => collider !== undefined),
       tiles: Object.fromEntries(this.tiles.entries().map(([key, {tiles}])=>[key, tiles])),
     };
