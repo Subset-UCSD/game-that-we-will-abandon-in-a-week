@@ -7,11 +7,14 @@ type TileRegistryEntry =
   | { bl: TileId, mid: TileId, path: string }
 
 // Register your tile textures here
+// last one has precedence
 const tileRegistry: TileRegistryEntry[] = [
   { tile: 'temp_dirt', color: '#473327' },
   { tile: 'temp_water', color: '#23457a' },
   { bl: 'grass', mid: 'dirt', path: 'assets/tilesets/grass-path/janky-grass-path.png' },
+  { bl: 'black', mid: 'bad_wall', path: 'assets/tilesets/wall-black.png' },
   { bl: 'grass', mid: 'bad_wall', path: 'assets/tilesets/crappy-wall.png' },
+  { tile: 'black', color: 'black' },
 ]
 
 type IndividualTile = { type: 'color', color: string } | { type: 'tilemap', side: 'bl' | 'mid', image: ImageBitmap; tileSize: number }

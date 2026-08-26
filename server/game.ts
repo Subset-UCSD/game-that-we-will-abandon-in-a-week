@@ -1,5 +1,5 @@
 import { WebSocket } from "ws";
-import { ClientMessage, PartialFkingGameStateMessage } from "@common/messages";
+import { ClientMessage, PartialFkingGameStateMessage, Particle } from "@common/messages";
 import { SESSION_KEY_NUM_BYTES } from "@common/session";
 import { Seed, Corpse, Explosion, StaticThing, Meatball, Player, SEED_COOLDOWN } from "@server/gameobjects";
 import { send } from "./net/send";
@@ -8,6 +8,7 @@ import { BoxCollider, Collider } from "./collision";
 import { generateDiffPayload } from "@common/json-optimizer";
 import { ChunkEntryMap, setTile } from "./tile-manager";
 import { D20 } from "./gameobjects/d20";
+import { Room } from "./gamelogic/room";
 
 declare const IS_SERVING: boolean
 
@@ -24,11 +25,16 @@ export class Game {
       collider: new BoxCollider(-50, -130, 20, 20)
      }),
   ];
+  private rooms: Map<string, Room> = new Map([
+    ["base", { id: "base", x: 0, y: 0 }],
+    ["test", { id: "test", x: 1900, y: 2200 }],
+  ]);
   private colliders: Collider[] = [];
   private lastSentGameState?: { gameState: WholeFkingGameState, versionId: string }
   private tiles: ChunkEntryMap
   private onTileEdit: (tiles: ChunkEntryMap) => void
   private d20 =  new D20()
+  private particleQueue: Particle[] = []
 
   constructor(tiles: ChunkEntryMap, onTileEdit: (tiles: ChunkEntryMap) => void) { 
     this.tiles = tiles
@@ -112,6 +118,7 @@ export class Game {
             if (!player.knivesInside.has(entity)) {
               player.knivesInside.add(entity)
               entity.setHp(entity.getHp() - KNIFE_DAMAGE);
+              this.particleQueue.push({color:[6, .89,.36],count:20,x:knife.x,y:knife.y,})
             }
           } else {
             player.knivesInside.delete(entity)
@@ -123,6 +130,7 @@ export class Game {
             if (!player.knivesInside.has(entity)) {
               player.knivesInside.add(entity)
               entity.takeDamageIfPossible(KNIFE_DAMAGE)
+              this.particleQueue.push({color:[6, .89,.36],count:20,x:knife.x,y:knife.y,})
             }
           } else {
             player.knivesInside.delete(entity)
@@ -169,8 +177,16 @@ export class Game {
         });
       }
       conn.lastSentGameStateVersionId = versionId
+
+      if (this.particleQueue.length > 0) {
+        send(conn.socket,'particles', this.particleQueue)
+      }
     }
     this.lastSentGameState = { gameState, versionId }
+    if (this.particleQueue.length > 0) {
+
+      this.particleQueue = []
+    }
   }
 
   getWorldState(): WholeFkingGameState {
@@ -355,6 +371,20 @@ export class Game {
       } else {
         player.thought = ''
         player.wasBaaing = false
+      }
+      if (player.inputs.teleport) {
+        if (player.wasTeleporting) continue;
+        
+        const destination = player.roomId === "base" ? this.rooms.get("test") : this.rooms.get("base");
+
+        if (!destination) return;
+
+        player.roomId = destination.id;
+        player.setPosition(destination.x, destination.y);
+        
+        player.wasTeleporting = true;
+      } else {
+        player.wasTeleporting = false
       }
       if (player.inputs.seed && player.seedCooldownTicks <= 0) {
         this.addGameObject(new Seed({

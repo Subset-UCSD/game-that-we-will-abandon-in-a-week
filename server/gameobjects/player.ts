@@ -38,8 +38,10 @@ export class Player implements GameObject {
    * TODO: in that case we should change this to just a number
    */
   canInteractWith: number[] = []
-private   knifeState = { angle: 0, radius: 0 }
-knivesInside = new Set<GameObject>
+  roomId: string = 'base';
+  wasTeleporting = false;
+  private knifeState = { angle: 0, radius: 0 }
+  knivesInside = new Set<GameObject>
  
   constructor(game: Game) {
     this.game = game
