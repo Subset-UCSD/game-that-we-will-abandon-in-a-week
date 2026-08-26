@@ -23,7 +23,7 @@ export class Game {
     new StaticThing({ type: 'tree', x: -100, y: -100 }),
     new StaticThing({ type: 'campfire', x: -0, y: -100 }),
     new StaticThing({ type: 'techbro', x: -50, y: -120, interactive: true, hp: 10000, maxHp: 10000,
-      collider: new BoxCollider(-50, -130, 20, 20)
+      collider: new BoxCollider(-50, -150, 40, 70)
      }),
   ];
   private rooms: Map<string, Room> = new Map([

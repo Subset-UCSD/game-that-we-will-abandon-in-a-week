@@ -67,7 +67,7 @@ export class Player implements RenderableObject {
 			c.rotate(knifeAngle)
 			const KNIFE_WIDTH = 20
 			const KNIFE_HEIGHT = 15
-			c.drawImage(knife, -KNIFE_WIDTH/2,  knifeRadius, KNIFE_WIDTH, KNIFE_HEIGHT);
+			c.drawImage(knife, -KNIFE_WIDTH/2,  knifeRadius - KNIFE_HEIGHT/2, KNIFE_WIDTH, KNIFE_HEIGHT);
 			c.restore()
 		}
 

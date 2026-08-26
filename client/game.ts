@@ -3,7 +3,7 @@ import { Arena } from "./render/arena";
 import { Room } from "./render/room";
 import { Connection } from './net/connection'
 import { InputListener } from "./input-listener";
-import { addVec, isVecEq, SERVER_GAME_TICK,lerp, ChunkMap } from "@common";
+import { addVec, isVecEq, SERVER_GAME_TICK,lerp, ChunkMap, Particle } from "@common";
 import { defaultInputs, keymap } from "@common/input";
 import { WholeFkingGameState, MeatBall, SerializedThing, Line, SerializedCollider, Player as NetPlayer } from '@common/game'
 import { ClientSeed, ClientExplosion, ClientCorpse, ThingRenderer, render, ClientMeatball, Canvas, SerializedThingWithAdditionalRenderProperties } from "./render"
@@ -192,8 +192,11 @@ export class Game {
 		)
 		c.scale(this.camera.scale, this.camera.scale);
 		c.translate(
-			-this.camera.x, // + canvas.width/ 2, 
-			-this.camera.y, // + canvas.height/ 2, 
+// 			-this.camera.x,
+// -this.camera.y,
+// i am not sure if this helps with 
+			-Math.round(this.camera.x*(this.camera.scale*canvas.dpr)) / (this.camera.scale*canvas.dpr), // + canvas.width/ 2, 
+			-Math.round(this.camera.y*(this.camera.scale*canvas.dpr)) / (this.camera.scale*canvas.dpr), // + canvas.height/ 2, 
 		);
 		const screenShakeAngle = Math.random() * 2 * Math.PI;
 		if (screenShake > 0) {
@@ -239,7 +242,7 @@ export class Game {
 		if (this.__debugTileEditor != null && this.__debugTileEditor.isRenderCollider) {
 			c.strokeStyle = 'red'
 		for (const collider of this.debugColldiers) {
-			console.log(collider.type)
+			// console.log(collider.type)
 			switch (collider.type) {
 				case 'box': {
 					c.strokeRect(collider.x, collider.y, collider.width, collider.height)
@@ -345,6 +348,10 @@ export class Game {
 			}
 		}
 		c.restore()
+	}
+
+	spawnParticles (particle: Particle): void {
+		// TODO
 	}
 
 }
