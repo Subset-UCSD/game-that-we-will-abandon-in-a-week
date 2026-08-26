@@ -81,7 +81,7 @@ export class Player implements GameObject {
   }
 
   serialize(): NetPlayer {
-    return {...this.position, x_vel: this.velocity.x, y_vel: this.velocity.y, id: this.id, baaing:this.thought,
+    return {...this.position, x_vel: this.velocity.x, y_vel: this.velocity.y, id: this.id, roomId: this.roomId, baaing:this.thought,
       facingLeft:this.facingLeft,
       connected: this.connected,
       // round down to nearest second because client doesnt need that much granularity

@@ -21,6 +21,7 @@ export const playerSchema = z.object({
   y: z.number(),
   x_vel: z.number(),
   y_vel: z.number(),
+  roomId: z.string(),
   facingLeft:z.boolean(),
   baaing: z.string(),
   connected: z.boolean(),
