@@ -7,6 +7,7 @@ import { subVec, vecLength, WholeFkingGameState, GameObject, vecLengthSquared, v
 import { Collider } from "./collision";
 import { generateDiffPayload } from "@common/json-optimizer";
 import { ChunkEntryMap, setTile } from "./tile-manager";
+import { Room } from "./gamelogic/room";
 
 declare const IS_SERVING: boolean
 
@@ -21,6 +22,10 @@ export class Game {
     new StaticThing({ type: 'campfire', x: -0, y: -100 }),
     new StaticThing({ type: 'techbro', x: -50, y: -120, interactive: true, hp: 10000, maxHp: 10000 }),
   ];
+  private rooms: Map<string, Room> = new Map([
+    ["base", { id: "base", x: 0, y: 0 }],
+    ["test", { id: "test", x: 800, y: 0 }],
+  ]);
   private colliders: Collider[] = [];
   private lastSentGameState?: { gameState: WholeFkingGameState, versionId: string }
   private tiles: ChunkEntryMap
@@ -308,6 +313,20 @@ export class Game {
       } else {
         player.thought = ''
         player.wasBaaing = false
+      }
+      if (player.inputs.teleport) {
+        if (player.wasTeleporting) continue;
+        
+        const destination = player.roomId === "base" ? this.rooms.get("test") : this.rooms.get("base");
+
+        if (!destination) return;
+
+        player.roomId = destination.id;
+        player.setPosition(destination.x, destination.y);
+        
+        player.wasTeleporting = true;
+      } else {
+        player.wasTeleporting = false
       }
       if (player.inputs.seed && player.seedCooldownTicks <= 0) {
         this.addGameObject(new Seed({

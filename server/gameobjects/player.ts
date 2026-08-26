@@ -37,6 +37,8 @@ export class Player implements GameObject {
    * TODO: in that case we should change this to just a number
    */
   canInteractWith: number[] = []
+  roomId: string = 'base';
+  wasTeleporting = false;
  
   constructor(game: Game) {
     this.game = game
