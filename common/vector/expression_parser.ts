@@ -4,7 +4,7 @@
  */
 
 export type Expression =
-  | { op: '+' | '-' | '*' | '/' | '.'; a: Expression; b: Expression }
+  | { op: '+' | '-' | '*' | '/' | '.' | '@'; a: Expression; b: Expression }
   | { value: number }
   | { reference: number }
 
@@ -51,7 +51,7 @@ function * parseLitExpr (string: string): ParseResult {
 function * parseMulExpr (string: string): ParseResult {
   for (const right of parseLitExpr(string)) {
     const op = right.string[right.string.length - 1]
-    if (op === '*' || op === '/' || op === '.') {
+    if (op === '*' || op === '/' || op === '.' || op === "@") {
       for (const left of parseMulExpr(right.string.slice(0, -1))) {
         yield { ...left, expr: { op, a: left.expr, b: right.expr } }
       }

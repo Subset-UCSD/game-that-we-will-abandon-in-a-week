@@ -1,6 +1,5 @@
 import { WebSocket } from "ws";
 import { ClientMessage, PartialFkingGameStateMessage, Particle } from "@common/messages";
-import { SESSION_KEY_NUM_BYTES } from "@common/session";
 import { Seed, Corpse, Explosion, StaticThing, Meatball, Player, SEED_COOLDOWN } from "@server/gameobjects";
 import { send } from "./net/send";
 import { subVec, vecLength, WholeFkingGameState, GameObject, vecLengthSquared, vec2 } from "@common";
@@ -11,6 +10,8 @@ import { D20 } from "./gameobjects/d20";
 import { Room } from "./gamelogic/room";
 
 declare const IS_SERVING: boolean
+
+const SESSION_KEY_NUM_BYTES = 32;
 
 // ALL OF THE GAME LOGIC
 export class Game {

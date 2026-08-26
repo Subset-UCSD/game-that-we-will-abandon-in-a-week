@@ -41,6 +41,9 @@ export const vecToArray = ({x,y}: Vec2): [x: number, y: number] => [x, y]
 //     a.x*b.x + b.y*b.y
 export const dot = (a: Vec2, b: Vec2): number => a.x * b.x + a.y * b.y 
 
+export const distSq = (a: Vec2, b: Vec2): number => (a.x - b.x) ** 2 + (a.y - b.y) ** 2;
+export const dist = (a: Vec2, b: Vec2): number => distSq(a, b) ** 0.5;
+
 /**
  * rotates `point` `radians` radians *clockwise* about `axis`
  */
@@ -76,7 +79,7 @@ const cache = new WeakMap<TemplateStringsArray, Expression | null>()
  * ev = eval vector expression
  * @throws when you are bad!!
  */
-export function ev (parts: TemplateStringsArray, ...values: (Vec2 | number)[]): Vec2 {
+export function ev (parts: TemplateStringsArray, ...values: (Vec2 | number)[]): Vec2 | number {
 	const parsed = cache.getOrInsertComputed(parts, () => {
 		let fullString = ''
 		for (const [i, part] of parts.entries()) {
@@ -91,10 +94,7 @@ export function ev (parts: TemplateStringsArray, ...values: (Vec2 | number)[]): 
 		throw new SyntaxError(`'${parsed}' is BAD expression`)
 	}
 	const result = evaluateExpression(values, parsed)
-	if (typeof result === 'number') {
-		throw new TypeError(`you somehow produced a number (${result})`)
-	}
-	return result
+	return result;
 }
 
 function evaluateExpression (values: (Vec2 | number)[], expression: Expression): Vec2 | number {
@@ -149,6 +149,12 @@ function evaluateExpression (values: (Vec2 | number)[], expression: Expression):
 					return dot(a, b)
 				}
 				throw new Error('cannot dot anything but vectors')
+			}
+			case "@": {
+				if (typeof a !== "number" && typeof b !== "number") {
+					return distSq(a, b);
+				}
+				throw new Error("cannot dist anything but vectors");
 			}
 		}
 	} else if ('value' in expression) {
