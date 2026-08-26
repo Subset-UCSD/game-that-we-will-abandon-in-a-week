@@ -86,6 +86,7 @@ export type SerializedCorpse = z.infer<typeof corpseSchema>;
 
 const colliderSchema = z.discriminatedUnion('type', [
   z.object({type:z.literal('box'),x:z.number(),y:z.number(),width:z.number(),height:z.number()}),
+  z.object({type:z.literal('circle'),x:z.number(),y:z.number(),radius:z.number()}),
   z.object({type:z.literal('capsule'),x:z.number(),y:z.number(),width:z.number(),height:z.number()}),
 ])
 export type SerializedCollider = z.infer<typeof colliderSchema>
