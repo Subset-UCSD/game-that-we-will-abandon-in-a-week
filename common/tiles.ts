@@ -12,6 +12,7 @@ export const tileSchema = z.literal([
   'dirt',
   'grass',
   'bad_wall',
+  'black',
 
   // legacy
   'temp_dirt',

@@ -1,5 +1,5 @@
 import { WebSocket } from "ws";
-import { ClientMessage, PartialFkingGameStateMessage } from "@common/messages";
+import { ClientMessage, PartialFkingGameStateMessage, Particle } from "@common/messages";
 import { SESSION_KEY_NUM_BYTES } from "@common/session";
 import { Seed, Corpse, Explosion, StaticThing, Meatball, Player, SEED_COOLDOWN } from "@server/gameobjects";
 import { send } from "./net/send";
@@ -27,6 +27,7 @@ export class Game {
   private lastSentGameState?: { gameState: WholeFkingGameState, versionId: string }
   private tiles: ChunkEntryMap
   private onTileEdit: (tiles: ChunkEntryMap) => void
+  private particleQueue: Particle[] = []
 
   constructor(tiles: ChunkEntryMap, onTileEdit: (tiles: ChunkEntryMap) => void) { 
     this.tiles = tiles
@@ -110,6 +111,7 @@ export class Game {
             if (!player.knivesInside.has(entity)) {
               player.knivesInside.add(entity)
               entity.setHp(entity.getHp() - KNIFE_DAMAGE);
+              this.particleQueue.push({color:[6, .89,.36],count:20,x:knife.x,y:knife.y,})
             }
           } else {
             player.knivesInside.delete(entity)
@@ -121,6 +123,7 @@ export class Game {
             if (!player.knivesInside.has(entity)) {
               player.knivesInside.add(entity)
               entity.takeDamageIfPossible(KNIFE_DAMAGE)
+              this.particleQueue.push({color:[6, .89,.36],count:20,x:knife.x,y:knife.y,})
             }
           } else {
             player.knivesInside.delete(entity)
@@ -167,8 +170,16 @@ export class Game {
         });
       }
       conn.lastSentGameStateVersionId = versionId
+
+      if (this.particleQueue.length > 0) {
+        send(conn.socket,'particles', this.particleQueue)
+      }
     }
     this.lastSentGameState = { gameState, versionId }
+    if (this.particleQueue.length > 0) {
+
+      this.particleQueue = []
+    }
   }
 
   getWorldState(): WholeFkingGameState {

@@ -60,6 +60,18 @@ export const partialFkingGameStateMessage = $message("partial-game-state", z.obj
 }));
 export type PartialFkingGameStateMessage = z.infer<typeof partialFkingGameStateMessage>;
 
+const particleSchema = z.object({
+	// hsl format
+	color: z.tuple([z.number(), z.number(), z.number()]),
+	count: z.number(),
+	x: z.number(),
+	y: z.number(),
+	// TODO: how customizable do we want this to be
+})
+export type Particle = z.infer<typeof particleSchema>
+
+const particleMessage = $message('particles' , particleSchema.array())
+
 export const joinResponse = $message("join-response", z.object({
 	sessionId: z.string(),
 	playerId: z.number()
@@ -69,6 +81,7 @@ export type JoinResponse = z.infer<typeof joinResponse>;
 export const serverMessage = z.discriminatedUnion('type',[
 	wholeFkingGameStateMessage,
 	partialFkingGameStateMessage,
+	particleMessage,
 	joinResponse
 ]);
 export type ServerMessage = z.infer<typeof serverMessage>;
