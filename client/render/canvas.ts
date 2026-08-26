@@ -27,6 +27,8 @@ export class Canvas {
     width = 0
     /** height of canvas, in pixels */
     height = 0
+    /** device pixel ratio */
+    dpr = 1
 
     constructor () {
         this.#observer.observe(this.canvas)
@@ -52,6 +54,7 @@ export class Canvas {
         this.canvas.height = physicalSize.blockSize
         this.width = size.inlineSize
         this.height = size.blockSize
+        this.dpr = physicalSize.inlineSize/size.inlineSize
         this.context.scale(
             physicalSize.inlineSize/size.inlineSize,
             physicalSize.blockSize/size.blockSize,

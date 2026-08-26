@@ -123,7 +123,7 @@ export class Player implements GameObject {
     }
     this.seedCooldownTicks = Math.max(this.seedCooldownTicks - 1, 0);
     this.collider.updateLocation(subVec(this.position, {x:0,y:10}))
-    const MAX_RADIUS = 25
+    const MAX_RADIUS = 30
     if (this.inputs.knife) {
       this.knifeState.radius += (MAX_RADIUS - this.knifeState.radius) * 0.3
     } else if (this.knifeState.radius > 0) {

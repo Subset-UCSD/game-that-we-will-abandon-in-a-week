@@ -65,6 +65,12 @@ class Connection {
 				this.send('please-send-full-game-state', null)
 				break
 			}
+			case 'particles': {
+				for (const particle of message.value) {
+					this.game.spawnParticles(particle)
+				}
+				break
+			}
 			default: {
 				
 		console.log('[server 🗣️]', message);
