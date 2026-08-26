@@ -33,7 +33,10 @@ export class InputListener {
 		this.options.handleInputs(this.inputs);
 	}
 
-	private handleKeydown = (e: KeyboardEvent) => this.handleInput(this.options.keymap[e.code], true);
+	private handleKeydown = (e: KeyboardEvent) => {
+		if (e.code === 'F3') e.preventDefault();
+		this.handleInput(this.options.keymap[e.code], true);
+	};
 	private handleKeyup = (e: KeyboardEvent) => this.handleInput(this.options.keymap[e.code], false);
 	private handleMousedown = (e: MouseEvent) => this.handleInput(this.options.keymap[e.button], true);
 	private handleMouseup = (e: MouseEvent) => this.handleInput(this.options.keymap[e.button], false);
