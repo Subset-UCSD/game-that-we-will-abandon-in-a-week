@@ -26,7 +26,7 @@ export class Game {
   ];
   private rooms: Map<string, Room> = new Map([
     ["base", { id: "base", x: 0, y: 0 }],
-    ["test", { id: "test", x: 800, y: 0 }],
+    ["test", { id: "test", x: 1900, y: 2200 }],
   ]);
   private colliders: Collider[] = [];
   private lastSentGameState?: { gameState: WholeFkingGameState, versionId: string }
