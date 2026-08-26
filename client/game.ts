@@ -80,6 +80,7 @@ export class Game {
 		// Instantiate objects for newly appearing updates from the server
 		this.__debugText = JSON.stringify({
 			...gameState,
+			players: gameState.players.map(p => ({...p,lines:`... ${p.lines.length} line(s)`})),
 			tiles: Object.fromEntries(Object.entries(gameState.tiles).map(([k,v]) => [k, `... ${v.reduce((cum , curr) => cum + +(curr !== null),0)} tile(s)`]))
 		}, null, 2)
 
@@ -189,8 +190,8 @@ export class Game {
 
 
 		// TODO: draw game state
-		this.room.render(canvas);
-		this.arena.render(canvas);
+		// this.room.render(canvas);
+		// this.arena.render(canvas);
 
 		renderTiles(canvas, this.camera, this.tiles)
 

@@ -1,5 +1,6 @@
 import { GameObject, SerializedThing, Vec2 } from "@common";
 import { Player } from "./player";
+import { Collider } from "@server/collision";
 
 /**
  * for things that don't move ("static") like trees, signs, and tech bros ig
@@ -8,12 +9,16 @@ export class StaticThing implements GameObject {
   static #nextId = 0
   #state: SerializedThing
   shouldDelete = false
+  collider?: Collider
 
-  constructor (thing: Omit<SerializedThing, 'id'>) {
+  constructor ({collider,...thing}: Omit<SerializedThing, 'id'>&{collider?: Collider},
+    
+  ) {
     this.#state = {
       id: StaticThing.#nextId++,
       ...thing
     }
+    this.collider = collider
   }
 
   tick(): void {

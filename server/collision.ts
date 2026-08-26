@@ -1,4 +1,4 @@
-import { Vec2, vec2, rotate, ortho, normalize, subVec, dot, scaleVec, vecLength, SerializedCollider, ev } from '@common'
+import { Vec2, vec2, rotate, ortho, normalize, subVec, dot, scaleVec, vecLength, SerializedCollider, ev, vecMap2, vecLengthSquared } from '@common'
 import test from 'node:test';
 
 export interface Collider {
@@ -13,6 +13,8 @@ export interface Collider {
   onCollide(cb: () => void): void;
   updateLocation(center: Vec2): void;
   serialize(): SerializedCollider
+  /** 😳 */
+  isInsideMe (point: Vec2): boolean
 }
 
 export interface PolygonCollider extends Collider {
@@ -197,11 +199,19 @@ export class BoxCollider implements PolygonCollider {
     return { type: 'box', x: this.x - this.width / 2, y: this.y - this.height / 2, width: this.width, height: this.height }
   }
 
+  isInsideMe(point: Vec2): boolean {
+     return this.x - this.width  / 2 <= point.x && point.x <= this.x + this.width  / 2
+        &&  this.y - this.height / 2 <= point.y && point.y <= this.y + this.height / 2
+  }
+
 }
 
 export class CircleCollider implements Collider {
   constructor(x: number, y: number, width: number, height: number) {
 
+  }
+  isInsideMe(point: Vec2): boolean {
+    throw new Error('Method not implemented.');
   }
   collide(collider: Collider) {
     return { x: 0, y: 0 }
@@ -323,6 +333,21 @@ export class CapsuleCollider implements Collider {
           radius,
         },
       ];
+  }
+  isInsideMe(point: Vec2): boolean {
+    if (this.center.x - this.body.width /2 <= point.x && point.x <= this.center.x + this.body.width /2
+     && this.center.y - this.body.height/2 <= point.y && point.y <= this.center.y + this.body.height/2
+    ) {
+      return true
+    }
+    const horizontal =this.body. width >=this.body. height;
+    const centers = horizontal
+      ? [vec2(this.center.x - this.body.width /2, this.center.y), vec2(this.center.x + this.body.width /2, this.center.y)]
+      : [vec2(this.center.x, this.center.y - this.body.height/2), vec2(this.center.x, this.center.y + this.body.height/2)]
+      const radius = horizontal
+        ? this.body.height/2: this.body.width /2
+        // : 
+        return centers.some(center => vecLengthSquared(subVec(center,point)) <= radius)
   }
 
   getNearestPoint(point: Vec2): Vec2 {

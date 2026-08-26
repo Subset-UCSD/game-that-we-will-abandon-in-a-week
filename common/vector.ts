@@ -30,6 +30,7 @@ export const ortho =  ({ x, y }: Vec2): Vec2 => vec2(-y, x);
 
 export const vecMap1 = ({x, y}: Vec2, mapFn: (n: number) => number): Vec2 => ({ x: mapFn(x), y: mapFn(y) })
 export const vecMap2 = (a: Vec2, b: Vec2, mapFn: (a: number, b: number) => number): Vec2 => ({ x: mapFn(a.x, b.x), y: mapFn(a.y, b.y) })
+export const vecMap3 = (a: Vec2, b: Vec2, c: Vec3, mapFn: (a: number, b: number, c: number) => number): Vec2 => ({ x: mapFn(a.x, b.x, c.x), y: mapFn(a.y, b.y, c.y) })
 
 export const vecToArray = ({x,y}: Vec2): [x: number, y: number] => [x, y]
 

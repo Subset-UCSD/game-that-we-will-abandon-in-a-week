@@ -13,6 +13,8 @@ const lineSchema = z.object({
 })
 export type Line = z.infer<typeof lineSchema>
 
+export const KNIFE_OFFSET_Y = -20
+
 export const playerSchema = z.object({
   id: playerIdSchema,
   x: z.number(),
@@ -28,6 +30,8 @@ export const playerSchema = z.object({
   maxHp: z.number(),
   lines: z.array(lineSchema),
   canInteractWith: z.number().array(),
+  knifeRadius: z.number(),
+  knifeAngle: z.number(),
   // wtf is "collied"
   // like the dog ?
   collied: z.boolean()
