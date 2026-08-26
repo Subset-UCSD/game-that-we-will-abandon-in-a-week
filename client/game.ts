@@ -227,9 +227,18 @@ export class Game {
 		if (this.__debugTileEditor != null && this.__debugTileEditor.isRenderCollider) {
 			c.strokeStyle = 'red'
 		for (const collider of this.debugColldiers) {
+			console.log(collider.type)
 			switch (collider.type) {
 				case 'box': {
 					c.strokeRect(collider.x, collider.y, collider.width, collider.height)
+					break
+				}
+				case 'circle': {
+					c.beginPath()
+					c.arc(collider.x, collider.y, collider.radius, 0, 2 * Math.PI)
+					c.closePath()
+					c.stroke()
+					
 					break
 				}
 				case 'capsule': {
