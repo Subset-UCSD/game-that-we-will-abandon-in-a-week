@@ -1,4 +1,4 @@
-import { Expression, parse } from "./vector/expression_parser";
+import { type Expression, parse } from "./vector/expression_parser";
 
 export type Vec2 = { x: number; y: number };
 
@@ -42,17 +42,17 @@ export const vecMap3 = (a: Vec2, b: Vec2, c: Vec3, mapFn: (a: number, b: number,
 export const clamp = (target: Vec2, max: number) => {
 	const signs = {
 		x: Math.sign(target.x),
-		y: Math.sign(target.y)
+		y: Math.sign(target.y),
 	};
 
 	const normalized = normalize(target);
 	const magnitude = vecLength(target);
 	if (magnitude < max) {
-		return target
+		return target;
 	} else {
-		return scaleVec(normalized, max)
+		return scaleVec(normalized, max);
 	}
-}
+};
 
 export const vecToArray = ({ x, y }: Vec2): [x: number, y: number] => [x, y];
 

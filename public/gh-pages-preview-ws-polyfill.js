@@ -1,26 +1,24 @@
-const worker = new Worker('./dist/worker.js', { type: 'module' })
+const worker = new Worker("./dist/worker.js", { type: "module" });
 
-const instances = []
+const instances = [];
 
-const RealWebSocket = WebSocket
+const RealWebSocket = WebSocket;
 self.WebSocket = class FakeWebSocket {
-  static OPEN = RealWebSocket.OPEN
-  OPEN = RealWebSocket.OPEN
-  readyState = RealWebSocket.OPEN
-  constructor () {
-    instances.push(this)
-    queueMicrotask(() => this.onopen?.())
-  }
+	static OPEN = RealWebSocket.OPEN;
+	OPEN = RealWebSocket.OPEN;
+	readyState = RealWebSocket.OPEN;
+	constructor() {
+		instances.push(this);
+		queueMicrotask(() => this.onopen?.());
+	}
 
-  send (message) {
-    worker.postMessage(message)
-  }
-}
+	send(message) {
+		worker.postMessage(message);
+	}
+};
 
-worker.addEventListener('message', e => {
-  for (const ws of instances) {
-    ws.onmessage?.(e)
-  }
-})
-
-
+worker.addEventListener("message", (e) => {
+	for (const ws of instances) {
+		ws.onmessage?.(e);
+	}
+});

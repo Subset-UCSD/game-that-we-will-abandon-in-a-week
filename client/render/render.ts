@@ -1,14 +1,13 @@
-import type { Canvas } from './canvas'
-import { SerializedGameObject } from "@common";
-
+import type { SerializedGameObject } from "@common";
+import type { Canvas } from "./canvas";
 
 interface RenderableObject {
-  // Objects with a higher index render over top of objects with a lower index
-  index: number;
-  render(canvas: Canvas): void;
-  renderShadow?(canvas: Canvas): void;
-  update(objState: SerializedGameObject): void;
-  shouldRemove?(): boolean
+	// Objects with a higher index render over top of objects with a lower index
+	index: number;
+	render(canvas: Canvas): void;
+	renderShadow?(canvas: Canvas): void;
+	update(objState: SerializedGameObject): void;
+	shouldRemove?(): boolean;
 }
 
 // class Explosion implements RenderableObject {
@@ -59,7 +58,7 @@ interface RenderableObject {
 //     // creators.get(object.type)
 //   const existing = cilentState.get(object.id)?? creators[object.type]()
 //   existing.update(object)
-    
+
 // }
 
 // TODO
@@ -75,17 +74,17 @@ interface RenderableObject {
  *
  */
 export async function render(canvas: Canvas, objects: RenderableObject[]) {
-  const c = canvas.c
-  const sorted = objects.toSorted((a, b) => a.index - b.index);
-  c.fillStyle = 'rgba(0, 0, 0, 0.1)'
-  c.beginPath()
-  for (const object of sorted) {
-    object.renderShadow?.(canvas);
-  }
-  c.fill()
-  for (const object of sorted) {
-    object.render(canvas);
-  }
+	const c = canvas.c;
+	const sorted = objects.toSorted((a, b) => a.index - b.index);
+	c.fillStyle = "rgba(0, 0, 0, 0.1)";
+	c.beginPath();
+	for (const object of sorted) {
+		object.renderShadow?.(canvas);
+	}
+	c.fill();
+	for (const object of sorted) {
+		object.render(canvas);
+	}
 }
 
 export { RenderableObject };
