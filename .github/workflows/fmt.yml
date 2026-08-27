@@ -34,9 +34,9 @@ jobs:
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
         run: |
           # https://github.com/cli/cli/discussions/5792#discussioncomment-10410197
-          PR_URL="$(gh pr list --head "${BRANCH_NAME}" --state open --json url --jq .[].url)"
+          PR_URL="$(gh pr list --head fmt --state open --json url --jq .[].url)"
           if [[ -n "${PR_URL}" ]]; then
               echo "PR already exists -> ${PR_URL}"
           else
-              gh pr create --head fmt --body "code ugly, dont like" --title make code less ugly
+              gh pr create --head fmt --body "code ugly, dont like" --title "make code less ugly"
           fi
