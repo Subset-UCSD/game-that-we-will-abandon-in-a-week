@@ -12,9 +12,9 @@
  * 3. Default party that everyone joins is empty string party, party cannot create empty party
  */
 export type Party = {
-  id: string;
-  leaderSessionId: string;
-  memberSessionIds: Set<string>;
-  status: "lobby" | "embarked";
-  embarkId?: string;
+	id: string;
+	leaderSessionId: string;
+	memberSessionIds: Set<string>;
+	status: "lobby" | "embarked";
+	embarkId?: string;
 };

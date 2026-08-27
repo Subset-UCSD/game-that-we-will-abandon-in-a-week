@@ -1,42 +1,42 @@
 {
-  "name": "game-that-we-will-abandon-in-a-week",
-  "version": "1.0.0",
-  "description": "High level idea: we make a box and we hit people in the box",
-  "main": "index.js",
-  "scripts": {
-    "start": "node dist/server.js 6767",
-    "start:watch": "nodemon --watch dist/server.js --exec \"node dist/server.js 6769\"",
-    "build": "node ./esbuild.ts build",
-    "build:watch": "node ./esbuild.ts serve",
-    "dev": "run-p build:watch start:watch",
-    "clean": "rm -rf dist public/dist"
-  },
-  "repository": {
-    "type": "git",
-    "url": "git+https://github.com/Subset-UCSD/game-that-we-will-abandon-in-a-week.git"
-  },
-  "keywords": [],
-  "type": "module",
-  "bugs": {
-    "url": "https://github.com/Subset-UCSD/game-that-we-will-abandon-in-a-week/issues"
-  },
-  "homepage": "https://github.com/Subset-UCSD/game-that-we-will-abandon-in-a-week#readme",
-  "devDependencies": {
-    "@types/express": "^5.0.6",
-    "@types/node": "^26.2.0",
-    "@types/ws": "^8.18.1",
-    "esbuild": "^0.28.2",
-    "nodemon": "^3.1.14",
-    "npm-run-all2": "^9.0.3",
-    "typescript": "^7.0.2"
-  },
-  "dependencies": {
-    "@biomejs/biome": "^2.5.10",
-    "express": "^5.2.1",
-    "ws": "^8.21.3",
-    "zod": "^4.4.3"
-  },
-  "allowScripts": {
-    "esbuild@0.28.2": true
-  }
+	"name": "game-that-we-will-abandon-in-a-week",
+	"version": "1.0.0",
+	"description": "High level idea: we make a box and we hit people in the box",
+	"main": "index.js",
+	"scripts": {
+		"start": "node dist/server.js 6767",
+		"start:watch": "nodemon --watch dist/server.js --exec \"node dist/server.js 6769\"",
+		"build": "node ./esbuild.ts build",
+		"build:watch": "node ./esbuild.ts serve",
+		"dev": "run-p build:watch start:watch",
+		"clean": "rm -rf dist public/dist"
+	},
+	"repository": {
+		"type": "git",
+		"url": "git+https://github.com/Subset-UCSD/game-that-we-will-abandon-in-a-week.git"
+	},
+	"keywords": [],
+	"type": "module",
+	"bugs": {
+		"url": "https://github.com/Subset-UCSD/game-that-we-will-abandon-in-a-week/issues"
+	},
+	"homepage": "https://github.com/Subset-UCSD/game-that-we-will-abandon-in-a-week#readme",
+	"devDependencies": {
+		"@types/express": "^5.0.6",
+		"@types/node": "^26.2.0",
+		"@types/ws": "^8.18.1",
+		"esbuild": "^0.28.2",
+		"nodemon": "^3.1.14",
+		"npm-run-all2": "^9.0.3",
+		"typescript": "^7.0.2"
+	},
+	"dependencies": {
+		"@biomejs/biome": "^2.5.10",
+		"express": "^5.2.1",
+		"ws": "^8.21.3",
+		"zod": "^4.4.3"
+	},
+	"allowScripts": {
+		"esbuild@0.28.2": true
+	}
 }

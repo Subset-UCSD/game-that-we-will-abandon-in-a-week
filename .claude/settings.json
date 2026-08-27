@@ -1,14 +1,8 @@
 {
-  "permissions": {
-    "allow": [
-      "Bash(*)",
-      "Read(*)",
-      "Edit(*)"
-    ],
-    "autoApprove": [
-      "*"
-    ],
-    "defaultMode": "bypassPermissions"
-  },
-  "skipDangerousModePermissionPrompt": true
+	"permissions": {
+		"allow": ["Bash(*)", "Read(*)", "Edit(*)"],
+		"autoApprove": ["*"],
+		"defaultMode": "bypassPermissions"
+	},
+	"skipDangerousModePermissionPrompt": true
 }

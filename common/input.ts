@@ -1,4 +1,3 @@
-
 import z from "zod";
 
 export const inputSchema = z.object({
@@ -14,7 +13,7 @@ export const inputSchema = z.object({
 	knife: z.boolean(),
 	seed: z.boolean(),
 	teleport: z.boolean(),
-	debug: z.boolean()
+	debug: z.boolean(),
 });
 
 export type Inputs = z.infer<typeof inputSchema>;
@@ -32,7 +31,7 @@ export const defaultInputs: Inputs = {
 	knife: false,
 	seed: false,
 	teleport: false,
-	debug: false
+	debug: false,
 } as const;
 
 export const keymap = {
@@ -43,7 +42,7 @@ export const keymap = {
 	Space: "interact",
 	KeyB: "baa",
 	KeyP: "paint",
-	KeyK: 'knife',
+	KeyK: "knife",
 	KeyF: "seed",
 	KeyM: "teleport",
 	F3: "debug",
