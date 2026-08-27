@@ -15,6 +15,7 @@ import { renderTiles } from "./tiles";
 
 audio.unlockOnFirstInteraction();
 audio.preload({
+  	baseTheme: "./assets/music/BaseTheme.wav",
 	footstep: [
 		"./assets/sounds/Footstep1.wav",
 		"./assets/sounds/Footstep2.wav",
