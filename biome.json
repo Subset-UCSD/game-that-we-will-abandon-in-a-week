@@ -18,6 +18,11 @@
     }
   },
   "assist": {
-    "enabled": true
+    "enabled": true,
+        "actions": {
+      "source": {
+        "organizeImports": "on"
+      }
+    }
   }
 }

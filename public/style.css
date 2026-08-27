@@ -10,3 +10,30 @@ body {
   bottom: 0;
   right: 0;
 }
+
+.mobile-controls {
+  position: fixed;
+  bottom:0;left:0;
+  /* width:100%;
+  max-width: 300px; */
+
+  display: grid;
+  grid-auto-flow: column;
+  grid-template-rows: repeat(5, auto);  gap: 20px;
+  padding: 20px;
+}
+
+.mobile-control {
+  touch-action: none;
+  user-select: none;
+
+  width: 50px;
+  height: 30px;
+  /* background-color: white; */
+
+  &:active {
+    background-color: magenta;
+    color: lime;
+    font-family: 'Comic Sans MS', serif;
+  }
+}
