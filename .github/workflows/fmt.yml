@@ -1,0 +1,42 @@
+name: clean up your bad code
+
+on:
+  push:
+    branches:
+      - main
+  workflow_dispatch:
+
+permissions:
+  contents: write
+
+concurrency:
+  group: fmt
+  cancel-in-progress: true
+
+jobs:
+  build:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v7
+      - run: npm install
+      - run: npx biome check --write || true
+      - run: git add .
+      - name: set up git
+      # todo: who should our formatter be
+        run: |
+          git config user.name joe
+          git config user.email Protolinux@users.noreply.github.com
+      - run: git commit -m "format with biome"
+      - run: git push -f origin HEAD:fmt
+      - name: create PR if dne
+        env:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+        run: |
+          # https://github.com/cli/cli/discussions/5792#discussioncomment-10410197
+          PR_URL="$(gh pr list --head "${BRANCH_NAME}" --state open --json url --jq .[].url)"
+          if [[ -n "${PR_URL}" ]]; then
+              echo "PR already exists -> ${PR_URL}"
+          else
+              gh pr create --head fmt --body "code ugly, dont like" --title make code less ugly
+          fi

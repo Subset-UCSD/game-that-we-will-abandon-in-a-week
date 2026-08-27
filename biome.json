@@ -6,7 +6,16 @@
     "indentStyle": "tab"
   },
   "linter": {
-    "enabled": true
+    "enabled": true,
+    "rules": {
+      "preset": "none",
+      "correctness": {
+        "noUnusedImports": {
+          "level": "error",
+          "fix": "safe"
+        }
+      }
+    }
   },
   "assist": {
     "enabled": true

@@ -4,6 +4,8 @@
   "files.insertFinalNewline": false,
   "files.trimFinalNewlines": false,
   "files.trimTrailingWhitespace": false,
+  // anoyign! let the formatter deal with this for us
+   "biome.enabled": false,
   // siloux knows how to spell!!
   "cSpell.enabled": false,
 }
