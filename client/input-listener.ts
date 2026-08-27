@@ -47,12 +47,23 @@ export class InputListener {
 		this.options.handleInputs(this.inputs);
 	};
 
+	private touchControls = makeTouchControls()
+
+	private handleFirstTouch = (e: PointerEvent) => {
+		if (e.pointerType==='touch') {
+			document.body.append(this.touchControls)
+
+			removeEventListener('pointerdown', this.handleFirstTouch)
+		}
+	}
+
 	listen() {
 		addEventListener("keydown", this.handleKeydown);
 		addEventListener("keyup", this.handleKeyup);
 		addEventListener("mousedown", this.handleMousedown);
 		addEventListener("mouseup", this.handleMouseup);
 		addEventListener("blur", this.handleBlur);
+			addEventListener('pointerdown', this.handleFirstTouch)
 
 		if (this.options.period) {
 			this.intervalID = setInterval(
@@ -68,6 +79,9 @@ export class InputListener {
 		removeEventListener("mousedown", this.handleMousedown);
 		removeEventListener("mouseup", this.handleMouseup);
 		removeEventListener("blur", this.handleBlur);
+			removeEventListener('pointerdown', this.handleFirstTouch)
+			this.touchControls.remove()
+			// this.touchControls = undefined
 
 		if (this.intervalID !== undefined) {
 			window.clearInterval(this.intervalID);
@@ -75,3 +89,12 @@ export class InputListener {
 		}
 	}
 }
+
+
+function makeTouchControls (): HTMLElement {
+	const wrapper = Object.assign(document.createElement('div'), {
+		className: 'mobile-controls'
+	})
+	return wrapper
+}
+
