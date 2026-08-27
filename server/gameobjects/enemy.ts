@@ -1,6 +1,6 @@
 import { GameObject, Vec2 } from "@common";
 import { subscribe } from "@server/events";
-import { Enemy as NetEnemy, evN } from "@common";
+import { Enemy as NetEnemy, evN, vec2 } from "@common";
 
 export type EnemyProps = Omit<NetEnemy, "id">;
 
@@ -10,10 +10,9 @@ export class Enemy implements GameObject {
 
 	publicState: NetEnemy;
 
-	private target: Vec2 = {
-		x: 0,
-		y: 0
-	};
+	private target = vec2();
+	private velocity = vec2()
+	private acceleration = vec2();
 
 	constructor(props: EnemyProps) {
 		this.publicState = {...props, id: nextId++};
@@ -30,15 +29,12 @@ export class Enemy implements GameObject {
 			}
 			if (!shortestPlayer) return;
 			const selected = players[shortestPlayer];
-			this.target = {
-				x: selected.x,
-				y: selected.y
-			}
+			this.target = vec2(selected.x, selected.y);
 		}, this);
 	}
 
 	tick(): void {
-		
+		this.publicState.x = 
 	}
 
 	playerMoved() {
