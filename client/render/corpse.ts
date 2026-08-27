@@ -1,4 +1,4 @@
-import {SerializedCorpse} from '@common/game'
+import {SerializedCorpse, WholeFkingGameState} from '@common/game'
 import { Canvas} from './canvas'
 
 import { RenderableObject } from './render'
@@ -13,9 +13,12 @@ const frames = await Promise.all([
           )
       ))
 
-export class ClientCorpse implements RenderableObject {
-    index = 1;
-    state?: SerializedCorpse
+export class ClientCorpse extends RenderableObject {
+    get index() { return 1 }
+
+    constructor(state: SerializedCorpse) {
+      super(state)
+    }
 
     get y () { return this.state?.y ?? 0 }
 

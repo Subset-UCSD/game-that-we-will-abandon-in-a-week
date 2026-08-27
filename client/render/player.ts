@@ -6,7 +6,7 @@
 import { Canvas } from "./canvas";
 import { loadFrames } from "./frames";
 import { RenderableObject } from "./render";
-import { Interpolator, KNIFE_OFFSET_Y, lerpAngle, Player as NetPlayer } from "@common";
+import { Interpolator, KNIFE_OFFSET_Y, lerpAngle, Player as NetPlayer, WholeFkingGameState } from "@common";
 
 const { base, walking, think, sleep, knife: [knife] } = await loadFrames({
 	base: ["./assets/sheep.png", "./assets/sheep2.png"],
@@ -19,7 +19,7 @@ const { base, walking, think, sleep, knife: [knife] } = await loadFrames({
 export const SHEEP_WIDTH = 60;
 
 
-export class Player implements RenderableObject {
+export class Player extends RenderableObject {
 	private props: NetPlayer;
 	private x: Interpolator<number>
 	private y: Interpolator<number>
@@ -28,6 +28,7 @@ export class Player implements RenderableObject {
 	get index() { return this.y.getValue() };
 
 	constructor(props: NetPlayer) {
+		super(props)
 		this.props = props;
 		this.x = Interpolator.number(props.x)
 		this.y = Interpolator.number(props.y)
@@ -110,5 +111,19 @@ export class Player implements RenderableObject {
 		this.y.setValue(props.y)
 		this.knifeAngle.setValue(props.knifeAngle)
 		this.knifeRadius.setValue(props.knifeRadius)
+	}
+
+	static updateAll(players: Map<number, Player>, gameState: WholeFkingGameState): Map<number, Player> {
+		const newPlayers = new Map<number, Player>()
+		for (const playerUpdate of gameState.players.values()) {
+			const existing = players.get(playerUpdate.id)
+			if (existing) {
+				existing.update(playerUpdate);
+				newPlayers.set(playerUpdate.id, existing)
+			} else {
+				newPlayers.set(playerUpdate.id, new Player(playerUpdate))
+			}
+		}
+		return newPlayers
 	}
 }

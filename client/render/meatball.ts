@@ -1,4 +1,4 @@
-import { MeatBall } from '@common/game';
+import { MeatBall, WholeFkingGameState } from '@common/game';
 import { Canvas } from './canvas';
 import { RenderableObject } from './render';
 import { loadFrames } from './frames';
@@ -9,7 +9,7 @@ const frames = await loadFrames([
     "./assets/meatball2.png"
 ]);
 
-export class ClientMeatball implements RenderableObject {
+export class ClientMeatball extends RenderableObject{
     #id?: number
     #x?: Interpolator<number>
     #y?: Interpolator<number>
@@ -44,4 +44,14 @@ export class ClientMeatball implements RenderableObject {
         const R = 7 // radius (maybe)
         c.drawImage(frame, x - R, y - R - 3 - height, R * 2, R * 2)
     }
+
+    // static updateAll(meatballs: Map<number, ClientMeatball>, gameState: WholeFkingGameState): Map<number, ClientMeatball> {
+    //     const newMeatballs = new Map<number, ClientMeatball>()
+    //     for (const meatball of gameState.meatballs) {
+    //         let existing = meatballs.get(meatball.id) ?? new ClientMeatball()
+    //         existing.setState(meatball)
+    //         newMeatballs.set(meatball.id, existing)
+    //     }
+    //     return newMeatballs
+    // }
 }

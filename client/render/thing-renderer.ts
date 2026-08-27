@@ -48,12 +48,13 @@ const resolved = new Map(await Promise.all(thingsToRender.entries().map(async ([
 /**
  * a stateless renderer for objects that don't move
  */
-export class BasicRenderer<T extends {id:number;x:number;y:number}>  implements RenderableObject {
+export class BasicRenderer<T extends {id:number;x:number;y:number}>  extends RenderableObject {
   renderType: Renderable
   thing: T
   get index () { return this.thing.y }
 
   constructor (renderType: Renderable, thing: T) {
+    super("") //sets state here so state = ""
     this.renderType = renderType
     this.thing = thing
   }

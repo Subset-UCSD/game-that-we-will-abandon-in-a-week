@@ -1,12 +1,42 @@
+import { initialize } from 'esbuild';
 import type { Canvas } from './canvas'
+import { WholeFkingGameState } from '@common';
 
+// interface RenderableObject {
+//   // Objects with a higher index render over top of objects with a lower index
+//   index: number;
+//   render(canvas: Canvas): void;
+  
+// }
 
-interface RenderableObject {
-  // Objects with a higher index render over top of objects with a lower index
-  index: number;
-  render(canvas: Canvas): void;
-  renderShadow?(canvas: Canvas): void
+export class RenderableObject {
+  state: any = null
+  get index(): number { throw Error("Not Implemented Error - Index") };
+  
+  constructor(state: any, ...args: any[]) {
+    this.state = state
+  }
+
+  static updateAll(
+      objs: Map<number, RenderableObject>, 
+      gameState: WholeFkingGameState): Map<number, RenderableObject>
+  {
+   const newObjs = new Map<number, RenderableObject>()
+   for (const [gameStateObj] of Object.entries(gameState)) {
+      newObjs.set(gameStateObj.id, objs.get(gameStateObj.id) ?? new RenderableObject(gameStateObj))
+    }
+   return newObjs
+  }
+
+  render(canvas: Canvas): void {
+    throw Error("Not Implemented Error - render()")
+  }
+
+  renderShadow?(canvas: Canvas): void  
 }
+
+
+// export type RenderableObjectConstructor<T = {}> = new (...args: any[]) => RenderableObjectInstantiator;
 
 /**
  * I'm the renderer
@@ -29,5 +59,3 @@ export async function render(canvas: Canvas, objects: RenderableObject[]) {
     object.render(canvas);
   }
 }
-
-export { RenderableObject };

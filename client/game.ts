@@ -5,8 +5,8 @@ import { Connection } from './net/connection'
 import { InputListener } from "./input-listener";
 import { addVec, isVecEq, SERVER_GAME_TICK,lerp, ChunkMap, Particle } from "@common";
 import { defaultInputs, keymap } from "@common/input";
-import { WholeFkingGameState, MeatBall, SerializedThing, Line, SerializedCollider, Player as NetPlayer } from '@common/game'
-import { ClientSeed, ClientExplosion, ClientCorpse, ThingRenderer, render, ClientMeatball, Canvas, SerializedThingWithAdditionalRenderProperties } from "./render"
+import { WholeFkingGameState, MeatBall, SerializedThing, Line, SerializedCollider, Player as NetPlayer, Explosion } from '@common/game'
+import { ClientSeed, ClientExplosion, ClientCorpse, ThingRenderer, render, ClientMeatball, Canvas, SerializedThingWithAdditionalRenderProperties, RenderableObject } from "./render"
 import { audio, PlaySoundOptions } from '@client/audio/index';
 import { number } from "zod";
 import { DebugTileEditor } from "./debug/tile-editor";
@@ -35,14 +35,69 @@ export type Camera = {
 	scale: number
 }
 
+class GameObjectData {
+	name: string;
+	objectClass: typeof RenderableObject;
+	cb: () => void = () => {};
+
+	constructor(name: string, objectClass: typeof RenderableObject) {
+		this.name = name
+		this.objectClass = objectClass
+	}
+}
+
+const GameObjectRegistery:Map<string, GameObjectData> = new Map([
+	["player", new GameObjectData("player", Player)],
+	["meatballs", new GameObjectData("meatballs", ClientMeatball)],
+	["corpses", new GameObjectData("corpses", ClientCorpse)],
+	["explosions", new GameObjectData("explosions", ClientExplosion)],
+	["seeds", new GameObjectData("seeds", ClientSeed)],
+])
+
+class GameObjectStore {
+	private gameObjectStore: Map<string, Map<number, RenderableObject>> = new Map();
+
+	update(objectName:string, gameState: WholeFkingGameState){
+		const objectData = GameObjectRegistery.get(objectName)
+		const objects = this.gameObjectStore.get(objectName)
+		if (objectData == null || objects == null) {
+			throw Error("something is mispelling a game object, you should blame sean")
+		}
+		
+		this.gameObjectStore.set(objectName, objectData.objectClass.updateAll(objects, gameState))
+	}
+
+	values() : RenderableObject[] {
+		const values:RenderableObject[] = [];
+		for (const objectName in this.gameObjectStore) {
+			const objects = this.gameObjectStore.get(objectName)
+			if (objects == null) {
+				throw Error("not actually possible typescript")
+			}
+			values.push(...objects.values())
+		}
+		return values
+	}
+
+	get(objectName:string):  Map<number, RenderableObject> | undefined {
+		return this.gameObjectStore.get(objectName)
+	}
+
+	set(objectName:string, value: Map<number, RenderableObject>) {
+		return this.gameObjectStore.set(objectName, value)
+	}
+}
+
 export class Game {
 	private conn;
 	private inputListener;
-	private players: Map<number, Player> = new Map();
-	private meatballs = new Map<number, ClientMeatball>()
-	private corpses = new Map<number, ClientCorpse>()
-	private explosions = new Map<number, ClientExplosion>()
-	private seeds = new Map<number, ClientSeed>();
+	private gameObjectStore: GameObjectStore = new GameObjectStore();
+
+	// private players: Map<number, Player> = new Map();
+	// private meatballs = new Map<number, ClientMeatball>()
+	// private corpses = new Map<number, ClientCorpse>()
+	// private explosions = new Map<number, ClientExplosion>()
+	// private seeds = new Map<number, ClientSeed>();
 	private arena;
 	// private objects;
 	private room;
@@ -90,58 +145,34 @@ export class Game {
 			tiles: Object.fromEntries(Object.entries(gameState.tiles).map(([k,v]) => [k, `... ${v.reduce((cum , curr) => cum + +(curr !== null),0)} tile(s)`]))
 		}, null, 2)
 
-		const newPlayers = new Map<number, Player>()
-		for (const playerUpdate of gameState.players.values()) {
-			const existing = this.players.get(playerUpdate.id)
-			if (existing) {
-				existing.update(playerUpdate);
-				newPlayers.set(playerUpdate.id, existing)
-			} else {
-				newPlayers.set(playerUpdate.id, new Player(playerUpdate))
-			}
-			
+		
+		// This handles updating most of the renderable game objects
+		for (const [object_name, _] of GameObjectRegistery)
+			this.gameObjectStore.update(object_name, gameState)
+
+		// There will be some werid logic that the renderable games objects don't need to know about
+		// Handling that here till we figure out a better system?
+
+		//Player logic
+		for (const playerUpdate of gameState.players) {
 			if (playerUpdate.id === this.id) {
 				this.currPlayerState = playerUpdate
 			}
 		}
-		this.players = newPlayers
 
-		const newMeatballs = new Map<number, ClientMeatball>()
-		for (const meatball of gameState.meatballs) {
-			if (!this.meatballs.get(meatball.id)) this.playAudioAtPosition('baaa', meatball.x, meatball.y, 500, { playbackRate: 1 + Math.random() * 0.2 });
-			let existing = this.meatballs.get(meatball.id) ?? new ClientMeatball()
-			existing.setState(meatball)
-			newMeatballs.set(meatball.id, existing)
-		}
-		this.meatballs = newMeatballs
+		// Explosions
+		const explosions = this.gameObjectStore.get("explosions")
+		if (explosions)
+			this.gameObjectStore.set("explosions", new Map(explosions.entries().filter(([, x]) => !x.shouldDie)))
+
+		// Meatball calls an audio function
+		// TODO add audio event emitter
+		// for (const meatball of gameState.meatballs) {
+        //     if (!meatballs.get(meatball.id)) this.playAudioAtPosition('baaa', meatball.x, meatball.y, 500, { playbackRate: 1 + Math.random() * 0.2 });
 
 		this.things = gameState.things.map(thing => ({...thing, canInteract: this.currPlayerState?.canInteractWith[0] === thing.id}))
-
-		const newSeeds = new Map<number, ClientSeed>();
-		for (const seed of gameState.seeds) {
-			newSeeds.set(seed.id, this.seeds.get(seed.id) ?? new ClientSeed(seed));
-		}
-		this.seeds = newSeeds;
-
-		const newCorpses = new Map<number, ClientCorpse>()
-		for (const meatball of gameState.corpses) {
-			let existing = this.corpses.get(meatball.id) ?? new ClientCorpse()
-			existing.state = meatball
-			newCorpses.set(meatball.id, existing)
-		}
-		this.corpses = newCorpses
-		// console.log("no restarts?")
-
-		for (const explosion of gameState.explosions) {
-			if (!this.explosions.has(explosion.id)) {
-				this.explosions.set(explosion.id, new ClientExplosion(explosion))
-			}
-		}
-		this.explosions = new Map(this.explosions.entries().filter(([, x]) => !x.shouldDie))
-
 		this.lines = gameState.players.values().flatMap(player => player.lines).toArray()
 		this.tiles = gameState.tiles
-
 		this.debugColldiers = gameState.colliders
 	}
 
@@ -176,8 +207,6 @@ export class Game {
 			this.camera.scale += (targetZoom - this.camera.scale) * 0.2;
 		}
 
-		const screenShake = this.explosions.values().reduce((cum, curr) => cum + (1 - Math.min(1, curr.progress * 2) ** 0.3) * 5, 0) ?? 0
-
 		const { c } = canvas;
 
 
@@ -198,9 +227,14 @@ export class Game {
 			-Math.round(this.camera.x*(this.camera.scale*canvas.dpr)) / (this.camera.scale*canvas.dpr), // + canvas.width/ 2, 
 			-Math.round(this.camera.y*(this.camera.scale*canvas.dpr)) / (this.camera.scale*canvas.dpr), // + canvas.height/ 2, 
 		);
+		
+		const explosions = this.gameObjectStore.get("explosions")
 		const screenShakeAngle = Math.random() * 2 * Math.PI;
-		if (screenShake > 0) {
-			c.translate(Math.cos(screenShakeAngle) * screenShake, Math.sin(screenShakeAngle) * screenShake);
+		if (explosions) {
+			const screenShake = explosions.values().reduce(
+				(cum, curr) => cum + (1 - Math.min(1, (curr).progress * 2) ** 0.3) * 5, 0) ?? 0
+			if (screenShake) 
+				c.translate(Math.cos(screenShakeAngle) * screenShake, Math.sin(screenShakeAngle) * screenShake);
 		}
 
 
@@ -231,12 +265,8 @@ export class Game {
 		this.paintLines(c);
 
 		render(canvas, [
-			...this.players.values(),
-			...this.meatballs.values(),
-			...this.corpses.values(),
+			...this.gameObjectStore.values(),
 			...this.things.values().map(thing => new ThingRenderer(thing)),
-			...this.explosions.values(),
-			...this.seeds.values()
 		])
 
 		if (this.__debugTileEditor != null && this.__debugTileEditor.isRenderCollider) {

@@ -1,5 +1,5 @@
 import { RenderableObject } from "./render";
-import { Seed } from "@common";
+import { Seed, WholeFkingGameState } from "@common";
 import { Canvas } from "./canvas";
 import { loadFrames } from "./frames";
 
@@ -10,11 +10,12 @@ const frames = await loadFrames([
 
 const SIZE = 20;
 
-export class ClientSeed implements RenderableObject {
+export class ClientSeed extends RenderableObject {
   private props: Seed;
   get index() { return this.props.y };
 
   constructor(props: Seed) {
+    super(props)
     this.props = props;
   }
 
