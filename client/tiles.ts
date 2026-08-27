@@ -172,8 +172,8 @@ export function renderTiles(canvas: Canvas, camera: Camera, tiles: ChunkMap, ena
 							vecMap2(
 								vec2(pairImage.tileSize),
 								pairTilePositions[
-									`${tileBL === bl ? (tileTL === bl ? ":" : ".") : (tileTL === bl ? "'" : " ")}${
-										tileBR === bl ? (tileTR === bl ? ":" : ".") : (tileTR === bl ? "'" : " ")
+									`${tileBL === bl ? (tileTL === bl ? ":" : ".") : tileTL === bl ? "'" : " "}${
+										tileBR === bl ? (tileTR === bl ? ":" : ".") : tileTR === bl ? "'" : " "
 									}`
 								],
 								(a, b) => a * b,
