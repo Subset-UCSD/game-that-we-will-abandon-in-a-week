@@ -1,6 +1,6 @@
 import { GameObject, Vec2 } from "@common";
 import { subscribe } from "@server/events";
-import { Enemy as NetEnemy, ev } from "@common";
+import { Enemy as NetEnemy, evN } from "@common";
 
 export type EnemyProps = Omit<NetEnemy, "id">;
 
@@ -22,7 +22,7 @@ export class Enemy implements GameObject {
 			let shortestPlayer;
 			let shortestDist = Infinity;
 			for (const [i, player] of players.entries()) {
-				const dist: number = +ev`${player} @ ${this.publicState}`;
+				const dist: number = evN`${player} @ ${this.publicState}`;
 				if (dist < shortestDist) {
 					shortestDist = dist;
 					shortestPlayer = i;
