@@ -15,6 +15,7 @@ import { renderTiles } from "./tiles";
 
 audio.unlockOnFirstInteraction();
 audio.preload({
+  	baseTheme: "./assets/music/BaseTheme.wav",
 	footstep: [
 		"./assets/sounds/Footstep1.wav",
 		"./assets/sounds/Footstep2.wav",
@@ -215,6 +216,8 @@ export class Game {
 		c.fillText('press W A S D to move', 50, -50);
 		c.fillText('press B to ?', - 300, - 20);
 		c.fillText('press P to Paint', - 300, 320);
+		c.fillText('Press F to Impregnate.', 300, 20);
+		c.fillText('press M to tp', 500, 500);
 
 		c.fillStyle = 'black';
 		const lines = this.__debugText.split('\n');

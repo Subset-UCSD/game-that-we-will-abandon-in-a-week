@@ -1,4 +1,4 @@
-import { Inputs } from "@common/input";
+import { Inputs, keymap } from "@common/input";
 
 export type InputListenerOptions = {
 	default: Inputs;
@@ -36,6 +36,11 @@ export class InputListener {
 	private handleKeydown = (e: KeyboardEvent) => {
 		if (e.code === 'F3') e.preventDefault();
 		this.handleInput(this.options.keymap[e.code], true);
+		if (this.touchACtive) {
+			this.touchControls.remove()
+			this.touchACtive=false
+			addEventListener('pointerdown', this.handleFirstTouch)
+		}
 	};
 	private handleKeyup = (e: KeyboardEvent) => this.handleInput(this.options.keymap[e.code], false);
 	private handleMousedown = (e: MouseEvent) => this.handleInput(this.options.keymap[e.button], true);
@@ -47,12 +52,25 @@ export class InputListener {
 		this.options.handleInputs(this.inputs);
 	};
 
+	private touchACtive = false
+	private touchControls = makeTouchControls((code,down) => this.handleInput(this.options.keymap[code],down))
+
+	private handleFirstTouch = (e: PointerEvent) => {
+		if (e.pointerType==='touch') {
+			this.touchACtive = true
+			document.body.append(this.touchControls)
+
+			removeEventListener('pointerdown', this.handleFirstTouch)
+		}
+	}
+
 	listen() {
 		addEventListener("keydown", this.handleKeydown);
 		addEventListener("keyup", this.handleKeyup);
 		addEventListener("mousedown", this.handleMousedown);
 		addEventListener("mouseup", this.handleMouseup);
 		addEventListener("blur", this.handleBlur);
+			addEventListener('pointerdown', this.handleFirstTouch)
 
 		if (this.options.period) {
 			this.intervalID = setInterval(
@@ -68,6 +86,10 @@ export class InputListener {
 		removeEventListener("mousedown", this.handleMousedown);
 		removeEventListener("mouseup", this.handleMouseup);
 		removeEventListener("blur", this.handleBlur);
+			removeEventListener('pointerdown', this.handleFirstTouch)
+			this.touchControls.remove()
+			this.touchACtive=false
+			// this.touchControls = undefined
 
 		if (this.intervalID !== undefined) {
 			window.clearInterval(this.intervalID);
@@ -75,3 +97,49 @@ export class InputListener {
 		}
 	}
 }
+
+
+function makeTouchControls (handle: (code: string, down: boolean) => void): HTMLElement {
+	const wrapper = Object.assign(document.createElement('div'), {
+		className: 'mobile-controls'
+	})
+	//bug: it is shuffling the keys and idk why
+	for (const code of shuffle(Object.keys(keymap))) {
+		const button = Object.assign(document.createElement('button'), {
+		className: 'mobile-control',
+		textContent: Number.isInteger(+code)?`MB ${code}` : code
+	})
+	let pid: number|undefined
+	button.addEventListener('pointerdown', e => {
+		handle(code,true)
+		button.setPointerCapture(pid=e.pointerId)
+	})
+	const end = (e: PointerEvent)=>{
+		if (pid===e.pointerId){
+			handle(code,false)
+			pid=undefined
+		}
+	}
+	button.addEventListener('pointerup',end)
+	button.addEventListener('pointercancel',end)
+	button.addEventListener('contextmenu',e => e.preventDefault())
+	wrapper.append(button)
+	}
+	return wrapper
+}
+
+
+function shuffle(arr: string[]): string[] {
+	for (let i = arr.length ; i > 0; i--) {
+		const index = Math.floor(Math.random() * i)
+		if (index !== i-1) {
+			[arr[i-1],arr[index]]
+			=
+			[arr[index],arr[i-1]]
+		}
+	}
+	return arr
+}
+
+
+
