@@ -1,51 +1,49 @@
-import { GameObject, SerializedThing, Vec2 } from "@common";
-import { Player } from "./player";
-import { Collider } from "@server/collision";
+import type { GameObject, SerializedThing, Vec2 } from "@common";
+import type { Collider } from "@server/collision";
+import { generateId } from "@server/id-manager";
 
 /**
  * for things that don't move ("static") like trees, signs, and tech bros ig
  */
 export class StaticThing implements GameObject {
-  static #nextId = 0
-  #state: SerializedThing
-  shouldDelete = false
-  collider?: Collider
+	static #nextId = 0;
+	#state: SerializedThing;
+	shouldDelete = false;
+	collider?: Collider;
+	partyId = "";
 
-  constructor ({collider,...thing}: Omit<SerializedThing, 'id'>&{collider?: Collider},
-    
-  ) {
-    this.#state = {
-      id: StaticThing.#nextId++,
-      ...thing
-    }
-    this.collider = collider
-  }
+	constructor({ collider, ...thing }: Omit<SerializedThing, "id" | "type"> & { collider?: Collider }) {
+		this.#state = {
+			id: generateId(),
+			type: "thing",
+			...thing,
+		};
+		this.collider = collider;
+	}
 
-  tick(): void {
-    // static things dont do anything
-  }
-  
-  serialize(): SerializedThing {
-    return this.#state
-  }
-  
-  get id(): number {
-    return this.#state.id
-  }
+	tick(): void {
+		// static things dont do anything
+	}
 
-  get position(): Vec2 {
-    return this.#state
-  }
+	serialize(): SerializedThing {
+		return this.#state;
+	}
 
-  get interactive(): boolean {
-    return this.#state.interactive ?? false
-  }
+	get id(): number {
+		return this.#state.id;
+	}
 
-  takeDamageIfPossible (damage: number): void {
-    if (this.#state.hp !== undefined) {
-      this.#state.hp = Math.max(0, this.#state.hp-damage)
-    }
-  }
+	get position(): Vec2 {
+		return this.#state;
+	}
+
+	get interactive(): boolean {
+		return this.#state.interactive ?? false;
+	}
+
+	takeDamageIfPossible(damage: number): void {
+		if (this.#state.hp !== undefined) {
+			this.#state.hp = Math.max(0, this.#state.hp - damage);
+		}
+	}
 }
-
-

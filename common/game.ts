@@ -1,4 +1,4 @@
-import { Collider } from "@server/collision";
+import type { Collider } from "@server/collision";
 import z from "zod";
 import { chunkMapSchema } from "./tiles";
 
@@ -17,56 +17,68 @@ export const KNIFE_OFFSET_Y = -20;
 // objects in the world have a position and id
 const worldObjectSchema = z.object({
 	id: idSchema,
+	// type: z.string(),
 	x: z.number(),
 	y: z.number(),
 });
 
-const playerSchema = worldObjectSchema.and(
-	z.object({
-		x_vel: z.number(),
-		y_vel: z.number(),
-		roomId: z.string(),
-		facingLeft: z.boolean(),
-		baaing: z.string(),
-		connected: z.boolean(),
-		probablyafk: z.boolean(),
-		healthpercent: z.number(),
-		thought: z.string(),
-		maxHp: z.number(),
-		lines: z.array(lineSchema),
-		canInteractWith: z.number().array(),
-		knifeRadius: z.number(),
-		knifeAngle: z.number(),
-		// wtf is "collied"
-		// like the dog ?
-		// probably idk man, i'm not the one whose bat at spelling
-		collied: z.boolean(),
-	}),
-);
+const playerSchema = worldObjectSchema.extend({
+	type: z.literal("player"),
+	x_vel: z.number(),
+	y_vel: z.number(),
+	roomId: z.string(),
+	facingLeft: z.boolean(),
+	baaing: z.string(),
+	connected: z.boolean(),
+	probablyafk: z.boolean(),
+	healthpercent: z.number(),
+	thought: z.string(),
+	maxHp: z.number(),
+	lines: z.array(lineSchema),
+	canInteractWith: z.number().array(),
+	knifeRadius: z.number(),
+	knifeAngle: z.number(),
+	// wtf is "collied"
+	// like the dog ?
+	// probably idk man, i'm not the one whose bat at spelling
+	collied: z.boolean(),
+});
 
-const meatBallSchema = worldObjectSchema.and(z.object({ height: z.number() }));
+const meatBallSchema = worldObjectSchema.extend({
+	type: z.literal("meatball"),
+	height: z.number(),
+});
 
-const explosionSchema = worldObjectSchema.and(z.object({ radius: z.number() }));
+const explosionSchema = worldObjectSchema.extend({
+	type: z.literal("explosion"),
+	radius: z.number(),
+});
 
-const enemySchema = worldObjectSchema;
+const enemySchema = worldObjectSchema.extend({
+	type: z.literal("enemy"),
+});
 
-const seedSchema = worldObjectSchema.and(z.object({ growthStage: z.number() }));
+const seedSchema = worldObjectSchema.extend({
+	type: z.literal("seed"),
+	growthStage: z.number(),
+});
 
-const thingSchema = worldObjectSchema.and(
-	z.object({
-		type: z.literal(["tree", "campfire", "techbro"]),
-		interactive: z.boolean().optional(),
-		hp: z.number().optional(),
-		maxHp: z.number().optional(),
-	}),
-);
+const thingSchema = worldObjectSchema.extend({
+	type: z.literal("thing"),
+	kind: z.literal(["tree", "campfire", "techbro"]),
+	interactive: z.boolean().optional(),
+	hp: z.number().optional(),
+	maxHp: z.number().optional(),
+});
 
-const corpseSchema = worldObjectSchema.and(z.object({ facingLeft: z.boolean() }));
+const corpseSchema = worldObjectSchema.extend({ type: z.literal("corpse"), facingLeft: z.boolean() });
 
 export const d20schema = z.strictObject({
-  // probably should use worldObjectSchema
+	// probably should use worldObjectSchema
+	type: z.literal("d20"),
 	x: z.number(),
 	y: z.number(),
+	id: z.number(),
 	x_vel: z.number(),
 	y_vel: z.number(),
 	radius: z.number(),
@@ -79,7 +91,25 @@ const colliderSchema = z.discriminatedUnion("type", [
 	z.object({ type: z.literal("capsule"), x: z.number(), y: z.number(), width: z.number(), height: z.number() }),
 ]);
 
+const allGameObjectSchemas = z.discriminatedUnion("type", [
+	playerSchema,
+	d20schema,
+	meatBallSchema,
+	explosionSchema,
+	// enemySchema,
+	seedSchema,
+	thingSchema,
+	corpseSchema,
+]);
+export type SerializedGameObject = z.infer<typeof allGameObjectSchemas>;
+
 export const wholeFkingGameState = z.object({
+	gameObjects: z.array(allGameObjectSchemas),
+	debugColliders: z.array(colliderSchema), //.optional(),
+	tiles: chunkMapSchema,
+});
+
+z.object({
 	players: z.array(playerSchema),
 	meatballs: z.array(meatBallSchema),
 	explosions: z.array(explosionSchema),
@@ -92,12 +122,12 @@ export const wholeFkingGameState = z.object({
 	// add to this when you want the client to know more about the game
 });
 
-
 export interface GameObject {
+	partyId: string;
 	shouldDelete: boolean;
 	collider?: Collider;
 	tick(): void;
-	serialize(): unknown;
+	serialize(): SerializedGameObject;
 }
 
 export type SerializedThing = z.infer<typeof thingSchema>;

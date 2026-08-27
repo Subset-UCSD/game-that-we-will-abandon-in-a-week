@@ -1,32 +1,39 @@
-import { RenderableObject } from "./render";
-import { Seed } from "@common";
-import { Canvas } from "./canvas";
+import type { Seed, SerializedGameObject } from "@common";
+import type { Canvas } from "./canvas";
 import { loadFrames } from "./frames";
+import type { RenderableObject } from "./render";
 
-const frames = await loadFrames([
-  "./assets/seed1.png",
-  "./assets/seed2.png"
-]);
+const frames = await loadFrames(["./assets/seed1.png", "./assets/seed2.png"]);
 
 const SIZE = 20;
 
 export class ClientSeed implements RenderableObject {
-  private props: Seed;
-  get index() { return this.props.y };
+	private props!: Seed;
+	get index() {
+		return this.props.y;
+	}
 
-  constructor(props: Seed) {
-    this.props = props;
-  }
+	constructor() {}
 
-  renderShadow({ c }: Canvas): void {
-    c.moveTo(this.props.x + 5, this.props.y)
-    c.ellipse(this.props.x, this.props.y, SIZE - 4, 4, 0, 0, Math.PI * 2)
-  }
+	renderShadow({ c }: Canvas): void {
+		c.moveTo(this.props.x + 5, this.props.y);
+		c.ellipse(this.props.x, this.props.y, SIZE - 4, 4, 0, 0, Math.PI * 2);
+	}
 
-  render({ c }: Canvas) {
-    const frame = frames[Math.floor(Date.now() / (470 + (this.props.id * Math.PI) % 50)) % frames.length]
-    const { x, y } = this.props;
-    
-    c.drawImage(frame, x - SIZE, y - SIZE * 2, SIZE * 2, SIZE * 2);
-  }
+	render({ c }: Canvas) {
+		const frame = frames[Math.floor(Date.now() / (470 + ((this.props.id * Math.PI) % 50))) % frames.length];
+		const { x, y } = this.props;
+
+		c.drawImage(frame, x - SIZE, y - SIZE * 2, SIZE * 2, SIZE * 2);
+	}
+
+	update(objState: SerializedGameObject): void {
+		if (objState.type !== "seed") return;
+		this.props = objState;
+	}
+
+	// isn't it the server's responsibility to never stop sending seed in the game state?
+	// shouldRemove() {
+	//   return false
+	// }
 }

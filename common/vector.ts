@@ -1,4 +1,4 @@
-import { Expression, parse } from "./vector/expression_parser";
+import { type Expression, parse } from "./vector/expression_parser";
 
 export type Vec2 = { x: number; y: number };
 
@@ -35,6 +35,24 @@ export const vecMap3 = (a: Vec2, b: Vec2, c: Vec3, mapFn: (a: number, b: number,
 	x: mapFn(a.x, b.x, c.x),
 	y: mapFn(a.y, b.y, c.y),
 });
+
+/**
+ * makes the length of `target` at most `max`
+ */
+export const clamp = (target: Vec2, max: number) => {
+	const signs = {
+		x: Math.sign(target.x),
+		y: Math.sign(target.y),
+	};
+
+	const normalized = normalize(target);
+	const magnitude = vecLength(target);
+	if (magnitude < max) {
+		return target;
+	} else {
+		return scaleVec(normalized, max);
+	}
+};
 
 export const vecToArray = ({ x, y }: Vec2): [x: number, y: number] => [x, y];
 

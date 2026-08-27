@@ -9,8 +9,8 @@
 			"@server/*": ["./server/*"],
 			"@common": ["./common"],
 			// should we remove this and encourage @common instead
-			"@common/*": ["./common/*"],
+			"@common/*": ["./common/*"]
 		},
-  	"noEmit": true
+		"noEmit": true
 	}
 }

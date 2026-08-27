@@ -1,6 +1,3 @@
-
-
-
 // // pew pew
 // type Projectile = {
 //   x: number;
