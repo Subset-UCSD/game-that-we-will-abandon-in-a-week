@@ -3,7 +3,7 @@ import { Arena } from "./render/arena";
 import { Room } from "./render/room";
 import { Connection } from './net/connection'
 import { InputListener } from "./input-listener";
-import { addVec, isVecEq, SerializedGameObject, lerp, ChunkMap, Particle } from "@common";
+import { addVec, isVecEq, SerializedGameObject, lerp, ChunkMap, Particle, subVec, vecLength } from "@common";
 import { defaultInputs, keymap } from "@common/input";
 import { WholeFkingGameState, MeatBall, SerializedThing, Line, SerializedCollider, Player as NetPlayer, GameObject } from '@common/game'
 import { ClientSeed, ClientExplosion, ClientCorpse, ThingRenderer, render, ClientMeatball, Canvas,  } from "./render"
@@ -95,6 +95,11 @@ export class Game {
 			// period: SERVER_GAME_TICK,
 		});
 		this.inputListener.listen();
+
+		// show D20 while connecting
+		const d20 = D20()
+		
+		this.cilentState.set(-1, d20)
 	}
 
 	updateGameState(gameState: WholeFkingGameState) {
@@ -174,9 +179,12 @@ export class Game {
 			this.camera.x += (player.x - this.camera.x) * 0.2;
 			this.camera.y += (player.y - this.camera.y) * 0.2;
 			this.camera.scale += (targetZoom - this.camera.scale) * 0.2;
+		} else {
+			const targetZoom =3
+			this.camera.scale += (targetZoom - this.camera.scale) * 0.2;
 		}
 
-		const screenShake = this.cilentState.values().reduce((cum, curr) => cum + (curr instanceof ClientExplosion? (1 - Math.min(1, curr.progress * 2) ** 0.3) * 5:0), 0) ?? 0
+		const screenShake = this.cilentState.values().reduce((cum, curr) => cum + (curr instanceof ClientExplosion? (1 - Math.min(1, curr.progress * 2) ** 0.3) * 5 * Math.exp(-vecLength(subVec(curr.position, this.camera)) / 500):0), 0) ?? 0
 
 		const { c } = canvas;
 
@@ -210,6 +218,10 @@ export class Game {
 
 		renderTiles(canvas, this.camera, this.tiles,this.__debugTileEditor?.isRenderCollider)
 
+		if (!player) {
+			c.fillStyle = 'red'
+		c.fillText('loading...', -17, 50);
+		}
 		c.fillStyle = 'black';
 		c.fillText('fuck', 50, -100);
 		c.fillText('press W A S D to move', 50, -50);

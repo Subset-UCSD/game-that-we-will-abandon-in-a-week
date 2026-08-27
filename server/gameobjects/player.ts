@@ -1,10 +1,10 @@
 import { defaultInputs, Inputs } from "@common/input";
 import { Player as NetPlayer,GameObject, KNIFE_OFFSET_Y } from "@common/game";
 import { Game } from '@server/game';
-import { ev, subVec, vec2, Vec2 } from "@common";
+import { ev, subVec, vec2, Vec2, clamp } from "@common";
 import { Corpse } from './corpse'
 import { Meatball } from './meatball';
-import { BoxCollider } from "@server/collision";
+import { BoxCollider, CircleCollider } from "@server/collision";
 import { number } from "zod";
 import { generateId } from "@server/id-manager";
 
@@ -33,7 +33,7 @@ export class Player implements GameObject {
   lines: {start:Vec2, end:Vec2,committed?:number}[] = []
   shouldDelete = false
   seedCooldownTicks = 0;
-  collider: BoxCollider;
+  collider: CircleCollider;
   collied: boolean = false;
   /** 
    * list of static thing IDs
@@ -52,12 +52,12 @@ export class Player implements GameObject {
     this.game = game
     this.inputs = { ...defaultInputs };
     this.id = generateId()//Player.next_id++;
-    this.collider = new BoxCollider(
+    this.collider = new CircleCollider(
       this.position.x,
       this.position.y-20,
       30,
-      30,
-      0
+      // 30,
+      // 0
     )
   }
 
@@ -109,11 +109,7 @@ export class Player implements GameObject {
   }
 
   tick() {
-    if (this.velocity.x != 0)
-      this.position.x += (this.velocity.x  / Math.hypot(this.velocity.x, this.velocity.y)) * this.max_speed
-
-    if (this.velocity.y != 0)
-      this.position.y += (this.velocity.y / Math.hypot(this.velocity.x , this.velocity.y)) * this.max_speed
+    this.position = ev`${this.position} + ${clamp(this.velocity, this.max_speed)}`;
 
     if (this.hp <= 0) {
       this.hp = MAX_HP

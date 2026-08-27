@@ -35,6 +35,7 @@ export class AudioManager {
         this.masterGain = this.context.createGain();
         this.effectsGain = this.context.createGain();
         this.musicGain = this.context.createGain();
+        this.musicGain.gain.value = 0.5
 
         this.effectsGain.connect(this.masterGain);
         this.musicGain.connect(this.masterGain);
@@ -44,9 +45,11 @@ export class AudioManager {
         return this.context;
     }
 
-    private updateMasterVolume() {
-		if (!this.masterGain) return;
-		this.masterGain.gain.value = this.muted ? 0 : this.volume;
+    private updateMasterVolume(override ?: number) {
+		if (!this.masterGain||!this.context) return;
+        // console.log('volume:',override ?? (this.muted ? 0 : this.volume))
+		this.masterGain.gain.value = (this.muted ? 0 : this.volume)//(override ?? (this.muted ? 0 : this.volume), this.context.currentTime + 0.5);
+		// this.masterGain.gain.linearRampToValueAtTime(override ?? (this.muted ? 0 : this.volume), this.context.currentTime + 0.5);
 	}
 
     // unlock sound on first user interaction
@@ -160,6 +163,23 @@ export class AudioManager {
         // stop previous music if any
         this.currentMusic?.source.stop();
         this.currentMusic = { name, source };
+
+        document.addEventListener('visibilitychange', (e) => {
+            if (!this.context) return
+            if (document.hidden) {
+                // console.log('muting')
+                // this.updateMasterVolume(0)
+                // https://stackoverflow.com/a/29128551 otherwise it sounds choppy (at least in firefox)
+                this.masterGain?.gain.setValueAtTime((this.muted ? 0 : this.volume), 0);
+                this.masterGain?.gain.linearRampToValueAtTime(0, this.context.currentTime + 0.3);
+            } else {
+                // console.log('welcome back')
+                // this.updateMasterVolume()
+                this.masterGain?.gain.setValueAtTime(0, 0);
+                this.masterGain?.gain.linearRampToValueAtTime((this.muted ? 0 : this.volume), this.context.currentTime + 0.3);
+            }
+        })
+        
     }
 
     stopMusic() {

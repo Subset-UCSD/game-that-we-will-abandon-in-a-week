@@ -5,7 +5,7 @@
 
 import { Canvas } from "../canvas";
 import { RenderableObject } from "../render";
-import { Vec3, vec3, vec3ToDomPoint, DomPointToVec3, cross_product, subVec3, SerializedGameObject } from "@common";
+import { Vec3, vec3, vec3ToDomPoint, DomPointToVec3, cross_product, subVec3, SerializedGameObject, D20Schema } from "@common";
 
 
 export const identity = new DOMMatrix();
@@ -23,21 +23,33 @@ interface Renderable3DObject extends RenderableObject {
 }
 
 class Polyhedron3D implements Renderable3DObject {
-    index = 20;
+    get index () {return this.y};
     vertrices: Vec3[];
     faces:  number[][];
+    x: number = 0;
+    y: number = 0;
+    x_vel: number = 0;
+    y_vel: number = 0;
 
     rotateX: number = 30;
     rotateY: number = 45;
     rotateZ: number = 0;
 
-    update(objState: SerializedGameObject): void {
+    update(objState: D20Schema): void {
+        console.log(objState.x, this.x)
+        this.x = objState.x
+        this.y = objState.y
+
+        this.x_vel = objState.x_vel
+        this.y_vel = objState.y_vel
         
     }
 
-    shouldRemove(): boolean {
-        return false
-    }
+    // shouldRemove(): boolean {
+    //     // return false
+    // }
+
+    
     
     constructor(vertrices:Vec3[], faces: number[][]) {
        this.vertrices = vertrices
@@ -98,11 +110,12 @@ class Polyhedron3D implements Renderable3DObject {
         c.lineWidth = 0.1; 
         c.strokeStyle = "red";
         const matrix = new DOMMatrix([1, 0, 0, 0, 0, 1, 0, 0, 0, 0, 1, 0, 0, 0, 0, 1]);
-        matrix.translateSelf(0, Math.sin(Date.now() / 800) * 2, 0) // sean you can comment this out if you want
+        
+        matrix.translateSelf(this.x, this.y+Math.sin(Date.now() / 800) * 2, 0)
         matrix.rotateSelf(this.rotateX, this.rotateY, this.rotateZ)
         matrix.scaleSelf(10, 10, 10)
-        this.rotateX += 0.1;
-        this.rotateY -= 0.1;
+        this.rotateX += 0.5 * this.x_vel;
+        this.rotateY += 0.5 * this.y_vel;
         // this.rotateZ--;
 
 

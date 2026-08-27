@@ -192,7 +192,7 @@ export class BoxCollider implements PolygonCollider {
 
 
   collide(collider: Collider): Vec2 {
-    if ("getCorners" in collider) {
+    if ("getAxes" in collider) {
       const ploygonCollider = collider as PolygonCollider
       const [isColliding, overlapAmount, direction] = SATSolver(this, ploygonCollider);
       return scaleVec(direction, overlapAmount)
@@ -246,10 +246,13 @@ export class CircleCollider implements SATCollider {
   
   collide(collider: Collider) {
     if ("getAxes" in collider) {
-      const ploygonCollider = collider as PolygonCollider
+      const ploygonCollider = collider as SATCollider
       const [isColliding, overlapAmount, direction] = SATSolver(this, ploygonCollider);
 
-      this.cb(scaleVec(direction, overlapAmount))
+      if (isColliding){
+        this.cb(scaleVec(direction, overlapAmount))
+      }
+      
       return scaleVec(direction, overlapAmount)
     }
     

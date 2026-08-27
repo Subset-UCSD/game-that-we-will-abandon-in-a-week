@@ -13,6 +13,9 @@ declare const IS_SERVING: boolean
 
 const SESSION_KEY_NUM_BYTES = 32;
 
+//Temp 
+const d20 = new D20()
+
 // http://localhost:6767/
 // ALL OF THE GAME LOGIC
 export class Game {
@@ -22,6 +25,7 @@ export class Game {
   private idForConnection: Map<WebSocket, string> = new Map();
   private joinedSockets: Set<WebSocket> = new Set();
   private gameObjects: GameObject[] = [
+    d20,
     new StaticThing({ kind: 'tree', x: -100, y: -100 }),
     new StaticThing({ kind: 'campfire', x: -0, y: -100 }),
     new StaticThing({ kind: 'techbro', x: -50, y: -120, interactive: true, hp: 10000, maxHp: 10000,
@@ -36,7 +40,6 @@ export class Game {
   private lastSentGameState?: { gameState: WholeFkingGameState, versionId: string }
   private tiles: ChunkEntryMap
   private onTileEdit: (tiles: ChunkEntryMap) => void
-  private d20 =  new D20()
   private particleQueue: Particle[] = []
 
   constructor(tiles: ChunkEntryMap, onTileEdit: (tiles: ChunkEntryMap) => void) { 
@@ -58,11 +61,21 @@ export class Game {
         if (mtv.x != 0 || mtv.y != 0) {
           player1.collied = true
           player1.velocity = mtv
-          console.log(player1.id, mtv)
+          // console.log(player1.id, mtv)
           break
         }
          player1.collied = false
       }
+
+      const mtv2 = d20.collider.collide(player1.collider);
+    
+      // if (mtv2.x != 0 || mtv2.y != 0) {
+
+      //     //d20.onCollide(mtv2)
+      //     // console.log(player1.id, mtv)
+      //     // break
+      // }
+
     }
 
     for (const meatball of this.gameObjects) {

@@ -1,4 +1,4 @@
-import { Explosion, SerializedGameObject } from "@common";
+import { Explosion, SerializedGameObject, Vec2 } from "@common";
 import { RenderableObject } from "./render";
 import { Canvas } from "./canvas";
 
@@ -13,6 +13,7 @@ export class ClientExplosion implements RenderableObject {
     id: 0
   }
   #created = Date.now()
+  get position (): Vec2 {return this.#explosion}
 
   get index( ) { return this.#explosion.y}
   // get shouldDie () { return Date.now() - this.#created >= EXPLOSION_ANIM_MAX_AGE }
