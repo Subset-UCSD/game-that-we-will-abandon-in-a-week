@@ -1,19 +1,21 @@
-import { Explosion } from "@common";
+import { Explosion, SerializedGameObject } from "@common";
 import { RenderableObject } from "./render";
 import { Canvas } from "./canvas";
 
  const EXPLOSION_ANIM_MAX_AGE = 1000
 
 export class ClientExplosion implements RenderableObject {
-  #explosion: Explosion
+  #explosion: Explosion = {
+    x: 0,
+    y: 0,
+    radius: 0,
+    type: "explosion",
+    id: 0
+  }
   #created = Date.now()
 
-  constructor (explosion: Explosion) {
-    this.#explosion = explosion
-  }
-
   get index( ) { return this.#explosion.y}
-  get shouldDie () { return Date.now() - this.#created >= EXPLOSION_ANIM_MAX_AGE }
+  // get shouldDie () { return Date.now() - this.#created >= EXPLOSION_ANIM_MAX_AGE }
   get progress () { return Math.min(1, (Date.now() - this.#created) / EXPLOSION_ANIM_MAX_AGE) }
 
   render ({c}: Canvas) {
@@ -25,6 +27,15 @@ export class ClientExplosion implements RenderableObject {
     c.arc(x, y, radius, 0, 2 * Math.PI)
     c.fill()
 
+  }
+
+  update(objState: SerializedGameObject): void {
+      if (objState.type!=='explosion')return
+      this.#explosion = objState
+  }
+
+  shouldRemove(): boolean {
+    return Date.now() - this.#created >= EXPLOSION_ANIM_MAX_AGE
   }
 
 }

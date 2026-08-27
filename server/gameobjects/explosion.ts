@@ -1,17 +1,19 @@
 import { type Explosion as ExplosionType, GameObject } from "@common/game";
+import { generateId } from "@server/id-manager";
 
-export type ExplosionProps = Omit<ExplosionType, "id"> & {
+export type ExplosionProps = Omit<ExplosionType, "id"|'type'> & {
 	duration: number;
 }
 
 let nextId = 0;
 export class Explosion implements GameObject {
+  partyId = '';
 	public publicState: ExplosionType;
   public shouldDelete = false;
 	private duration: number;
 
   constructor(props: ExplosionProps) {
-		this.publicState = {...props, id: nextId++};
+		this.publicState = {...props, id: generateId(),type:'explosion'};
 		this.duration = props.duration;
 	}
 

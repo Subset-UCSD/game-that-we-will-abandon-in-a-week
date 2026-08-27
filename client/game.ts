@@ -3,15 +3,32 @@ import { Arena } from "./render/arena";
 import { Room } from "./render/room";
 import { Connection } from './net/connection'
 import { InputListener } from "./input-listener";
-import { addVec, isVecEq, SERVER_GAME_TICK,lerp, ChunkMap, Particle } from "@common";
+import { addVec, isVecEq, SerializedGameObject, lerp, ChunkMap, Particle } from "@common";
 import { defaultInputs, keymap } from "@common/input";
-import { WholeFkingGameState, MeatBall, SerializedThing, Line, SerializedCollider, Player as NetPlayer } from '@common/game'
-import { ClientSeed, ClientExplosion, ClientCorpse, ThingRenderer, render, ClientMeatball, Canvas, SerializedThingWithAdditionalRenderProperties } from "./render"
+import { WholeFkingGameState, MeatBall, SerializedThing, Line, SerializedCollider, Player as NetPlayer, GameObject } from '@common/game'
+import { ClientSeed, ClientExplosion, ClientCorpse, ThingRenderer, render, ClientMeatball, Canvas,  } from "./render"
 import { audio, PlaySoundOptions } from '@client/audio/index';
 import { number } from "zod";
 import { DebugTileEditor } from "./debug/tile-editor";
-import { D20 as Cube } from "./render/3dObjects/3d";
+import { D20 } from "./render/3dObjects/3d";
 import { renderTiles } from "./tiles";
+import { RenderableObject } from "./render/render"
+
+type Creator = () => RenderableObject
+
+const creators: Record<SerializedGameObject['type'], Creator> = {
+	player: () => new Player(),
+	d20: () => D20(),
+	meatball: () => new ClientMeatball(),
+	explosion: () => new ClientExplosion(),
+	// enemy:() => new Xyz(),
+	seed:() => new ClientSeed(),
+	// tree:() => new ThingRenderer(),
+	// campfire:() => new ThingRenderer(),
+	thing:() => new ThingRenderer(),
+	corpse:() => new ClientCorpse(),
+}
+
 
 audio.unlockOnFirstInteraction();
 audio.preload({
@@ -39,11 +56,8 @@ export type Camera = {
 export class Game {
 	private conn;
 	private inputListener;
-	private players: Map<number, Player> = new Map();
-	private meatballs = new Map<number, ClientMeatball>()
-	private corpses = new Map<number, ClientCorpse>()
-	private explosions = new Map<number, ClientExplosion>()
-	private seeds = new Map<number, ClientSeed>();
+	private cilentState: Map<number, RenderableObject> = new Map()
+
 	private arena;
 	// private objects;
 	private room;
@@ -51,7 +65,7 @@ export class Game {
 	private debugInfoVisible = false
 	private wasDebugKeyPressed = false
 	private id = -1;
-	private things: SerializedThingWithAdditionalRenderProperties[] = []
+	// private things: SerializedThingWithAdditionalRenderProperties[] = []
 	private lines: Line[] = []
 	private debugColldiers: SerializedCollider[] =[ ]
 	private currPlayerState?: NetPlayer;
@@ -84,66 +98,51 @@ export class Game {
 	}
 
 	updateGameState(gameState: WholeFkingGameState) {
+		const newClientState = new Map<number, RenderableObject>()
+		for (const objState of gameState.gameObjects) {
+			const existing = this.cilentState.get(objState.id)?? creators[objState.type]()
+			existing.update(objState)
+			newClientState.set(
+				objState.id,
+				existing
+			)
+			this.cilentState.delete(objState.id)
+
+			switch (objState.type) {
+				case "player":
+					if (objState.id === this.id) {
+						this.currPlayerState = objState
+					}	
+					break;
+			}
+		}
+		// loop through objects that the server no longer sends over
+		for (const [id, object] of this.cilentState) {
+			if (object.shouldRemove && !object.shouldRemove()) {
+				newClientState.set(id,object)
+			}
+		}
+		this.cilentState = newClientState
+		
+		const canInteractWithId = this.currPlayerState?.canInteractWith[0]
+		if (canInteractWithId !== undefined) {
+			const thing = this.cilentState.get(canInteractWithId)
+			if (thing instanceof ThingRenderer) {
+				thing.canInteract = true
+			}
+		}
+		
 		// Instantiate objects for newly appearing updates from the server
 		this.__debugText = JSON.stringify({
 			...gameState,
-			players: gameState.players.map(p => ({...p,lines:`... ${p.lines.length} line(s)`})),
+			gameObjects:gameState.gameObjects.map(p => p.type==='player'? ({...p,lines:`... ${p.lines.length} line(s)`}):p),
 			tiles: Object.fromEntries(Object.entries(gameState.tiles).map(([k,v]) => [k, `... ${v.reduce((cum , curr) => cum + +(curr !== null),0)} tile(s)`]))
 		}, null, 2)
 
-		const newPlayers = new Map<number, Player>()
-		for (const playerUpdate of gameState.players.values()) {
-			const existing = this.players.get(playerUpdate.id)
-			if (existing) {
-				existing.update(playerUpdate);
-				newPlayers.set(playerUpdate.id, existing)
-			} else {
-				newPlayers.set(playerUpdate.id, new Player(playerUpdate))
-			}
-			
-			if (playerUpdate.id === this.id) {
-				this.currPlayerState = playerUpdate
-			}
-		}
-		this.players = newPlayers
-
-		const newMeatballs = new Map<number, ClientMeatball>()
-		for (const meatball of gameState.meatballs) {
-			if (!this.meatballs.get(meatball.id)) this.playAudioAtPosition('baaa', meatball.x, meatball.y, 500, { playbackRate: 1 + Math.random() * 0.2 });
-			let existing = this.meatballs.get(meatball.id) ?? new ClientMeatball()
-			existing.setState(meatball)
-			newMeatballs.set(meatball.id, existing)
-		}
-		this.meatballs = newMeatballs
-
-		this.things = gameState.things.map(thing => ({...thing, canInteract: this.currPlayerState?.canInteractWith[0] === thing.id}))
-
-		const newSeeds = new Map<number, ClientSeed>();
-		for (const seed of gameState.seeds) {
-			newSeeds.set(seed.id, this.seeds.get(seed.id) ?? new ClientSeed(seed));
-		}
-		this.seeds = newSeeds;
-
-		const newCorpses = new Map<number, ClientCorpse>()
-		for (const meatball of gameState.corpses) {
-			let existing = this.corpses.get(meatball.id) ?? new ClientCorpse()
-			existing.state = meatball
-			newCorpses.set(meatball.id, existing)
-		}
-		this.corpses = newCorpses
-		// console.log("no restarts?")
-
-		for (const explosion of gameState.explosions) {
-			if (!this.explosions.has(explosion.id)) {
-				this.explosions.set(explosion.id, new ClientExplosion(explosion))
-			}
-		}
-		this.explosions = new Map(this.explosions.entries().filter(([, x]) => !x.shouldDie))
-
-		this.lines = gameState.players.values().flatMap(player => player.lines).toArray()
+		this.lines = gameState.gameObjects.values().flatMap(player => player.type==='player'?player.lines:[]).toArray()
 		this.tiles = gameState.tiles
 
-		this.debugColldiers = gameState.colliders
+		this.debugColldiers = gameState.debugColliders
 	}
 
 	setCurrPlayerId(id: number) {
@@ -177,7 +176,7 @@ export class Game {
 			this.camera.scale += (targetZoom - this.camera.scale) * 0.2;
 		}
 
-		const screenShake = this.explosions.values().reduce((cum, curr) => cum + (1 - Math.min(1, curr.progress * 2) ** 0.3) * 5, 0) ?? 0
+		const screenShake = this.cilentState.values().reduce((cum, curr) => cum + (curr instanceof ClientExplosion? (1 - Math.min(1, curr.progress * 2) ** 0.3) * 5:0), 0) ?? 0
 
 		const { c } = canvas;
 
@@ -218,6 +217,7 @@ export class Game {
 		c.fillText('press P to Paint', - 300, 320);
 		c.fillText('Press F to Impregnate.', 300, 20);
 		c.fillText('press M to tp', 500, 500);
+		c.fillText('press K to knife', 400, -100);
 
 		c.fillStyle = 'black';
 		const lines = this.__debugText.split('\n');
@@ -225,21 +225,18 @@ export class Game {
 			canvas.context.fillText(line, 0, i * 10)
 		}
 
-
 		//temp test3D shape
-		Cube.render(canvas)
+		// Cube.render(canvas)
 
-
-		
 		this.paintLines(c);
 
 		render(canvas, [
-			...this.players.values(),
-			...this.meatballs.values(),
-			...this.corpses.values(),
-			...this.things.values().map(thing => new ThingRenderer(thing)),
-			...this.explosions.values(),
-			...this.seeds.values()
+			...this.cilentState.values(),
+			// ...this.meatballs.values(),
+			// ...this.corpses.values(),
+			// ...this.things.values().map(thing => new ThingRenderer(thing)),
+			// ...this.explosions.values(),
+			// ...this.seeds.values()
 		])
 
 		if (this.__debugTileEditor != null && this.__debugTileEditor.isRenderCollider) {

@@ -1,15 +1,17 @@
 import { SerializedCorpse, GameObject } from "@common/game";
+import { generateId } from "@server/id-manager";
 
 
 
 export class Corpse implements GameObject {
+    partyId = '';
     static #nextId = 0
     shouldDelete = false
     #publicState: SerializedCorpse
 
-    constructor (publicState: Omit<SerializedCorpse, 'id'> ) {
+    constructor (publicState: Omit<SerializedCorpse, 'id'|'type'> ) {
         this.#publicState = {...publicState,
-            id: Corpse.#nextId++,
+            id: generateId(),type:'corpse'
         }
     }
 

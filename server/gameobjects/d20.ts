@@ -1,11 +1,13 @@
 import { D20Schema, GameObject } from "@common/game";
 import { CircleCollider, Collider } from "@server/collision";
 import { Vec2, vec2 } from "@common";
+import { generateId } from "@server/id-manager";
 
 
 const ROTATION_SPEED = 100
 
 export class D20 implements GameObject {
+    partyId = '';
     publicState: D20Schema;
     collider: Collider;
     shouldDelete: boolean = false;
@@ -20,6 +22,8 @@ export class D20 implements GameObject {
             y_vel: 0, 
             radius: 30, 
             value: -1,
+            type:'d20',
+            id: generateId()
         }
         this.collider = new CircleCollider(0, 0, 30)
         this.collider.onCollide(this.onCollide)

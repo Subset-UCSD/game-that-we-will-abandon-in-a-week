@@ -6,6 +6,7 @@ import { Corpse } from './corpse'
 import { Meatball } from './meatball';
 import { BoxCollider } from "@server/collision";
 import { number } from "zod";
+import { generateId } from "@server/id-manager";
 
 const MAX_HP = 67;
 const LINE_START_AGE = 5_000
@@ -39,8 +40,9 @@ export class Player implements GameObject {
    * it's an array because you could be standing next to multiple interactive things
    * not sure if we want it to be click or space (i think space makes more sense because you have to walk up to the object to interact)
    * TODO: in that case we should change this to just a number
-   */
+  */
   canInteractWith: number[] = []
+  partyId = '';
   roomId: string = 'base';
   wasTeleporting = false;
   private knifeState = { angle: 0, radius: 0 }
@@ -49,7 +51,7 @@ export class Player implements GameObject {
   constructor(game: Game) {
     this.game = game
     this.inputs = { ...defaultInputs };
-    this.id = Player.next_id++;
+    this.id = generateId()//Player.next_id++;
     this.collider = new BoxCollider(
       this.position.x,
       this.position.y-20,
@@ -97,7 +99,8 @@ export class Player implements GameObject {
       canInteractWith: this.canInteractWith,
       knifeRadius: +this.knifeState.radius.toFixed(3),
       knifeAngle: this.knifeState.angle,
-      thought: this.thought
+      thought: this.thought,
+      type:'player'
     };
   }
 

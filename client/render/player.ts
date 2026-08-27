@@ -20,22 +20,18 @@ export const SHEEP_WIDTH = 60;
 
 
 export class Player implements RenderableObject {
-	private props: NetPlayer;
-	private x: Interpolator<number>
-	private y: Interpolator<number>
-	private knifeAngle: Interpolator<number>
-	private knifeRadius: Interpolator<number>
-	get index() { return this.y.getValue() };
+	private props?: NetPlayer;
+	private x?: Interpolator<number>
+	private y?: Interpolator<number>
+	private knifeAngle?: Interpolator<number>
+	private knifeRadius?: Interpolator<number>
+	get index() { return this.y?.getValue() ?? 0 };
 
-	constructor(props: NetPlayer) {
-		this.props = props;
-		this.x = Interpolator.number(props.x)
-		this.y = Interpolator.number(props.y)
-		this.knifeRadius = Interpolator.number(props.knifeRadius)
-		this.knifeAngle = new Interpolator(props.knifeAngle, lerpAngle)
+	constructor() {
 	}
 
 	renderShadow({ c }: Canvas) {
+		if (!this.x || !this.y)return
 		const x = this.x.getValue()
 		const y = this.y.getValue()
 		c.moveTo(x + SHEEP_WIDTH * 0.4, y);
@@ -43,6 +39,7 @@ export class Player implements RenderableObject {
 	}
 
 	render({ c }: Canvas): void {
+		if (!this.x || !this.y||!this.props)return
 		const x = this.x.getValue()
 		const y = this.y.getValue()
 		const { id, x_vel, y_vel, facingLeft, probablyafk, healthpercent,maxHp, thought,connected,
@@ -106,6 +103,12 @@ export class Player implements RenderableObject {
 
 	update(props: NetPlayer): void {
 		this.props = props;
+		
+		this.x ??= Interpolator.number(props.x)
+		this.y ??= Interpolator.number(props.y)
+		this.knifeRadius ??= Interpolator.number(props.knifeRadius)
+		this.knifeAngle ??= new Interpolator(props.knifeAngle, lerpAngle)
+
 		this.x.setValue(props.x)
 		this.y.setValue(props.y)
 		this.knifeAngle.setValue(props.knifeAngle)

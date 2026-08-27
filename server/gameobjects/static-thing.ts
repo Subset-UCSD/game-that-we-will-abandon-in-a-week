@@ -1,6 +1,7 @@
 import { GameObject, SerializedThing, Vec2 } from "@common";
 import { Player } from "./player";
 import { Collider } from "@server/collision";
+import { generateId } from "@server/id-manager";
 
 /**
  * for things that don't move ("static") like trees, signs, and tech bros ig
@@ -10,13 +11,14 @@ export class StaticThing implements GameObject {
   #state: SerializedThing
   shouldDelete = false
   collider?: Collider
+  partyId = '';
 
-  constructor ({collider,...thing}: Omit<SerializedThing, 'id'>&{collider?: Collider},
+  constructor ({collider,...thing}: Omit<SerializedThing, 'id'|'type'>&{collider?: Collider},
     
   ) {
     this.#state = {
-      id: StaticThing.#nextId++,
-      ...thing
+      id: generateId(),type:'thing',
+      ...thing,
     }
     this.collider = collider
   }

@@ -7,22 +7,24 @@ import { BoxCollider, Collider } from "./collision";
 import { generateDiffPayload } from "@common/json-optimizer";
 import { ChunkEntryMap, setTile } from "./tile-manager";
 import { D20 } from "./gameobjects/d20";
-import { Room } from "./gamelogic/room";
+import { Room, Party } from "./gamelogic";
 
 declare const IS_SERVING: boolean
 
 const SESSION_KEY_NUM_BYTES = 32;
 
+// http://localhost:6767/
 // ALL OF THE GAME LOGIC
 export class Game {
   private players: Map<string, Player> = new Map();
+  private parties: Map<string, Party> = new Map();
   private connections: Map<string, { socket: WebSocket, lastSentGameStateVersionId?: string }> = new Map();
   private idForConnection: Map<WebSocket, string> = new Map();
   private joinedSockets: Set<WebSocket> = new Set();
   private gameObjects: GameObject[] = [
-    new StaticThing({ type: 'tree', x: -100, y: -100 }),
-    new StaticThing({ type: 'campfire', x: -0, y: -100 }),
-    new StaticThing({ type: 'techbro', x: -50, y: -120, interactive: true, hp: 10000, maxHp: 10000,
+    new StaticThing({ kind: 'tree', x: -100, y: -100 }),
+    new StaticThing({ kind: 'campfire', x: -0, y: -100 }),
+    new StaticThing({ kind: 'techbro', x: -50, y: -120, interactive: true, hp: 10000, maxHp: 10000,
       collider: new BoxCollider(-50, -150, 40, 70)
      }),
   ];
@@ -202,27 +204,11 @@ export class Game {
 
   getWorldState(): WholeFkingGameState {
     return {
-      players: this.players
-        .values()
-        .map((player) => player.serialize())
-        .toArray(),
-      meatballs: this.gameObjects
-        .filter((o) => o instanceof Meatball)
-        .map((mb) => mb.serialize()),
-      explosions: this.gameObjects
-        .filter((o) => o instanceof Explosion)
-        .map((ex) => ex.serialize()),
-      things: this.gameObjects
-        .filter((o) => o instanceof StaticThing)
-        .map((ex) => ex.serialize()),
-      corpses: this.gameObjects
-        .filter((o) => o instanceof Corpse)
-        .map((ex) => ex.serialize()),
-      seeds: this.gameObjects.filter(x => x instanceof Seed).map(x => x.serialize()),
-      d20: [this.d20.serialize()],
-      colliders: this.gameObjects.map(object => object.collider?.serialize()).filter(collider => collider !== undefined),
+      gameObjects: this.gameObjects.map((mb) => mb.serialize()),
+      // d20: [this.d20.serialize()],
+      debugColliders: this.gameObjects.map(object => object.collider?.serialize()).filter(collider => collider !== undefined),
       tiles: Object.fromEntries(this.tiles.entries().map(([key, {tiles}])=>[key, tiles])),
-    };
+    }
   }
 
   handleMessage(ws: WebSocket, msg: ClientMessage) {

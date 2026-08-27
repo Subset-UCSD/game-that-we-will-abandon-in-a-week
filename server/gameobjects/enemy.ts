@@ -1,11 +1,19 @@
 import { GameObject, Vec2 } from "@common";
 import { subscribe } from "@server/events";
-import { Enemy as NetEnemy, evN, vec2 } from "@common";
+import { Enemy as NetEnemy, evN, vec2, ev, normalize} from "@common";
+import { generateId } from "@server/id-manager";
 
-export type EnemyProps = Omit<NetEnemy, "id">;
+export type EnemyProps = Omit<NetEnemy, "id"|'type'>;
+
+const MAX_ACCEL = vec2(3);
+const MAX_VELOCITY = vec2(10);
+
+
+function clamp(x:L)
 
 let nextId = 0;
 export class Enemy implements GameObject {
+    partyId = '';
 	shouldDelete: boolean = false;
 
 	publicState: NetEnemy;
@@ -15,7 +23,7 @@ export class Enemy implements GameObject {
 	private acceleration = vec2();
 
 	constructor(props: EnemyProps) {
-		this.publicState = {...props, id: nextId++};
+		this.publicState = {...props, id: generateId(),type:'enemy'};
 	
 		subscribe("players:move", (players) => {
 			let shortestPlayer;
@@ -34,7 +42,14 @@ export class Enemy implements GameObject {
 	}
 
 	tick(): void {
-		this.publicState.x = 
+		const moveDirection = normalize(ev`${this.publicState} - ${this.target}`);
+		this.acceleration = ev`${this.acceleration} + ${moveDirection}`;
+		this.acceleration = {
+			x: this.acceleration.x > MAX_ACCEL.x ? MAX_ACCEL.x : this.acceleration.x,
+			y: this.acceleration.y > MAX_ACCEL.y ? MAX_ACCEL.y : this.acceleration.y
+		};
+		this.velocity = this.acceleration
+
 	}
 
 	playerMoved() {

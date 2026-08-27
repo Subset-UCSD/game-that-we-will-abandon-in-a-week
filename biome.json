@@ -9,6 +9,9 @@
     "enabled": true,
     "rules": {
       "preset": "none",
+            "style": {
+        "useImportType": "error"
+      },
       "correctness": {
         "noUnusedImports": {
           "level": "error",

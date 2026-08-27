@@ -17,7 +17,7 @@ export class ClientMeatball implements RenderableObject {
 
     get index() { return this.#y?.getValue() ?? 0 }
 
-    setState ({id,x,y,height}: MeatBall): void {
+    update ({id,x,y,height}: MeatBall): void {
         this.#id = id
         this.#x ??= Interpolator.number(x)
         this.#x.setValue(x)

@@ -1,4 +1,5 @@
 import { MeatBall as PublicMeatBall, GameObject } from "@common/game";
+import { generateId } from "@server/id-manager";
 
 let nextMeatballId = 0;
 
@@ -16,6 +17,7 @@ export class Meatball implements GameObject {
   private  hv: number;
   shouldDelete = false;
   private  bounces = 0
+  partyId = '';
 
   constructor({
     x = 0,
@@ -26,10 +28,10 @@ export class Meatball implements GameObject {
     inithv = 10,
   }: Partial<MeatballOptions> = {}) {
     this.publicState = {
-      id: nextMeatballId++,
+      id: generateId(),
       x,
       y,
-      height,
+      height,type:'meatball'
     };
 
     this.xv = xv;

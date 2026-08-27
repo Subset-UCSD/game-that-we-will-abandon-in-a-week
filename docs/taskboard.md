@@ -22,7 +22,7 @@
    a. sound effect
       - footstep and baaa demoable (after wire in)
    b. bgm
-      - working on music production :music:
+      - working on music production :music: (done and wired in 8/26)
 
 
 ## Random Ideas

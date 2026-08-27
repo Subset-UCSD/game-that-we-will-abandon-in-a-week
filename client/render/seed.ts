@@ -1,5 +1,5 @@
 import { RenderableObject } from "./render";
-import { Seed } from "@common";
+import { Seed, SerializedGameObject } from "@common";
 import { Canvas } from "./canvas";
 import { loadFrames } from "./frames";
 
@@ -11,11 +11,10 @@ const frames = await loadFrames([
 const SIZE = 20;
 
 export class ClientSeed implements RenderableObject {
-  private props: Seed;
+  private props!: Seed;
   get index() { return this.props.y };
 
-  constructor(props: Seed) {
-    this.props = props;
+  constructor() {
   }
 
   renderShadow({ c }: Canvas): void {
@@ -29,4 +28,15 @@ export class ClientSeed implements RenderableObject {
     
     c.drawImage(frame, x - SIZE, y - SIZE * 2, SIZE * 2, SIZE * 2);
   }
+
+  update(objState: SerializedGameObject): void {  
+      if (objState.type!=='seed')return
+      this.props = objState
+  }
+
+  // isn't it the server's responsibility to never stop sending seed in the game state?
+  // shouldRemove() {
+  //   return false
+  // }
+
 }

@@ -37,6 +37,8 @@ class Room implements RenderableObject {
             player.render(canvas);
         }
     }
+
+    update(){}
 }
 
 

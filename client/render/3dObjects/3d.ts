@@ -5,7 +5,7 @@
 
 import { Canvas } from "../canvas";
 import { RenderableObject } from "../render";
-import { Vec3, vec3, vec3ToDomPoint, DomPointToVec3, cross_product, subVec3 } from "@common";
+import { Vec3, vec3, vec3ToDomPoint, DomPointToVec3, cross_product, subVec3, SerializedGameObject } from "@common";
 
 
 export const identity = new DOMMatrix();
@@ -20,7 +20,6 @@ interface Renderable3DObject extends RenderableObject {
     //unspoken rule of faces: the vertex at index 0, connects to index 1 and -1
 
     texture?(c: CanvasRenderingContext2D, face_idx: number): void
-    
 }
 
 class Polyhedron3D implements Renderable3DObject {
@@ -31,6 +30,14 @@ class Polyhedron3D implements Renderable3DObject {
     rotateX: number = 30;
     rotateY: number = 45;
     rotateZ: number = 0;
+
+    update(objState: SerializedGameObject): void {
+        
+    }
+
+    shouldRemove(): boolean {
+        return false
+    }
     
     constructor(vertrices:Vec3[], faces: number[][]) {
        this.vertrices = vertrices
@@ -223,7 +230,7 @@ export const Pyramid = new Polyhedron3D(
 
 const GOLDEN_RATIO = (1 + Math.sqrt(5)) / 2
 
-export const D20 = new Polyhedron3D(
+export const D20 = () => new Polyhedron3D(
     //verticies
     [
         vec3(0, 1, GOLDEN_RATIO), // 0

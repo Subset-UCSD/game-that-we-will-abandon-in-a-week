@@ -1,4 +1,4 @@
-import {SerializedCorpse} from '@common/game'
+import {SerializedCorpse, SerializedGameObject} from '@common/game'
 import { Canvas} from './canvas'
 
 import { RenderableObject } from './render'
@@ -43,6 +43,11 @@ const frame = frames[Math.floor(Date.now() / (770 + (this.state.id * Math.PI) % 
         c.drawImage(frame, x - SHEEP_WIDTH/2, y-42+offset, SHEEP_WIDTH, 50);
 
       }
+    }
+
+    update(objState: SerializedGameObject): void {
+      if (objState.type!=='corpse')return
+      this.state = objState
     }
 }
 

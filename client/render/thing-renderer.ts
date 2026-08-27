@@ -1,4 +1,4 @@
-import { SerializedThing } from "@common";
+import { SerializedGameObject, SerializedThing } from "@common";
 import { RenderableObject } from "./render";
 import { Canvas } from "./canvas";
 
@@ -11,7 +11,7 @@ type RegisteredThing = {
   /** applied BEFORE scale (so basically height of transparent pixels at bottom of original texture) */
   offsetY?: number
 }
-type Renderable = SerializedThing['type']
+type Renderable = SerializedThing['kind']
 const thingsToRender = new Map<Renderable, Promise<RegisteredThing>>([
   ['tree', Promise.all([
     './assets/treee.png',
@@ -48,55 +48,26 @@ const resolved = new Map(await Promise.all(thingsToRender.entries().map(async ([
 /**
  * a stateless renderer for objects that don't move
  */
-export class BasicRenderer<T extends {id:number;x:number;y:number}>  implements RenderableObject {
-  renderType: Renderable
-  thing: T
-  get index () { return this.thing.y }
+export  class ThingRenderer  implements RenderableObject {
+  canInteract = false
+  // renderType: Renderable
+ private thing?:SerializedThing
+  get index () { return this.thing?. y??0 }
 
-  constructor (renderType: Renderable, thing: T) {
-    this.renderType = renderType
-    this.thing = thing
-  }
   
   render ({c}: Canvas) {
-    const rendered = resolved.get(this.renderType)
+    if (!this.thing)return
+    const rendered = resolved.get(this.thing.kind)
     if (!rendered) return
 
     const {frames,timePerFrame=1000,imageSize,scale=1,offsetY=0} = rendered
     const frame = frames[Math.floor(Date.now() / (timePerFrame + (this.thing.id * Math.PI) % 50)) % frames.length]
      c.drawImage(frame, this.thing.x - imageSize.width * scale/2, this.index-imageSize.height*scale + offsetY*scale, imageSize.width * scale, imageSize.height*scale);
-  }
 
-
-  renderShadow({c}: Canvas): void {
-    const rendered = resolved.get(this.renderType)
-    if (!rendered) return
-
-    const {imageSize,scale=1,shadowScale=1} = rendered
-    const width = imageSize.width * scale * shadowScale
-    c.moveTo(this.thing.x+width/2, this.thing.y)
-    c.ellipse(this.thing.x, this.thing.y, width/2, width/10, 0, 0, Math.PI*2)
-  }
-}
-
-export type SerializedThingWithAdditionalRenderProperties = SerializedThing & {
-  canInteract: boolean
-}
-
-export class ThingRenderer extends BasicRenderer<SerializedThingWithAdditionalRenderProperties> {
-  constructor (thing: SerializedThingWithAdditionalRenderProperties) {
-    super(thing.type, thing)
-  }
-
-  render (canvas: Canvas) {
-    super.render(canvas)
-    const {c} = canvas
-    const rendered = resolved.get(this.renderType)
-    if (!rendered) return
-    const {imageSize,scale=1,offsetY=0} = rendered
-    const {x, y, canInteract, hp, maxHp} = this.thing
+    //  const {imageSize,scale=1,offsetY=0} = rendered
+    const {x, y,  hp, maxHp} = this.thing
     const heightOffset = (offsetY - imageSize.height) * scale
-    if (canInteract) {
+    if (this.canInteract) {
       c.save()
       c.lineWidth = 2
       c.lineJoin = 'round'
@@ -115,5 +86,24 @@ export class ThingRenderer extends BasicRenderer<SerializedThingWithAdditionalRe
         c.strokeRect(x - 20.5, y - 10.8 +heightOffset, 41, 6)
       }
     }
+  }
+
+
+  renderShadow({c}: Canvas): void {
+    if (!this.thing)return
+    const rendered = resolved.get(this.thing.kind)
+    if (!rendered) return
+
+    const {imageSize,scale=1,shadowScale=1} = rendered
+    const width = imageSize.width * scale * shadowScale
+    c.moveTo(this.thing.x+width/2, this.thing.y)
+    c.ellipse(this.thing.x, this.thing.y, width/2, width/10, 0, 0, Math.PI*2)
+  }
+
+  
+  update(objState: SerializedGameObject): void {
+    if (objState.type!=='thing') return
+    this.thing = objState
+    this.canInteract = false
   }
 }
