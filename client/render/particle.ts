@@ -1,4 +1,4 @@
-import { Particle, SerializedGameObject } from "@common";
+import { ev, Particle, randomInCircle, SerializedGameObject, vec2, Vec2 } from "@common";
 import { RenderableObject } from "./render";
 import { Canvas } from "./canvas";
 
@@ -6,11 +6,9 @@ import { Canvas } from "./canvas";
 // should they be clipped when they go behind ?
 export class ClientParticle /*implements RenderableObject*/ {
 #color: {h:number,s:number,l:number}
-#x: number
-#y: number
-#xv: number
-#yv: number
-#yAccel: number
+#position: Vec2
+#velocity: Vec2
+#acceleration: Vec2
 dieTime: number
 #radius: number
   constructor ({
@@ -19,12 +17,12 @@ dieTime: number
     radius,
   }: Omit<Particle, 'count'>) {
 this.#color={h,s,l}
-this.#x=x
-this.#y=y
+this.#position={x,y}
 // todo: it looks very rectangular, needs elliptic sampling i think
-this.#xv=(xvSpread * (Math.random()* 2 - 1))
-this.#yv=yvBase + (yvSpread * (Math.random()* 2 - 1)) 
-this.#yAccel=yvGravity
+this.#velocity = ev`${randomInCircle()} * ${vec2(xvSpread,yvSpread)} + ${vec2(0, yvBase)}`
+// this.#xv=(xvSpread * (Math.random()* 2 - 1))
+// this.#yv=yvBase + (yvSpread * (Math.random()* 2 - 1)) 
+this.#acceleration=vec2(0,yvGravity)
 this.dieTime = Date.now() + lifetime
 this.#radius = radius
   }
@@ -36,18 +34,21 @@ this.#radius = radius
   tick (dt: number) {
     // kinematic equations
     /// source: https://apcentral.collegeboard.org/media/pdf/ap-physics-1-equations-sheet.pdf
-    this.#x += this.#xv * dt
-    this.#y += this.#yv * dt + this.#yAccel /2 * dt * dt
-    this.#yv += this.#yAccel * dt
+    // this.#position.x += this.#velocity.x * dt
+    // this.#position.y += this.#velocity.y * dt + this.#yAccel /2 * dt * dt
+    this.#position = ev`${this.#position} + ${this.#velocity} * ${dt} + ${this.#acceleration} / 2 * ${dt * dt}`
+    // this.#yv += this.#yAccel * dt
+    this.#velocity = ev`${this.#velocity} + ${this.#acceleration} * ${dt}`
   }
 
-  get index () { return this.#y }
+  get index () { return this.#position.y }
 
   render({c}: Canvas): void {
     c.fillStyle = `hsl(${this.#color.h}, ${this.#color.s}%, ${this.#color.l}%)`
     c.beginPath()
-    c.moveTo(this.#x + this.#radius, this.#y)
-    c.arc(this.#x, this.#y, this.#radius, 0, 2 * Math.PI, )
+    const{x,y} = this.#position
+    c.moveTo(x + this.#radius, y)
+    c.arc(x, y, this.#radius, 0, 2 * Math.PI, )
     c.fill()
   }
 

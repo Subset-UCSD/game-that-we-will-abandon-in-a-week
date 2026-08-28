@@ -38,6 +38,18 @@ export const vecMap3 = (a: Vec2, b: Vec2, c: Vec3, mapFn: (a: number, b: number,
 });
 
 /**
+ * picks point in circle of radius 1, uniformly
+ */
+export function randomInCircle (): Vec2 {
+	// marcelo algorithm
+	const radius = Math.sqrt(Math.random())
+	const angle = Math.random() * 2 * Math.PI
+	return vec2(Math.cos(angle)*radius, Math.sin(angle)*radius)
+}
+
+export const pairwiseMultiply =(a: Vec2, b: Vec2): Vec2 => ({x:a.x*b.x , y: a.y*b.y})
+
+/**
  * makes the length of `target` at most `max`
  */
 export const clamp = (target: Vec2, max: number) => {
@@ -159,7 +171,10 @@ function evaluateExpression(values: (Vec2 | number)[], expression: Expression): 
 				if (typeof a === "number" && typeof b !== "number") {
 					return scaleVec(b, a);
 				}
-				throw new Error("cannot multiply vectors, too ambiguous");
+				if (typeof a !== 'number' && typeof b!=='number') {
+					return  pairwiseMultiply(a, b)
+				}
+				// throw new Error("cannot multiply vectors, too ambiguous");
 			}
 			case "/": {
 				if (typeof a === "number" && typeof b === "number") {
