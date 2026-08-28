@@ -41,8 +41,8 @@ export class Game {
 			collider: new BoxCollider(-50, -150, 40, 70),
 		}),
 		new Enemy({
-			x: 600,
-			y: 600,
+			x: -300,
+			y: -300,
 		})
 	];
 	private rooms: Map<string, Room> = new Map([

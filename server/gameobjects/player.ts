@@ -113,11 +113,14 @@ export class Player implements GameObject {
 		this.inputs = inputs;
 	}
 
-	private static FRICTION = 10
+	// hint: player acceleration is set in server/Game.ts handlePlayerInput
+	private static FRICTION = 6
 	tick() {
 		// F = ma
 		// https://en.wikipedia.org/wiki/Friction#Kinetic_friction
 		// so friction is a constant acceleration i guess?
+
+		
 
 		// this assumes delta t = 1
 		const oldVelocity = this.velocity
@@ -125,13 +128,15 @@ export class Player implements GameObject {
 		// of velocity. but if friction would cause the velocity to change sign,
 		// then set it to zero
 		if (!isZeroVec(this.velocity)) {
-			const friction = ev`${normalize(this.velocity)} * ${Player.FRICTION}`
-			if (vecLengthSquared(friction) > vecLengthSquared(this.velocity)) {
-				// friction is more than velocity, so set it to zero
-				this.velocity = vec2()
-			} else {
-				this.velocity = ev`${this.velocity} - ${friction}`
-			}
+			const friction = ev`${normalize(this.velocity)} * ${Math.pow(vecLengthSquared(this.velocity), 0.1)} * ${Player.FRICTION}`
+			
+			this.velocity = ev`${this.velocity} - ${friction}`
+			// if (vecLengthSquared(friction) > vecLengthSquared(this.velocity)) {
+			// 	// friction is more than velocity, so set it to zero
+			// 	this.velocity = vec2()
+			// } else {
+			// 	this.velocity = ev`${this.velocity} - ${friction}`
+			// }
 		}
 		// v = v0 + at (assumes constant acceleration but whatever)
 		this.velocity = ev`${this.velocity} + ${this.acceleration}`;

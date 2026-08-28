@@ -9,6 +9,7 @@ import {
 	type Vec2,
 	vec2,
 	vecLength,
+	projVec
 } from "@common";
 
 export interface Collider {
@@ -16,12 +17,14 @@ export interface Collider {
 	// This is for is having multiple layers of collision, so only objects
 	// with the same mask can collide with other objects within that mask
 	mask: number; //binary mask
-	cb: (mts: Vec2) => void;
 
 	// border collie
-	collide(Collider: Collider): Vec2;
+	/**
+	 * returns the MTV, Modern Television / 🤓☝️minimum translation vector
+	 */
+	collide(Collider: Collider): [boolean, Vec2];
 	getNearestPoint(point: Vec2): Vec2;
-	onCollide(cb: (mts: Vec2) => void): void;
+	onCollide?(cb: (mts: Vec2) => void): void;
 	updateLocation(center: Vec2): void;
 	serialize(): SerializedCollider;
 	/** 😳 */
@@ -37,11 +40,6 @@ export interface SATCollider extends Collider {
 export interface PolygonCollider extends SATCollider {
 	getCorners(): Vec2[];
 	getEdges(): Vec2[];
-}
-
-interface ColliderProps {
-	onCollide: () => {},
-	state: () => {}
 }
 
 // // get all unnormalized edge vectors in a ploygon
@@ -60,11 +58,6 @@ interface ColliderProps {
 // }
 
 //TODO: FIND A POINT FURTHER DOWN RELATIVE TO ANOTHER POINT
-
-// find the 2 points on the projection that are in the shadow of the shape
-const projVec = (p: Vec2, axis: Vec2): Vec2 => {
-	return ev`${axis} * (${p} . ${axis}) / (${axis} . ${axis})`;
-};
 
 // Get the ratio of p1 on the line to point 2
 // assumes points are on the same line
@@ -130,37 +123,42 @@ const SATSolver = (
 	return [true, smallestOverlapAmount, mtvAxis];
 };
 
+interface BoxColliderProps {
+	width: number;
+	height: number;
+	radians: number;
+	position: Vec2;
+	center?: Vec2;
+}
+
 // question: do we need a distinction between objects that cant be moved vs entities that would be walking into these objects | yes
 export class BoxCollider implements PolygonCollider {
 	private corners: Vec2[];
 	private width: number;
 	private height: number;
 	private radians: number;
-	private x: number;
-	private y: number;
 	center: Vec2;
+	
 	debug = false;
 	mask = 0;
-	cb: (mts: Vec2) => void;
 
-	constructor(x: number, y: number, width: number, height: number, radians = 0) {
-		this.x = x;
-		this.y = y;
+	// nick: idk what center means here. i think i know what it should be but idk what it currently is.
+	// in my head center is the position of a point this collider should rotate around, but it
+	// looks like it's used a synonym for position in some methods here
+	constructor({height, position, radians, width, center}: BoxColliderProps) {
 		this.radians = radians;
 		this.width = width;
 		this.height = height;
-		this.center = vec2(x, y);
+		this.center = center;
 		this.corners = this.getCorners();
-		this.cb = (mts: Vec2) => {};
-
 	}
 
 	getCorners(): Vec2[] {
 		return [
-			rotate(this.center, vec2(this.x + this.width / 2, this.y + this.height / 2), this.radians), //bottom right
-			rotate(this.center, vec2(this.x - this.width / 2, this.y + this.height / 2), this.radians), //bottom left
-			rotate(this.center, vec2(this.x - this.width / 2, this.y - this.height / 2), this.radians), //top left
-			rotate(this.center, vec2(this.x + this.width / 2, this.y - this.height / 2), this.radians), //top right
+			rotate(this.center, vec2(this.position.x + this.width / 2, this.position.y + this.height / 2), this.radians), //bottom right
+			rotate(this.center, vec2(this.position.x - this.width / 2, this.position.y + this.height / 2), this.radians), //bottom left
+			rotate(this.center, vec2(this.position.x - this.width / 2, this.position.y - this.height / 2), this.radians), //top left
+			rotate(this.center, vec2(this.position.x + this.width / 2, this.position.y - this.height / 2), this.radians), //top right
 		];
 	}
 
@@ -202,45 +200,30 @@ export class BoxCollider implements PolygonCollider {
 		return [startPoint, endPoint];
 	}
 
-	collide(collider: Collider): Vec2 {
+	collide(collider: Collider): [boolean, Vec2] {
 		if ("getAxes" in collider) {
 			const ploygonCollider = collider as PolygonCollider;
 			const [isColliding, overlapAmount, direction] = SATSolver(this, ploygonCollider);
-			
-			if (isColliding) {
-				// state. collider.getObjectCB()
-
-				// this.cb(state, scaleVec(direction, overlapAmount));
-			}
-			return scaleVec(direction, overlapAmount);
+			return [isColliding, scaleVec(direction, overlapAmount)];
 		}
-
 		throw "shitass";
 	}
 	getNearestPoint(point: Vec2): Vec2 {
 		throw new Error("Method not implemented.");
 	}
-	onCollide(cb: (mts: Vec2) => void): void {
-		this.cb = cb;
-	}
-
-	updateLocation(center: Vec2): void {
-		this.x = center.x;
-		this.y = center.y;
-		this.center = center;
+	updateLocation(position: Vec2): void {
+		this.position = position;
 		this.corners = this.getCorners();
 	}
 
 	serialize(): SerializedCollider {
 		return {
 			type: "box",
-			x: this.x - this.width / 2,
-			y: this.y - this.height / 2,
+			...this.position,
 			width: this.width,
 			height: this.height,
 		};
 	}
-
 	isInsideMe(point: Vec2): boolean {
 		return (
 			this.x - this.width / 2 <= point.x &&
@@ -252,32 +235,24 @@ export class BoxCollider implements PolygonCollider {
 }
 
 export class CircleCollider implements SATCollider {
-	center: Vec2;
 	debug = false;
 	mask = 0;
-	radius = 1;
+	center: Vec2;
 
-	constructor(x: number, y: number, radius: number, private readonly props: ColliderProps) {
-		this.center = vec2(x, y);
-		this.radius = radius;
+	constructor(private readonly radius: number = 1, center: Vec2 = {x: 0, y: 0}) {
+		this.center = center;
 	}
 
 	isInsideMe(point: Vec2): boolean {
 		throw new Error("Method not implemented.");
 	}
 
-	collide(collider: Collider) {
+	collide(collider: Collider): [boolean, Vec2] {
 		if ("getAxes" in collider) {
 			const ploygonCollider = collider as SATCollider;
 			const [isColliding, overlapAmount, direction] = SATSolver(this, ploygonCollider);
-
-			if (isColliding) {
-				this.props.cb(scaleVec(direction, overlapAmount));
-			}
-
-			return scaleVec(direction, overlapAmount);
+			return [isColliding, scaleVec(direction, overlapAmount)];
 		}
-
 		throw "shitass";
 	}
 

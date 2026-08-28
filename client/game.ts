@@ -31,6 +31,7 @@ import type { RenderableObject } from "./render/render";
 import { Room } from "./render/room";
 import { renderTiles } from "./tiles";
 import { ClientParticle } from "./render/particle";
+import {Anemone} from './render/enemy'
 
 type Creator = () => RenderableObject;
 

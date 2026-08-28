@@ -1,9 +1,6 @@
-import { isZeroVec } from "@common";
 import { Game } from "@server/game"
 
-
-export
-	class CollisionWorld {
+export class CollisionWorld {
 	constructor(private readonly game: Game) { }
 
 	tick() {
@@ -15,21 +12,12 @@ export
 				const a = collideables[j]
 				if (!(b.collider && a.collider)) continue;
 
-				// do we need both?
-				// no we dont need both
-				const mtv = b.collider.collide(a.collider);
-				if (!isZeroVec(mtv)) {
-					a.hasCollidedWith(b, mtv);
-					b.hasCollidedWith(a, mtv);
+				const [isColliding, mtv] = b.collider.collide(a.collider);
+				if (isColliding) {
+					a.hasCollidedWith?.(b, mtv);
+					b.hasCollidedWith?.(a, mtv);
 				}
-
-
-				// const mtv2 = gameObj2.collider.collide(gameObj1.collider);
 			}
 		}
-	}
-
-	serialize() {
-		return 67
 	}
 }

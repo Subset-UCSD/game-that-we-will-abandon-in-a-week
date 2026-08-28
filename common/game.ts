@@ -128,7 +128,8 @@ export interface GameObject {
 	partyId: string;
 	shouldDelete: boolean;
 	collider?: Collider;
-	onCollide?: (mts: Vec2, id:number, type:number) => void
+	// onCollide?: (mts: Vec2, id:number, type:number) => void
+	hasCollidedWith? (other: GameObject, sdmts: Vec2): void
 	tick(): void;
 	serialize(): SerializedGameObject;
 }

@@ -23,10 +23,7 @@ export class D20 implements GameObject {
 			type: "d20",
 			id: generateId(),
 		};
-		this.collider = new CircleCollider(0, 0, 30, {
-			onCollide: this.onCollide,
-			state: this.state
-		});
+		this.collider = new CircleCollider( 20,vec2());
 	}
 
 	get state() {

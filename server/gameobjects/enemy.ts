@@ -45,7 +45,8 @@ export class Enemy implements GameObject {
 
 	tick(): void {
 		const moveDirection = normalize(ev`${this.publicState} - ${this.target}`);
-		this.acceleration = ev`${this.acceleration} + ${moveDirection}`;
+		// TEMP: i changed + -> - so the enemy can stay on the screen . idk if it is right
+		this.acceleration = ev`${this.acceleration} - ${moveDirection}`;
 		this.acceleration = clamp(this.acceleration, MAX_ACCEL);
 		this.velocity = clamp(ev`${this.velocity} + ${this.acceleration}`, MAX_VELOCITY);
 

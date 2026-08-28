@@ -37,6 +37,11 @@ export const vecMap3 = (a: Vec2, b: Vec2, c: Vec3, mapFn: (a: number, b: number,
 	y: mapFn(a.y, b.y, c.y),
 });
 
+// find the 2 points on the projection that are in the shadow of the shape
+export const projVec = (p: Vec2, axis: Vec2): Vec2 => {
+	return ev`${axis} * (${p} . ${axis}) / (${axis} . ${axis})`;
+};
+
 /**
  * picks point in circle of radius 1, uniformly
  */
