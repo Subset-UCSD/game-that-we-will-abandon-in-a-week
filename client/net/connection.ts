@@ -76,11 +76,11 @@ class Connection {
 				}
 				break;
 			}
-			case 'sound': {
+			case "sound": {
 				for (const sound of message.value) {
-				this.game.playAudioAtPosition(sound)
+					this.game.playAudioAtPosition(sound);
 				}
-				break
+				break;
 			}
 			default: {
 				console.log("[server 🗣️]", message);

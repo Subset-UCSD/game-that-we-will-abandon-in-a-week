@@ -1,4 +1,4 @@
-import { audio, type PlaySoundOptions } from "@client/audio/index";
+import { audio } from "@client/audio/index";
 import { Player } from "@client/render/player";
 import {
 	addVec,
@@ -7,7 +7,7 @@ import {
 	lerp,
 	type Particle,
 	type SerializedGameObject,
-	SoundEvent,
+	type SoundEvent,
 	subVec,
 	vecLength,
 } from "@common";
@@ -27,11 +27,11 @@ import {
 } from "./render";
 import { D20 } from "./render/3dObjects/3d";
 import { Arena } from "./render/arena";
+import { Anemone } from "./render/enemy";
+import { ClientParticle } from "./render/particle";
 import type { RenderableObject } from "./render/render";
 import { Room } from "./render/room";
 import { renderTiles } from "./tiles";
-import { ClientParticle } from "./render/particle";
-import {Anemone} from './render/enemy'
 
 type Creator = () => RenderableObject;
 
@@ -40,7 +40,7 @@ const creators: Record<SerializedGameObject["type"], Creator> = {
 	d20: () => D20(),
 	meatball: () => new ClientMeatball(),
 	explosion: () => new ClientExplosion(),
-	enemy:() => new Anemone(),
+	enemy: () => new Anemone(),
 	seed: () => new ClientSeed(),
 	// tree:() => new ThingRenderer(),
 	// campfire:() => new ThingRenderer(),
@@ -89,8 +89,8 @@ export class Game {
 	private debugColldiers: SerializedCollider[] = [];
 	private currPlayerState?: NetPlayer;
 	private tiles: ChunkMap = {};
-	private particles: ClientParticle[] = []
-	private lastRenderTime = Date.now()
+	private particles: ClientParticle[] = [];
+	private lastRenderTime = Date.now();
 
 	private camera: Camera = { x: 0, y: 0, scale: 1 };
 
@@ -186,13 +186,7 @@ export class Game {
 	}
 
 	// abstract playing a sound at a position in the world, with panning and volume based on distance from player
-	playAudioAtPosition(
-		{name ,
-		x,
-		y,
-		detectableDistance = 500,volume:volumeFromEvent=1,
-		playbackRate}:SoundEvent
-	) {
+	playAudioAtPosition({ name, x, y, detectableDistance = 500, volume: volumeFromEvent = 1, playbackRate }: SoundEvent) {
 		// get x position of item on screen for audio panning
 		const pan = (x - this.camera.x) / (this.arena.width / 2);
 		// get distance of item from player for audio volume
@@ -208,7 +202,7 @@ export class Game {
 
 	// width, height = screen size (useful for centering things)
 	render(canvas: Canvas) {
-		const now = Date.now()
+		const now = Date.now();
 		// if (this.id == -1) return
 
 		const player = this.currPlayerState;
@@ -295,13 +289,13 @@ export class Game {
 			// ...this.seeds.values()
 		]);
 
-		const djt = (now - this.lastRenderTime)/1000
-		this.particles = this.particles.filter(particle => {
-			if (particle.shouldRemove()) return false
-			particle.tick(djt)
-			particle.render(canvas)
-			return true
-		})
+		const djt = (now - this.lastRenderTime) / 1000;
+		this.particles = this.particles.filter((particle) => {
+			if (particle.shouldRemove()) return false;
+			particle.tick(djt);
+			particle.render(canvas);
+			return true;
+		});
 
 		if (this.__debugTileEditor != null && this.__debugTileEditor.isRenderCollider) {
 			c.strokeStyle = "red";
@@ -357,7 +351,7 @@ export class Game {
 			c.fillText(`position: ${player.x.toFixed(1)}, ${player.y.toFixed(1)}`, 10, 50);
 		}
 
-		this.lastRenderTime = now
+		this.lastRenderTime = now;
 	}
 
 	private paintLines(c: CanvasRenderingContext2D) {
@@ -426,6 +420,6 @@ export class Game {
 	}
 
 	spawnParticles(particle: Particle): void {
-		for (let i =0; i < particle.count;i++)this.particles.push(new ClientParticle(particle))
+		for (let i = 0; i < particle.count; i++) this.particles.push(new ClientParticle(particle));
 	}
 }

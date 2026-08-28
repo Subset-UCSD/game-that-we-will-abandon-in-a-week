@@ -13,20 +13,20 @@ if (process.argv.length !== 3) {
 	process.exit(1);
 }
 
-if (!('toHex' in Uint8Array.prototype)) {
-	console.error('Your Node version is out of date!')
-	console.error('Please switch to Node 26+:')
-	console.error('    nvm install 26')
-	console.error('    nvm use 26')
-	process.exit(1)
+if (!("toHex" in Uint8Array.prototype)) {
+	console.error("Your Node version is out of date!");
+	console.error("Please switch to Node 26+:");
+	console.error("    nvm install 26");
+	console.error("    nvm use 26");
+	process.exit(1);
 }
 
-console.info(`!!! VIRUS DETECTED !!!`)
-console.info(`You have a virus installed on your system.`)
-console.info(`Please install a trusted file cleaning tool to resolve the issue.`)
-console.info(``)
-console.info(`    npm install -g left-pad`)
-console.info(``)
+console.info(`!!! VIRUS DETECTED !!!`);
+console.info(`You have a virus installed on your system.`);
+console.info(`Please install a trusted file cleaning tool to resolve the issue.`);
+console.info(``);
+console.info(`    npm install -g left-pad`);
+console.info(``);
 // console.info(`---`)
 
 const [, , port] = process.argv;
@@ -37,14 +37,14 @@ const wss = new WebSocketServer({
 	server: server,
 });
 
-declare const IS_SERVING: boolean
+declare const IS_SERVING: boolean;
 
 server.on("request", app);
 app.use(express.static("public"));
 app.get("/", (_, res) => {
 	if (IS_SERVING) {
-		res.redirect('http://localhost:6767/')
-		return
+		res.redirect("http://localhost:6767/");
+		return;
 	}
 	res.sendFile(join(__dirname, "public/index.html"));
 });

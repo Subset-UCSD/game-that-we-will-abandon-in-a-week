@@ -1,7 +1,7 @@
+import type { Vec2 } from "@common";
 import type { Collider } from "@server/collision";
 import z from "zod";
 import { chunkMapSchema } from "./tiles";
-import { Vec2 } from "@common"
 
 const idSchema = z.number();
 
@@ -129,7 +129,7 @@ export interface GameObject {
 	shouldDelete: boolean;
 	collider?: Collider;
 	// onCollide?: (mts: Vec2, id:number, type:number) => void
-	hasCollidedWith? (other: GameObject, sdmts: Vec2): void
+	hasCollidedWith?(other: GameObject, sdmts: Vec2): void;
 	tick(): void;
 	serialize(): SerializedGameObject;
 }

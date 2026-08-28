@@ -1,4 +1,4 @@
-import type { Enemy, SerializedCorpse, SerializedGameObject } from "@common/game";
+import type { Enemy, SerializedGameObject } from "@common/game";
 import type { Canvas } from "./canvas";
 import { SHEEP_WIDTH } from "./player";
 import type { RenderableObject } from "./render";
@@ -29,8 +29,8 @@ export class Anemone implements RenderableObject {
 		const frame = frames[Math.floor(Date.now() / (770 + ((this.state.id * Math.PI) % 50))) % frames.length];
 
 		const { x, y } = this.state;
-	
-    c.drawImage(frame, x - SHEEP_WIDTH / 2, y - 42, SHEEP_WIDTH, 50);
+
+		c.drawImage(frame, x - SHEEP_WIDTH / 2, y - 42, SHEEP_WIDTH, 50);
 	}
 
 	update(objState: SerializedGameObject): void {

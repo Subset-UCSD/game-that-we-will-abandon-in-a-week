@@ -1,4 +1,4 @@
-import { Vec2, vec2, vecLength, ev, vec2Schema, dot, normalize } from "@common";
+import { dot, ev, type Vec2, vec2, vec2Schema, vecLength } from "@common";
 import z from "zod";
 
 /** 

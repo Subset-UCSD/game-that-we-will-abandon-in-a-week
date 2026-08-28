@@ -23,11 +23,11 @@ export class D20 implements GameObject {
 			type: "d20",
 			id: generateId(),
 		};
-		this.collider = new CircleCollider( 20,vec2());
+		this.collider = new CircleCollider(20, vec2());
 	}
 
 	get state() {
-		return this.publicState
+		return this.publicState;
 	}
 
 	onCollide = (mts: Vec2) => {
@@ -36,7 +36,7 @@ export class D20 implements GameObject {
 		this.publicState.x_vel = mts.x;
 		this.publicState.y_vel = mts.y;
 		this.#moving = true;
-	}
+	};
 
 	get id(): number {
 		return this.publicState.id;

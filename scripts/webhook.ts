@@ -4,32 +4,34 @@
  */
 
 // import { title } from "node:process"
-import z from "zod"
+import z from "zod";
 
 // https://docs.github.com/en/webhooks/webhook-events-and-payloads#push
 
-const discordWebhook = process.env.DISCORD_WEBHOOK
-const commitsJson = process.env.COMMITS
+const discordWebhook = process.env.DISCORD_WEBHOOK;
+const commitsJson = process.env.COMMITS;
 if (!discordWebhook) {
-  console.error('missing env var DISCORD_WEBHOOK')
-  process.exit(1)
+	console.error("missing env var DISCORD_WEBHOOK");
+	process.exit(1);
 }
 if (!commitsJson) {
-  console.error('missing env var COMMITS')
-  process.exit(1)
+	console.error("missing env var COMMITS");
+	process.exit(1);
 }
 
-const commitSchema = z.object({
-  author: z.object({
-    email: z.string().nullable(),
-    name: z.string(),
-    username: z.string().optional()
-  }),
-  id: z.string(),
-  message: z.string()
-}).array()
+const commitSchema = z
+	.object({
+		author: z.object({
+			email: z.string().nullable(),
+			name: z.string(),
+			username: z.string().optional(),
+		}),
+		id: z.string(),
+		message: z.string(),
+	})
+	.array();
 
-const commits = commitSchema.parse(JSON.parse(commitsJson))
+const commits = commitSchema.parse(JSON.parse(commitsJson));
 
 // {
 //   "content": "sdfsdf",
@@ -51,28 +53,27 @@ const commits = commitSchema.parse(JSON.parse(commitsJson))
 //   ]
 // }
 
-
-const content = ''
+const content = "";
 
 await fetch(discordWebhook, {
-  headers: {'content-type': 'application/json'},
-  method:'POST',
-  body: JSON.stringify({
-    username: 'tech bro',
-    content: 'i LOVE ai',
-    embeds: commits.map(({message, author: {username,name},id}) => {
-      const [first, ...rest] = message.split(/\r?\n/)
-      return ({
-        url: `https://github.com/Subset-UCSD/game-that-we-will-abandon-in-a-week/commit/${id}`,
-        title: first,
-      description: rest.join('\n'),
-      author: {
-        // is guy gender neutral
-        name: username ?? `some guy named ${name}`,
-        icon_url: username ? `https://github.com/${username}.png` : undefined,
-        url: username ? `https://github.com/${username}` : undefined,
-      }
-    })
-    })
-  })
-})
+	headers: { "content-type": "application/json" },
+	method: "POST",
+	body: JSON.stringify({
+		username: "tech bro",
+		content: "i LOVE ai",
+		embeds: commits.map(({ message, author: { username, name }, id }) => {
+			const [first, ...rest] = message.split(/\r?\n/);
+			return {
+				url: `https://github.com/Subset-UCSD/game-that-we-will-abandon-in-a-week/commit/${id}`,
+				title: first,
+				description: rest.join("\n"),
+				author: {
+					// is guy gender neutral
+					name: username ?? `some guy named ${name}`,
+					icon_url: username ? `https://github.com/${username}.png` : undefined,
+					url: username ? `https://github.com/${username}` : undefined,
+				},
+			};
+		}),
+	}),
+});
