@@ -15,6 +15,13 @@ npm run dev
 
 Open this in your browser: http://localhost:6767/
 
+> [!TIP]
+> **Why is there a http://localhost:6767/ and http://localhost:6769/?**
+>
+> In `npm run dev`, port 6767 is an esbuild server serving the client assets. This ensures that when you save a client-side change and reload, the changes will always reflect the latest build because esbuild will withhold finishing the request until it builds. Otherwise, you could reload too soon before a rebuild and get a stale build.
+>
+> Instead, the server is hosted on 6769. The client will autoreconnect when the server restarts on build.
+
 Check types:
 
 ```sh

@@ -23,6 +23,10 @@ export class Explosion implements GameObject {
 		if (this.duration <= 0) this.shouldDelete = true;
 	}
 
+	get id(): number {
+		return this.publicState.id;
+	}
+
 	serialize(): ExplosionType {
 		return this.publicState;
 	}

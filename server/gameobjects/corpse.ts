@@ -11,6 +11,10 @@ export class Corpse implements GameObject {
 		this.#publicState = { ...publicState, id: generateId(), type: "corpse" };
 	}
 
+	get id(): number {
+		return this.#publicState.id;
+	}
+
 	tick(): void {
 		// TODO
 	}

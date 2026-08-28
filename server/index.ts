@@ -20,9 +20,15 @@ const wss = new WebSocketServer({
 	server: server,
 });
 
+declare const IS_SERVING: boolean
+
 server.on("request", app);
 app.use(express.static("public"));
 app.get("/", (_, res) => {
+	if (IS_SERVING) {
+		res.redirect('http://localhost:6767/')
+		return
+	}
 	res.sendFile(join(__dirname, "public/index.html"));
 });
 

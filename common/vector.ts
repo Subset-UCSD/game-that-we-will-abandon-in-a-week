@@ -12,6 +12,7 @@ export const DomPointToVec3 = (v: DOMPoint) => vec3(v.x, v.y, v.z);
 
 //2D Vector Opertations
 export const isVecEq = (a: Vec2, b: Vec2) => a.x === b.x && a.y === b.y;
+export const isZeroVec = ({x,y}:Vec2) => x===0&&y===0
 
 export const addVec = (a: Vec2, b: Vec2): Vec2 => ({ x: a.x + b.x, y: a.y + b.y });
 export const subVec = (a: Vec2, b: Vec2): Vec2 => ({ x: a.x - b.x, y: a.y - b.y });

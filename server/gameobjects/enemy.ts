@@ -18,6 +18,8 @@ export class Enemy implements GameObject {
 	private velocity = vec2();
 	private acceleration = vec2();
 
+	get id () { return this.publicState.id}
+
 	constructor(props: EnemyProps) {
 		this.publicState = { ...props, id: generateId(), type: "enemy" };
 
@@ -52,5 +54,7 @@ export class Enemy implements GameObject {
 
 	playerMoved() {}
 
-	serialize(): any {}
+	serialize(): NetEnemy {
+		return this.publicState
+	}
 }

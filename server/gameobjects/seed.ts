@@ -21,6 +21,10 @@ export class Seed implements GameObject {
 		);
 	}
 
+	get id(): number {
+		return this.publicState.id;
+	}
+
 	tick(): void {
 		if (this.shouldDelete) return;
 		this.ticksUntilNextStage--;

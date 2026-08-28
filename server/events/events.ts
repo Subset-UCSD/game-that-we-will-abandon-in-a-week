@@ -6,7 +6,7 @@ import z from "zod";
  * @param value The Zod schema that defines the shape of your EVENT's payload
  * cannot be undefined or void!!!
  */
-function $EVENT<Type extends string, Payload extends z.ZodType>(name: Type, value: Payload) {
+function $EVENT<Type extends string, Value extends z.ZodType>(name: Type, value: Value) {
 	return z.object({
 		type: z.literal(name),
 		value,
@@ -50,6 +50,10 @@ const PlayerShitEvent = $EVENT(
 
 // =========================== ADD EVENTS ABOVE ============================
 
-export const eventSchema = z.discriminatedUnion("type", [PlayerMoveEvent, PlayerShitEvent]);
+export const eventSchema = z.discriminatedUnion("type", [
+	PlayerMoveEvent,
+	PlayerShitEvent,
+	// Add the events you added above to this array to use them
+]);
 export const eventNameSchema = z.union([...eventSchema.options.map((x) => x.def.shape.type)]);
 export type Event = z.infer<typeof eventSchema>;

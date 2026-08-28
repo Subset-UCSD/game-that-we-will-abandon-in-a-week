@@ -23,16 +23,26 @@ export class D20 implements GameObject {
 			type: "d20",
 			id: generateId(),
 		};
-		this.collider = new CircleCollider(0, 0, 30);
-		this.collider.onCollide(this.onCollide.bind(this));
+		this.collider = new CircleCollider(0, 0, 30, {
+			onCollide: this.onCollide,
+			state: this.state
+		});
 	}
 
-	onCollide(mts: Vec2) {
+	get state() {
+		return this.publicState
+	}
+
+	onCollide = (mts: Vec2) => {
 		mts = clamp(scaleVec(mts, 5), 50);
 		// console.log(this, this.publicState)
 		this.publicState.x_vel = mts.x;
 		this.publicState.y_vel = mts.y;
 		this.#moving = true;
+	}
+
+	get id(): number {
+		return this.publicState.id;
 	}
 
 	tick() {

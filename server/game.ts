@@ -1,4 +1,4 @@
-import { type GameObject, subVec, vecLength, vecLengthSquared, type WholeFkingGameState } from "@common";
+import { ev, type GameObject, normalize, subVec, vec2, vecLength, vecLengthSquared, type WholeFkingGameState } from "@common";
 import { generateDiffPayload } from "@common/json-optimizer";
 import type { ClientMessage, PartialFkingGameStateMessage, Particle, ServerMessage, SoundEvent } from "@common/messages";
 import { Explosion, Meatball, Player, SEED_COOLDOWN, Seed, StaticThing } from "@server/gameobjects";
@@ -8,6 +8,8 @@ import type { Party, Room } from "./gamelogic";
 import { D20 } from "./gameobjects/d20";
 import { send } from "./net/send";
 import { type ChunkEntryMap, setTile } from "./tile-manager";
+import { CollisionWorld } from "./collisionWorld";
+import { Enemy } from "./gameobjects/enemy";
 
 declare const IS_SERVING: boolean;
 
@@ -24,7 +26,8 @@ export class Game {
 	private connections: Map<string, { socket: WebSocket; lastSentGameStateVersionId?: string }> = new Map();
 	private idForConnection: Map<WebSocket, string> = new Map();
 	private joinedSockets: Set<WebSocket> = new Set();
-	private gameObjects: GameObject[] = [
+	private collision_world = new CollisionWorld(this)
+	gameObjects: GameObject[] = [
 		d20,
 		new StaticThing({ kind: "tree", x: -100, y: -100 }),
 		new StaticThing({ kind: "campfire", x: -0, y: -100 }),
@@ -37,6 +40,10 @@ export class Game {
 			maxHp: 10000,
 			collider: new BoxCollider(-50, -150, 40, 70),
 		}),
+		new Enemy({
+			x: 600,
+			y: 600,
+		})
 	];
 	private rooms: Map<string, Room> = new Map([
 		["base", { id: "base", x: 0, y: 0 }],
@@ -48,6 +55,7 @@ export class Game {
 	private onTileEdit: (tiles: ChunkEntryMap) => void;
 	private particleQueue: Particle[] = [];
 	private soundQueue: SoundEvent[] = [];
+	private collisionWorld = new CollisionWorld(this)
 
 	constructor(tiles: ChunkEntryMap, onTileEdit: (tiles: ChunkEntryMap) => void) {
 		this.tiles = tiles;
@@ -61,28 +69,24 @@ export class Game {
 		this.handlePlayerInputs();
 
 		//TEMP
-		for (const [id1, player1] of this.players.entries()) {
-			for (const [id2, player2] of this.players.entries()) {
-				if (id1 == id2) continue;
-				const mtv = player1.collider.collide(player2.collider);
-				if (mtv.x != 0 || mtv.y != 0) {
-					player1.collied = true;
-					player1.velocity = mtv;
-					// console.log(player1.id, mtv)
-					break;
-				}
-				player1.collied = false;
-			}
+		
+		// colider :)
 
-			const mtv2 = d20.collider.collide(player1.collider);
-
-			// if (mtv2.x != 0 || mtv2.y != 0) {
-
-			//     //d20.onCollide(mtv2)
-			//     // console.log(player1.id, mtv)
-			//     // break
-			// }
-		}
+		// for (const gameObj1 of this.gameObjects) {
+		// 	for (const gameObj2 of this.gameObjects) {
+		// 		if (gameObj1.id === gameObj2.id) continue;
+				
+		// 		//CollisionWorld
+				
+		// 		// if (mtv.x != 0 || mtv.y != 0) {
+		// 		// 	player1.collied = true;
+		// 		// 	player1.velocity = mtv;
+		// 		// 	// console.log(player1.id, mtv)
+		// 		// 	break;
+		// 		// }
+		// 		// player1.collied = false;
+		// 	}
+		// }
 
 		for (const meatball of this.gameObjects) {
 			meatball.tick();
@@ -99,14 +103,18 @@ export class Game {
 			const EXPLOSION_DAMAGE = 20;
 			for (const entity of this.gameObjects) {
 				if (entity instanceof Player) {
-					if (vecLength(subVec(entity.getPosition(), meatball.publicState)) < explosion.radius) {
+					const explosionToPlayer = subVec(entity.getPosition(), meatball.publicState)
+					const dist = vecLength(explosionToPlayer)
+					if (dist < explosion.radius) {
 						entity.setHp(entity.getHp() - EXPLOSION_DAMAGE);
+								entity.applyImpulse(ev`(${explosionToPlayer} / ${dist}) * ${(explosion.radius - dist) * 1.5}`)
 					}
 					entity.lines = entity.lines.filter(
 						(x) =>
 							vecLength(subVec(x.end, meatball.publicState)) >= explosion.radius ||
 							vecLength(subVec(x.start, meatball.publicState)) >= explosion.radius,
 					);
+					// const explosionToPlayer = ev`(${entity.position} - ${explosion.publicState})`
 				} else if (entity instanceof StaticThing) {
 					if (vecLength(subVec(entity.position, meatball.publicState)) < explosion.radius) {
 						entity.takeDamageIfPossible(EXPLOSION_DAMAGE);
@@ -150,6 +158,8 @@ export class Game {
 								player.knivesInside.add(entity);
 								entity.setHp(entity.getHp() - KNIFE_DAMAGE);
 								this.particleQueue.push(particle);
+								entity.applyImpulse(ev`${player.getKnifeVelocityDir()} * ${40}`)
+								// console.log(entity.velocity)
 							}
 						} else {
 							player.knivesInside.delete(entity);
@@ -291,7 +301,7 @@ conn.socket.send(
 					console.log("welcome new user", sessionId.slice(0, 8));
 				}
 				player.connected = true;
-				send(ws, "join-response", { sessionId, playerId: player.getId() });
+				send(ws, "join-response", { sessionId, playerId: player.id });
 				return;
 			}
 			case "input": {
@@ -342,22 +352,28 @@ conn.socket.send(
 
 	handlePlayerInputs() {
 		for (const [_, player] of this.players) {
+			
+			const movementDir = vec2()
 			if (player.inputs.up) {
-				player.velocity.y = -player.max_speed;
-			} else if (player.inputs.down) {
-				player.velocity.y = player.max_speed;
-			} else {
-				player.velocity.y = 0;
-			}
+				movementDir.y = -1;
+			} 
+			 if (player.inputs.down) {
+				movementDir.y = 1;
+			} 
 
 			if (player.inputs.left) {
 				player.facingLeft = true;
-				player.velocity.x = -player.max_speed;
-			} else if (player.inputs.right) {
+				movementDir.x = -1;
+			} 
+			 if (player.inputs.right) {
 				player.facingLeft = false;
-				player.velocity.x = player.max_speed;
+				movementDir.x = 1;
+			} 
+			if (vecLengthSquared(movementDir) > 0) {
+				// im so scared of touching this but i think acceleration and friction need to be equal ?
+				player.acceleration = ev`${normalize(movementDir)} * ${10}`
 			} else {
-				player.velocity.x = 0;
+				player.acceleration = vec2()
 			}
 
 			const last = player.lines.at(-1);

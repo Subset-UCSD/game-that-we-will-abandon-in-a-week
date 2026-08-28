@@ -1,17 +1,16 @@
-import type { SerializedCorpse, SerializedGameObject } from "@common/game";
+import type { Enemy, SerializedCorpse, SerializedGameObject } from "@common/game";
 import type { Canvas } from "./canvas";
 import { SHEEP_WIDTH } from "./player";
 import type { RenderableObject } from "./render";
 
 const frames = await Promise.all(
-	["./assets/what-do-sheep-become-when-they-die1.png", "./assets/what-do-sheep-become-when-they-die2.png"].map(
+	["./assets/enemy1.png", "./assets/enemy2.png"].map(
 		async (url) => await createImageBitmap(await fetch(url).then((r) => r.blob())),
 	),
 );
 
-export class ClientCorpse implements RenderableObject {
-	// index = 1;
-	state?: SerializedCorpse;
+export class Anemone implements RenderableObject {
+	state?: Enemy;
 
 	get index() {
 		return this.state?.y ?? 0;
@@ -30,19 +29,12 @@ export class ClientCorpse implements RenderableObject {
 		const frame = frames[Math.floor(Date.now() / (770 + ((this.state.id * Math.PI) % 50))) % frames.length];
 
 		const { x, y } = this.state;
-		const offset = Math.sin(Date.now() / (900 + ((this.state.id * Math.PI) % 100))) * 5;
-		if (this.state.facingLeft) {
-			c.save();
-			c.scale(-1, 1);
-			c.drawImage(frame, -x - SHEEP_WIDTH / 2, y - 42 + offset, SHEEP_WIDTH, 50);
-			c.restore();
-		} else {
-			c.drawImage(frame, x - SHEEP_WIDTH / 2, y - 42 + offset, SHEEP_WIDTH, 50);
-		}
+	
+    c.drawImage(frame, x - SHEEP_WIDTH / 2, y - 42, SHEEP_WIDTH, 50);
 	}
 
 	update(objState: SerializedGameObject): void {
-		if (objState.type !== "corpse") return;
+		if (objState.type !== "enemy") return;
 		this.state = objState;
 	}
 }

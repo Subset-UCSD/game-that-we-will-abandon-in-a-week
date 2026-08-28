@@ -16,6 +16,8 @@ if (doubleLoad) {
 	doubleLoad = true;
 }
 // aforementioned singleton
+// Eventually once we want to support multiple instances of our game, move this to whatever
+// class represents 1 instance of a game
 const registeredEvents: Map<Event["type"], Map<string, (data: any) => void>> = new Map();
 
 const RAND_ATTEMPT_THRESHOLD = 100;

@@ -33,6 +33,10 @@ export class Meatball implements GameObject {
 		this.hv = inithv;
 	}
 
+	get id(): number {
+		return this.publicState.id;
+	}
+
 	tick(): void {
 		if (this.shouldDelete) return;
 

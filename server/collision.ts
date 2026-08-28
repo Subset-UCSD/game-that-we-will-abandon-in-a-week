@@ -39,6 +39,11 @@ export interface PolygonCollider extends SATCollider {
 	getEdges(): Vec2[];
 }
 
+interface ColliderProps {
+	onCollide: () => {},
+	state: () => {}
+}
+
 // // get all unnormalized edge vectors in a ploygon
 // const getEdges = (vec_list: Vec2[]): Vec2[] => {
 
@@ -147,6 +152,7 @@ export class BoxCollider implements PolygonCollider {
 		this.center = vec2(x, y);
 		this.corners = this.getCorners();
 		this.cb = (mts: Vec2) => {};
+
 	}
 
 	getCorners(): Vec2[] {
@@ -202,7 +208,9 @@ export class BoxCollider implements PolygonCollider {
 			const [isColliding, overlapAmount, direction] = SATSolver(this, ploygonCollider);
 			
 			if (isColliding) {
-				this.cb(scaleVec(direction, overlapAmount));
+				// state. collider.getObjectCB()
+
+				// this.cb(state, scaleVec(direction, overlapAmount));
 			}
 			return scaleVec(direction, overlapAmount);
 		}
@@ -248,12 +256,10 @@ export class CircleCollider implements SATCollider {
 	debug = false;
 	mask = 0;
 	radius = 1;
-	cb: (mts: Vec2) => void;
 
-	constructor(x: number, y: number, radius: number) {
+	constructor(x: number, y: number, radius: number, private readonly props: ColliderProps) {
 		this.center = vec2(x, y);
 		this.radius = radius;
-		this.cb = (mts: Vec2) => {};
 	}
 
 	isInsideMe(point: Vec2): boolean {
@@ -266,7 +272,7 @@ export class CircleCollider implements SATCollider {
 			const [isColliding, overlapAmount, direction] = SATSolver(this, ploygonCollider);
 
 			if (isColliding) {
-				this.cb(scaleVec(direction, overlapAmount));
+				this.props.cb(scaleVec(direction, overlapAmount));
 			}
 
 			return scaleVec(direction, overlapAmount);
@@ -303,10 +309,6 @@ export class CircleCollider implements SATCollider {
 
 	getNearestPoint(point: Vec2): Vec2 {
 		throw new Error("Method not implemented.");
-	}
-
-	onCollide(cb: (mts: Vec2) => void): void {
-		this.cb = cb;
 	}
 
 	updateLocation(center: Vec2): void {

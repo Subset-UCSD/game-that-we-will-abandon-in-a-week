@@ -1,6 +1,7 @@
 import type { Collider } from "@server/collision";
 import z from "zod";
 import { chunkMapSchema } from "./tiles";
+import { Vec2 } from "@common"
 
 const idSchema = z.number();
 
@@ -96,7 +97,7 @@ const allGameObjectSchemas = z.discriminatedUnion("type", [
 	d20schema,
 	meatBallSchema,
 	explosionSchema,
-	// enemySchema,
+	enemySchema,
 	seedSchema,
 	thingSchema,
 	corpseSchema,
@@ -123,9 +124,11 @@ z.object({
 });
 
 export interface GameObject {
+	id: number;
 	partyId: string;
 	shouldDelete: boolean;
 	collider?: Collider;
+	onCollide?: (mts: Vec2, id:number, type:number) => void
 	tick(): void;
 	serialize(): SerializedGameObject;
 }

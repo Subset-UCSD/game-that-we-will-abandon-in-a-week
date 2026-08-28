@@ -1,6 +1,6 @@
 ## Contains ideas for what all the areas look like
 
-### overworld
+### green grassland
 
 ### rocky mountains
 
@@ -8,3 +8,9 @@
 
 
 ### misty forest
+
+### helly hell
+
+### heavenly heaven
+
+### something purple
