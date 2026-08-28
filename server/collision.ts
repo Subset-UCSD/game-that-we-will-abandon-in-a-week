@@ -170,12 +170,15 @@ export class BoxCollider implements PolygonCollider {
 	}
 
 	getAxes(otherCollider: SATCollider): Vec2[] {
-		const edges = this.getEdges();
-		const axes: Vec2[] = [];
-		for (const edge of edges) {
-			axes.push(normalize(ortho(edge)));
+		if ("getCorners" in otherCollider) {
+			const edges = this.getEdges();
+			const axes: Vec2[] = [];
+			for (const edge of edges) {
+				axes.push(normalize(ortho(edge)));
+			}
+			return axes;
 		}
-		return axes;
+		return []; //let the other collider handle the axes logic for rounded shapes
 	}
 
 	projShape(axis: Vec2): Vec2[] {
@@ -269,21 +272,23 @@ export class CircleCollider implements SATCollider {
 	}
 
 	getAxes(otherCollider: SATCollider): Vec2[] {
-		if ("getCorners" in otherCollider) {
-			const ploygonCollider = otherCollider as PolygonCollider;
-			const corners = ploygonCollider.getCorners();
+		// I think its easier to get the axes from the circle object
+		// Techically this SHOULd be right
+		// if ("getCorners" in otherCollider) {
+		// 	const ploygonCollider = otherCollider as PolygonCollider;
+		// 	const corners = ploygonCollider.getCorners();
 
-			let min_distance = Number.MAX_SAFE_INTEGER;
-			let min_idx = -1;
-			for (let i = 0; i < corners.length; i++) {
-				const distance = vecLength(ev`${corners[i]}-${this.center}`);
-				if (distance < min_distance) {
-					min_distance = distance;
-					min_idx = i;
-				}
-			}
-			return [normalize(ev`${this.center} - ${corners[min_idx]}`)];
-		}
+		// 	let min_distance = Number.MAX_SAFE_INTEGER;
+		// 	let min_idx = -1;
+		// 	for (let i = 0; i < corners.length; i++) {
+		// 		const distance = vecLength(ev`${corners[i]}-${this.center}`);
+		// 		if (distance < min_distance) {
+		// 			min_distance = distance;
+		// 			min_idx = i;
+		// 		}
+		// 	}
+		// 	return [normalize(ev`${this.center} - ${corners[min_idx]}`)];
+		// }
 
 		return [normalize(ev`${this.center} - ${otherCollider.center}`)];
 	}

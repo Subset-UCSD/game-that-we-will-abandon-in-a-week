@@ -1,7 +1,7 @@
 import { clamp, ev, subVec, type Vec2, vec2 } from "@common";
 import { type GameObject, KNIFE_OFFSET_Y, type Player as NetPlayer } from "@common/game";
 import { defaultInputs, type Inputs } from "@common/input";
-import { CircleCollider } from "@server/collision";
+import { BoxCollider } from "@server/collision";
 import type { Game } from "@server/game";
 import { generateId } from "@server/id-manager";
 import { Corpse } from "./corpse";
@@ -30,7 +30,7 @@ export class Player implements GameObject {
 	lines: { start: Vec2; end: Vec2; committed?: number }[] = [];
 	shouldDelete = false;
 	seedCooldownTicks = 0;
-	collider: CircleCollider;
+	collider: BoxCollider;
 	collied: boolean = false;
 	/**
 	 * list of static thing IDs
@@ -50,12 +50,12 @@ export class Player implements GameObject {
 		this.game = game;
 		this.inputs = { ...defaultInputs };
 		this.id = generateId(); //Player.next_id++;
-		this.collider = new CircleCollider(
+		this.collider = new BoxCollider(
 			this.position.x,
 			this.position.y - 20,
 			30,
-			// 30,
-			// 0
+			30,
+			0
 		);
 	}
 
