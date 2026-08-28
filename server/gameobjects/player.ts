@@ -44,6 +44,7 @@ export class Player implements GameObject {
 	wasTeleporting = false;
 	private knifeState = { angle: 0, radius: 0 };
 	knivesInside = new Set<GameObject>();
+	nextFootsoundCanBePlayedAt = 0
 
 	constructor(game: Game) {
 		this.game = game;

@@ -82,6 +82,17 @@ export type Particle = z.infer<typeof particleSchema>;
 
 const particleMessage = $message("particles", particleSchema.array());
 
+const soundSchema = z.object({
+	name: z.string(),
+	x: z.number(),
+	y: z.number(),
+	detectableDistance: z.number().optional(),
+	volume: z.number().optional(),
+	playbackRate: z.number().optional(),
+})
+export type SoundEvent = z.infer<typeof soundSchema>
+const soundMessage = $message("sound", soundSchema);
+
 export const joinResponse = $message(
 	"join-response",
 	z.object({
@@ -95,6 +106,7 @@ export const serverMessage = z.discriminatedUnion("type", [
 	wholeFkingGameStateMessage,
 	partialFkingGameStateMessage,
 	particleMessage,
+	soundMessage,
 	joinResponse,
 ]);
 export type ServerMessage = z.infer<typeof serverMessage>;

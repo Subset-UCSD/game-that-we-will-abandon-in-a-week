@@ -1,6 +1,6 @@
 import { type GameObject, subVec, vecLength, vecLengthSquared, type WholeFkingGameState } from "@common";
 import { generateDiffPayload } from "@common/json-optimizer";
-import type { ClientMessage, PartialFkingGameStateMessage, Particle } from "@common/messages";
+import type { ClientMessage, PartialFkingGameStateMessage, Particle, ServerMessage } from "@common/messages";
 import { Explosion, Meatball, Player, SEED_COOLDOWN, Seed, StaticThing } from "@server/gameobjects";
 import type { WebSocket } from "ws";
 import { BoxCollider, type Collider } from "./collision";
@@ -224,6 +224,21 @@ export class Game {
 		}
 	}
 
+	broadcast<T extends ServerMessage["type"], P extends Extract<ServerMessage, { type: T }>["value"]>(
+		type: T,
+		value: P,
+	) {
+		for (const conn of this.connections.values()) {
+			// type unhappy :(
+			// send(conn.socket,type,value)
+conn.socket.send(
+		JSON.stringify({			type,
+			value,
+		}),
+	);
+		}
+	}
+
 	getWorldState(): WholeFkingGameState {
 		return {
 			gameObjects: this.gameObjects.map((mb) => mb.serialize()),
@@ -373,16 +388,19 @@ export class Game {
 					player.thought = thoughts[Math.floor(Math.random() * thoughts.length)];
 
 					const angle = Math.random() * 2 * Math.PI;
-					this.addGameObject(
-						new Meatball({
+					const opts={
 							x: player.position.x + (player.facingLeft ? -1 : 1) * 10,
 							y: player.position.y,
 							xv: Math.cos(angle) * 5,
 							yv: (Math.sin(angle) * 5) / 2,
 							height: 42 - 15 - 9,
 							inithv: 5,
-						}),
+						}
+					const meatball=new Meatball(opts)
+					this.addGameObject(
+						meatball,
 					);
+					this.broadcast('sound',{name:'baaa',x:opts.x,y:opts.y,detectableDistance:200,playbackRate: 1 + Math.random() * 0.2})
 					player.wasBaaing = true;
 				}
 			} else {
@@ -429,6 +447,18 @@ export class Game {
 				}
 			} else {
 				player.wasInteracting = false;
+			}
+
+
+			
+
+			if (player.velocity.x !== 0 || player.velocity.y !== 0) {
+				if (Date.now() >= player.nextFootsoundCanBePlayedAt) {
+					this.broadcast('sound',{name:'footstep',...player.position,
+						// detectableDistance:50,
+					})
+					player.nextFootsoundCanBePlayedAt = Date.now() + 300 ///+ Math.random() * 200
+				}
 			}
 		}
 	}

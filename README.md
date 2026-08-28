@@ -1,4 +1,4 @@
-# Game that we will abandon in 7 days.
+# Game that we will abandon in 6 or 7 days.
 
 <img src="docs/sheep.png" alt="sheep" height="300">
 

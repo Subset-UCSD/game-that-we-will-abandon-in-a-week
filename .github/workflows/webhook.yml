@@ -1,0 +1,16 @@
+name: post update
+
+on:
+  push:
+    branches:
+      - main
+
+jobs:
+  build:
+    runs-on: ubuntu-latest
+    steps:
+      - name: post update
+        env:
+          DISCORD_WEBHOOK: ${{ secrets.DISCORD_WEBHOOK }}
+          COMMITS: ${{ toJson(github.event.commits) }}
+        run: node scripts/webhook.ts

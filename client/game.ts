@@ -7,6 +7,7 @@ import {
 	lerp,
 	type Particle,
 	type SerializedGameObject,
+	SoundEvent,
 	subVec,
 	vecLength,
 } from "@common";
@@ -46,6 +47,7 @@ const creators: Record<SerializedGameObject["type"], Creator> = {
 };
 
 audio.unlockOnFirstInteraction();
+// TODO: we should make audio ID a constnat defined in messages.ts / common
 audio.preload({
 	baseTheme: "./assets/music/BaseTheme.wav",
 	footstep: [
@@ -181,23 +183,23 @@ export class Game {
 
 	// abstract playing a sound at a position in the world, with panning and volume based on distance from player
 	playAudioAtPosition(
-		name: string,
-		x: number,
-		y: number,
-		detectableDistance: number = 500,
-		playSoundOptions?: PlaySoundOptions,
+		{name ,
+		x,
+		y,
+		detectableDistance = 500,volume:volumeFromEvent=1,
+		playbackRate}:SoundEvent
 	) {
 		// get x position of item on screen for audio panning
 		const pan = (x - this.camera.x) / (this.arena.width / 2);
 		// get distance of item from player for audio volume
 		const distance = Math.sqrt((x - this.camera.x) ** 2 + (y - this.camera.y) ** 2);
-		const volume = Math.max(0, 1 - distance / detectableDistance) * (playSoundOptions?.volume ?? 1);
-		audio.play(name, { ...playSoundOptions, pan, volume });
+		const volume = Math.max(0, 1 - distance / detectableDistance) * (volumeFromEvent ?? 1);
+		audio.play(name, { playbackRate, pan, volume });
 	}
 
 	// callback function to play a footstep sound inside Player class
 	footstepSoundCallback = (x: number, y: number) => {
-		this.playAudioAtPosition("footstep", x, y);
+		// this.playAudioAtPosition("footstep", x, y);
 	};
 
 	// width, height = screen size (useful for centering things)

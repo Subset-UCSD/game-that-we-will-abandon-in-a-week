@@ -30,3 +30,16 @@
 - Fill codebase withe typos
   - marcelo why did you do this
   - it wasn't me ._.
+
+
+
+
+
+
+---
+
+```ts
+if (!this.meatballs.get(meatball.id)) this.playAudioAtPosition('baaa', meatball.x, meatball.y, 500, { playbackRate: 1 + Math.random() * 0.2 });
+```
+
+

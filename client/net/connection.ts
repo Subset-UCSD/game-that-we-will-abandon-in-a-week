@@ -76,6 +76,10 @@ class Connection {
 				}
 				break;
 			}
+			case 'sound': {
+				this.game.playAudioAtPosition(message.value)
+				break
+			}
 			default: {
 				console.log("[server 🗣️]", message);
 			}
