@@ -1,4 +1,4 @@
-import { clamp, ev, isZeroVec, normalize, subVec, type Vec2, vec2, vecLengthSquared } from "@common";
+import { ev, isZeroVec, normalize, subVec, type Vec2, vec2, vecLengthSquared } from "@common";
 import { type GameObject, KNIFE_OFFSET_Y, type Player as NetPlayer } from "@common/game";
 import { defaultInputs, type Inputs } from "@common/input";
 import { BoxCollider } from "@server/collision";
@@ -16,7 +16,7 @@ export class Player implements GameObject {
 	inputs: Inputs;
 	max_speed: number = 5;
 	// represents player movement
-	acceleration = vec2()
+	acceleration = vec2();
 	position: Vec2 = { x: (Math.random() - 0.5) * 1000, y: (Math.random() - 0.5) * 1000 };
 	velocity: Vec2 = { x: 0, y: 0 };
 	id;
@@ -46,19 +46,13 @@ export class Player implements GameObject {
 	wasTeleporting = false;
 	private knifeState = { angle: 0, radius: 0 };
 	knivesInside = new Set<GameObject>();
-	nextFootsoundCanBePlayedAt = 0
+	nextFootsoundCanBePlayedAt = 0;
 
 	constructor(game: Game) {
 		this.game = game;
 		this.inputs = { ...defaultInputs };
 		this.id = generateId(); //Player.next_id++;
-		this.collider = new BoxCollider(
-			this.position.x,
-			this.position.y - 20,
-			30,
-			30,
-			0
-		);
+		this.collider = new BoxCollider(this.position.x, this.position.y - 20, 30, 30, 0);
 	}
 
 	setPosition(x: number, y: number) {
@@ -114,23 +108,21 @@ export class Player implements GameObject {
 	}
 
 	// hint: player acceleration is set in server/Game.ts handlePlayerInput
-	private static FRICTION = 6
+	private static FRICTION = 6;
 	tick() {
 		// F = ma
 		// https://en.wikipedia.org/wiki/Friction#Kinetic_friction
 		// so friction is a constant acceleration i guess?
 
-		
-
 		// this assumes delta t = 1
-		const oldVelocity = this.velocity
+		const oldVelocity = this.velocity;
 		// apply friction first: a constant acceleration in the opposite direction
 		// of velocity. but if friction would cause the velocity to change sign,
 		// then set it to zero
 		if (!isZeroVec(this.velocity)) {
-			const friction = ev`${normalize(this.velocity)} * ${Math.pow(vecLengthSquared(this.velocity), 0.1)} * ${Player.FRICTION}`
-			
-			this.velocity = ev`${this.velocity} - ${friction}`
+			const friction = ev`${normalize(this.velocity)} * ${Math.pow(vecLengthSquared(this.velocity), 0.1)} * ${Player.FRICTION}`;
+
+			this.velocity = ev`${this.velocity} - ${friction}`;
 			// if (vecLengthSquared(friction) > vecLengthSquared(this.velocity)) {
 			// 	// friction is more than velocity, so set it to zero
 			// 	this.velocity = vec2()
@@ -170,65 +162,11 @@ export class Player implements GameObject {
 		}
 	}
 
+	applyImpulse(impulse: Vec2): void {
+		// TODO
 
-
-
-
-
-
-
-
-
-
-
-
-applyImpulse (impulse: Vec2): void {
-
-
-
-
-// TODO
-
-
-
-this.velocity = ev`${this.velocity} + ${impulse}`
-
-
-
-
-
-
-
-
-
-
-}
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
+		this.velocity = ev`${this.velocity} + ${impulse}`;
+	}
 
 	setHp(hp: number) {
 		this.hp = hp;
@@ -244,8 +182,8 @@ this.velocity = ev`${this.velocity} + ${impulse}`
 		return ev`${this.position} + ${vec2(0, KNIFE_OFFSET_Y)} + ${vec2(Math.cos(this.knifeState.angle), Math.sin(this.knifeState.angle))} * ${this.knifeState.radius}`;
 	}
 
-	getKnifeVelocityDir (): Vec2 {
+	getKnifeVelocityDir(): Vec2 {
 		// take derivative of above
-		return vec2(Math.sin(this.knifeState.angle), -Math.cos(this.knifeState.angle))
+		return vec2(Math.sin(this.knifeState.angle), -Math.cos(this.knifeState.angle));
 	}
 }

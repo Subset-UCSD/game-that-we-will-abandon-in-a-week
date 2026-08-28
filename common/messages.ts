@@ -99,8 +99,8 @@ const soundSchema = z.object({
 	detectableDistance: z.number().optional(),
 	volume: z.number().optional(),
 	playbackRate: z.number().optional(),
-})
-export type SoundEvent = z.infer<typeof soundSchema>
+});
+export type SoundEvent = z.infer<typeof soundSchema>;
 const soundMessage = $message("sound", soundSchema.array());
 
 export const joinResponse = $message(

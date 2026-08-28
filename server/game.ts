@@ -1,15 +1,30 @@
-import { ev, type GameObject, normalize, subVec, vec2, vecLength, vecLengthSquared, type WholeFkingGameState } from "@common";
+import {
+	ev,
+	type GameObject,
+	normalize,
+	subVec,
+	vec2,
+	vecLength,
+	vecLengthSquared,
+	type WholeFkingGameState,
+} from "@common";
 import { generateDiffPayload } from "@common/json-optimizer";
-import type { ClientMessage, PartialFkingGameStateMessage, Particle, ServerMessage, SoundEvent } from "@common/messages";
+import type {
+	ClientMessage,
+	PartialFkingGameStateMessage,
+	Particle,
+	ServerMessage,
+	SoundEvent,
+} from "@common/messages";
 import { Explosion, Meatball, Player, SEED_COOLDOWN, Seed, StaticThing } from "@server/gameobjects";
 import type { WebSocket } from "ws";
 import { BoxCollider, type Collider } from "./collision";
+import { CollisionWorld } from "./collisionWorld";
 import type { Party, Room } from "./gamelogic";
 import { D20 } from "./gameobjects/d20";
+import { Enemy } from "./gameobjects/enemy";
 import { send } from "./net/send";
 import { type ChunkEntryMap, setTile } from "./tile-manager";
-import { CollisionWorld } from "./collisionWorld";
-import { Enemy } from "./gameobjects/enemy";
 
 declare const IS_SERVING: boolean;
 
@@ -26,7 +41,7 @@ export class Game {
 	private connections: Map<string, { socket: WebSocket; lastSentGameStateVersionId?: string }> = new Map();
 	private idForConnection: Map<WebSocket, string> = new Map();
 	private joinedSockets: Set<WebSocket> = new Set();
-	private collision_world = new CollisionWorld(this)
+	private collision_world = new CollisionWorld(this);
 	gameObjects: GameObject[] = [
 		d20,
 		new StaticThing({ kind: "tree", x: -100, y: -100 }),
@@ -43,7 +58,7 @@ export class Game {
 		new Enemy({
 			x: -300,
 			y: -300,
-		})
+		}),
 	];
 	private rooms: Map<string, Room> = new Map([
 		["base", { id: "base", x: 0, y: 0 }],
@@ -55,7 +70,7 @@ export class Game {
 	private onTileEdit: (tiles: ChunkEntryMap) => void;
 	private particleQueue: Particle[] = [];
 	private soundQueue: SoundEvent[] = [];
-	private collisionWorld = new CollisionWorld(this)
+	private collisionWorld = new CollisionWorld(this);
 
 	constructor(tiles: ChunkEntryMap, onTileEdit: (tiles: ChunkEntryMap) => void) {
 		this.tiles = tiles;
@@ -69,15 +84,15 @@ export class Game {
 		this.handlePlayerInputs();
 
 		//TEMP
-		
+
 		// colider :)
 
 		// for (const gameObj1 of this.gameObjects) {
 		// 	for (const gameObj2 of this.gameObjects) {
 		// 		if (gameObj1.id === gameObj2.id) continue;
-				
+
 		// 		//CollisionWorld
-				
+
 		// 		// if (mtv.x != 0 || mtv.y != 0) {
 		// 		// 	player1.collied = true;
 		// 		// 	player1.velocity = mtv;
@@ -103,11 +118,11 @@ export class Game {
 			const EXPLOSION_DAMAGE = 20;
 			for (const entity of this.gameObjects) {
 				if (entity instanceof Player) {
-					const explosionToPlayer = subVec(entity.getPosition(), meatball.publicState)
-					const dist = vecLength(explosionToPlayer)
+					const explosionToPlayer = subVec(entity.getPosition(), meatball.publicState);
+					const dist = vecLength(explosionToPlayer);
 					if (dist < explosion.radius) {
 						entity.setHp(entity.getHp() - EXPLOSION_DAMAGE);
-								entity.applyImpulse(ev`(${explosionToPlayer} / ${dist}) * ${(explosion.radius - dist) * 1.5}`)
+						entity.applyImpulse(ev`(${explosionToPlayer} / ${dist}) * ${(explosion.radius - dist) * 1.5}`);
 					}
 					entity.lines = entity.lines.filter(
 						(x) =>
@@ -149,7 +164,18 @@ export class Game {
 			const KNIFE_DAMAGE = 5.5; // as proclaimed by nick
 			const knife = player.getKnifeLocation();
 			if (knife) {
-				const particle: Particle = { color: [6, 89, 36], count: 20, x: knife.x, y: knife.y, lifetime:500,radius:2,xvSpread:100,yvSpread:100,yvBase: -100, yvGravity:500 }
+				const particle: Particle = {
+					color: [6, 89, 36],
+					count: 20,
+					x: knife.x,
+					y: knife.y,
+					lifetime: 500,
+					radius: 2,
+					xvSpread: 100,
+					yvSpread: 100,
+					yvBase: -100,
+					yvGravity: 500,
+				};
 				for (const entity of this.gameObjects) {
 					if (player === entity) continue;
 					if (entity instanceof Player) {
@@ -158,7 +184,7 @@ export class Game {
 								player.knivesInside.add(entity);
 								entity.setHp(entity.getHp() - KNIFE_DAMAGE);
 								this.particleQueue.push(particle);
-								entity.applyImpulse(ev`${player.getKnifeVelocityDir()} * ${40}`)
+								entity.applyImpulse(ev`${player.getKnifeVelocityDir()} * ${40}`);
 								// console.log(entity.velocity)
 							}
 						} else {
@@ -249,11 +275,7 @@ export class Game {
 		for (const conn of this.connections.values()) {
 			// type unhappy :(
 			// send(conn.socket,type,value)
-conn.socket.send(
-		JSON.stringify({			type,
-			value,
-		}),
-	);
+			conn.socket.send(JSON.stringify({ type, value }));
 		}
 	}
 
@@ -352,28 +374,27 @@ conn.socket.send(
 
 	handlePlayerInputs() {
 		for (const [_, player] of this.players) {
-			
-			const movementDir = vec2()
+			const movementDir = vec2();
 			if (player.inputs.up) {
 				movementDir.y = -1;
-			} 
-			 if (player.inputs.down) {
+			}
+			if (player.inputs.down) {
 				movementDir.y = 1;
-			} 
+			}
 
 			if (player.inputs.left) {
 				player.facingLeft = true;
 				movementDir.x = -1;
-			} 
-			 if (player.inputs.right) {
+			}
+			if (player.inputs.right) {
 				player.facingLeft = false;
 				movementDir.x = 1;
-			} 
+			}
 			if (vecLengthSquared(movementDir) > 0) {
 				// im so scared of touching this but i think acceleration and friction need to be equal ?
-				player.acceleration = ev`${normalize(movementDir)} * ${10}`
+				player.acceleration = ev`${normalize(movementDir)} * ${10}`;
 			} else {
-				player.acceleration = vec2()
+				player.acceleration = vec2();
 			}
 
 			const last = player.lines.at(-1);
@@ -412,19 +433,23 @@ conn.socket.send(
 					player.thought = thoughts[Math.floor(Math.random() * thoughts.length)];
 
 					const angle = Math.random() * 2 * Math.PI;
-					const opts={
-							x: player.position.x + (player.facingLeft ? -1 : 1) * 10,
-							y: player.position.y,
-							xv: Math.cos(angle) * 5,
-							yv: (Math.sin(angle) * 5) / 2,
-							height: 42 - 15 - 9,
-							inithv: 5,
-						}
-					const meatball=new Meatball(opts)
-					this.addGameObject(
-						meatball,
-					);
-					this.soundQueue.push({name:'baaa',x:opts.x,y:opts.y,detectableDistance:200,playbackRate: 1 + Math.random() * 0.2})
+					const opts = {
+						x: player.position.x + (player.facingLeft ? -1 : 1) * 10,
+						y: player.position.y,
+						xv: Math.cos(angle) * 5,
+						yv: (Math.sin(angle) * 5) / 2,
+						height: 42 - 15 - 9,
+						inithv: 5,
+					};
+					const meatball = new Meatball(opts);
+					this.addGameObject(meatball);
+					this.soundQueue.push({
+						name: "baaa",
+						x: opts.x,
+						y: opts.y,
+						detectableDistance: 200,
+						playbackRate: 1 + Math.random() * 0.2,
+					});
 					player.wasBaaing = true;
 				}
 			} else {
@@ -473,13 +498,15 @@ conn.socket.send(
 				player.wasInteracting = false;
 			}
 
-
-			
-
 			if (player.velocity.x !== 0 || player.velocity.y !== 0) {
 				if (Date.now() >= player.nextFootsoundCanBePlayedAt) {
-					this.soundQueue.push({name:'footstep',...player.position,volume:0.2,playbackRate: 1 + Math.random() * 0.2})
-					player.nextFootsoundCanBePlayedAt = Date.now() + 300 ///+ Math.random() * 200
+					this.soundQueue.push({
+						name: "footstep",
+						...player.position,
+						volume: 0.2,
+						playbackRate: 1 + Math.random() * 0.2,
+					});
+					player.nextFootsoundCanBePlayedAt = Date.now() + 300; ///+ Math.random() * 200
 				}
 			}
 		}

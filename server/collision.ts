@@ -1,16 +1,4 @@
-import {
-	dot,
-	ev,
-	normalize,
-	ortho,
-	rotate,
-	type SerializedCollider,
-	scaleVec,
-	type Vec2,
-	vec2,
-	vecLength,
-	projVec
-} from "@common";
+import { ev, normalize, ortho, projVec, rotate, type SerializedCollider, scaleVec, type Vec2, vec2 } from "@common";
 
 export interface Collider {
 	debug: boolean;
@@ -59,7 +47,6 @@ export interface PolygonCollider extends SATCollider {
 
 //TODO: FIND A POINT FURTHER DOWN RELATIVE TO ANOTHER POINT
 
-
 // question: do we need a distinction between objects that cant be moved vs entities that would be walking into these objects | yes
 export class BoxCollider implements PolygonCollider {
 	private corners: Vec2[];
@@ -67,14 +54,14 @@ export class BoxCollider implements PolygonCollider {
 	private height: number;
 	private radians: number;
 	center: Vec2;
-	
+
 	debug = false;
 	mask = 0;
 
 	// nick: idk what center means here. i think i know what it should be but idk what it currently is.
 	// in my head center is the position of a point this collider should rotate around, but it
 	// looks like it's used a synonym for position in some methods here
-	constructor({height, position, radians, width, center}: BoxColliderProps) {
+	constructor({ height, position, radians, width, center }: BoxColliderProps) {
 		this.radians = radians;
 		this.width = width;
 		this.height = height;
@@ -168,7 +155,10 @@ export class CircleCollider implements SATCollider {
 	mask = 0;
 	center: Vec2;
 
-	constructor(private readonly radius: number = 1, center: Vec2 = {x: 0, y: 0}) {
+	constructor(
+		private readonly radius: number = 1,
+		center: Vec2 = { x: 0, y: 0 },
+	) {
 		this.center = center;
 	}
 

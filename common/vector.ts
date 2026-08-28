@@ -1,12 +1,12 @@
-import { type Expression, parse } from "./vector/expression_parser";
 import z from "zod";
+import { type Expression, parse } from "./vector/expression_parser";
 
 export const vec2Schema = z.object({
 	x: z.number(),
-	y: z.number()
+	y: z.number(),
 });
 export const vec3Schema = vec2Schema.extend({
-	z: z.number()
+	z: z.number(),
 });
 
 export type Vec2 = z.infer<typeof vec2Schema>;
@@ -20,7 +20,7 @@ export const DomPointToVec3 = (v: DOMPoint) => vec3(v.x, v.y, v.z);
 
 //2D Vector Opertations
 export const isVecEq = (a: Vec2, b: Vec2) => a.x === b.x && a.y === b.y;
-export const isZeroVec = ({x,y}:Vec2) => x===0&&y===0
+export const isZeroVec = ({ x, y }: Vec2) => x === 0 && y === 0;
 
 export const addVec = (a: Vec2, b: Vec2): Vec2 => ({ x: a.x + b.x, y: a.y + b.y });
 export const subVec = (a: Vec2, b: Vec2): Vec2 => ({ x: a.x - b.x, y: a.y - b.y });
@@ -53,14 +53,14 @@ export const projVec = (p: Vec2, axis: Vec2): Vec2 => {
 /**
  * picks point in circle of radius 1, uniformly
  */
-export function randomInCircle (): Vec2 {
+export function randomInCircle(): Vec2 {
 	// marcelo algorithm
-	const radius = Math.sqrt(Math.random())
-	const angle = Math.random() * 2 * Math.PI
-	return vec2(Math.cos(angle)*radius, Math.sin(angle)*radius)
+	const radius = Math.sqrt(Math.random());
+	const angle = Math.random() * 2 * Math.PI;
+	return vec2(Math.cos(angle) * radius, Math.sin(angle) * radius);
 }
 
-export const pairwiseMultiply =(a: Vec2, b: Vec2): Vec2 => ({x:a.x*b.x , y: a.y*b.y})
+export const pairwiseMultiply = (a: Vec2, b: Vec2): Vec2 => ({ x: a.x * b.x, y: a.y * b.y });
 
 /**
  * makes the length of `target` at most `max`
@@ -184,8 +184,8 @@ function evaluateExpression(values: (Vec2 | number)[], expression: Expression): 
 				if (typeof a === "number" && typeof b !== "number") {
 					return scaleVec(b, a);
 				}
-				if (typeof a !== 'number' && typeof b!=='number') {
-					return  pairwiseMultiply(a, b)
+				if (typeof a !== "number" && typeof b !== "number") {
+					return pairwiseMultiply(a, b);
 				}
 				// throw new Error("cannot multiply vectors, too ambiguous");
 			}
