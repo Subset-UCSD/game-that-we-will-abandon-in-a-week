@@ -1,12 +1,20 @@
 import { type Expression, parse } from "./vector/expression_parser";
+import z from "zod";
 
-export type Vec2 = { x: number; y: number };
+export const vec2Schema = z.object({
+	x: z.number(),
+	y: z.number()
+});
+export const vec3Schema = vec2Schema.extend({
+	z: z.number()
+});
 
-export type Vec3 = { x: number; y: number; z: number };
+export type Vec2 = z.infer<typeof vec2Schema>;
+export type Vec3 = z.infer<typeof vec3Schema>;
 
 export const vec2 = (x = 0, y = x): Vec2 => ({ x, y });
-
 export const vec3 = (x: number, y: number, z: number): Vec3 => ({ x, y, z });
+
 export const vec3ToDomPoint = (v: Vec3) => new DOMPoint(v.x, v.y, v.z);
 export const DomPointToVec3 = (v: DOMPoint) => vec3(v.x, v.y, v.z);
 

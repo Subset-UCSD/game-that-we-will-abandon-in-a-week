@@ -59,77 +59,6 @@ export interface PolygonCollider extends SATCollider {
 
 //TODO: FIND A POINT FURTHER DOWN RELATIVE TO ANOTHER POINT
 
-// Get the ratio of p1 on the line to point 2
-// assumes points are on the same line
-const isP2FurtherPoint = (p1: Vec2, p2: Vec2, axis: Vec2): boolean => {
-	return dot(p1, axis) <= dot(p2, axis);
-};
-
-//https://dyn4j.org/2010/01/sat/ <- algorithm to detect collisons in convex polygon
-// Nolan is a roman
-/** sats lover */
-const SATSolver = (
-	collider1: SATCollider,
-	collider2: SATCollider,
-): [isColliding: boolean, overlapAmount: number, direction: Vec2] => {
-	// const corners1 = polygonCollider1.getCorners()
-	// const corners2 = polygonCollider2.getCorners()
-	// getEdges(corners1)
-	// getEdges(corners2)
-
-	// The normals of the Shape
-	const axes = [...collider1.getAxes(collider2), ...collider2.getAxes(collider1)];
-
-	let smallestOverlapAmount = Infinity;
-	let mtvAxis = axes[0];
-
-	let check = 0;
-	// console.log(axes)
-
-	for (const axis of axes) {
-		// console.log(check, axis)
-		check++;
-		// const [start_1, end_1] = projShape(corners1, axis)
-		// const [start_2, end_2] = projShape(corners2, axis)
-		const [start_1, end_1] = collider1.projShape(axis);
-		const [start_2, end_2] = collider2.projShape(axis);
-
-		//check non overlap in projects
-		// if one axis has two projections that don't overlap, then garenteed to not collide!
-		// !(start_1 <= end_2 && start_2 <= end_1) <- if something doesn't overlap
-		const start1_less_end2 = isP2FurtherPoint(start_1, end_2, axis);
-		const start2_less_end1 = isP2FurtherPoint(start_2, end_1, axis);
-
-		if (!(start1_less_end2 && start2_less_end1)) {
-			// console.log(start1_less_end2, start_1, end_1, start2_less_end1, start_2, end_2)
-			// console.log(start1_less_end2, start_1, end_2, start2_less_end1, start_2, end_1)
-			return [false, 0, vec2(0, 0)];
-		} else {
-			const overlapAmount = Math.min(vecLength(ev`${start_2} - ${end_1}`), vecLength(ev`${start_1} - ${end_2}`));
-
-			if (overlapAmount < smallestOverlapAmount) {
-				smallestOverlapAmount = overlapAmount;
-				mtvAxis = axis;
-			}
-		}
-	}
-
-	//TODO redo this to retrofit the logic
-	// Force two things to bonuce off each other
-	if (isP2FurtherPoint(collider1.center, collider2.center, mtvAxis)) {
-		smallestOverlapAmount *= -1;
-	}
-
-	return [true, smallestOverlapAmount, mtvAxis];
-};
-
-interface BoxColliderProps {
-	width: number;
-	height: number;
-	radians: number;
-	position: Vec2;
-	center?: Vec2;
-}
 
 // question: do we need a distinction between objects that cant be moved vs entities that would be walking into these objects | yes
 export class BoxCollider implements PolygonCollider {
@@ -257,24 +186,6 @@ export class CircleCollider implements SATCollider {
 	}
 
 	getAxes(otherCollider: SATCollider): Vec2[] {
-		// I think its easier to get the axes from the circle object
-		// Techically this SHOULd be right
-		// if ("getCorners" in otherCollider) {
-		// 	const ploygonCollider = otherCollider as PolygonCollider;
-		// 	const corners = ploygonCollider.getCorners();
-
-		// 	let min_distance = Number.MAX_SAFE_INTEGER;
-		// 	let min_idx = -1;
-		// 	for (let i = 0; i < corners.length; i++) {
-		// 		const distance = vecLength(ev`${corners[i]}-${this.center}`);
-		// 		if (distance < min_distance) {
-		// 			min_distance = distance;
-		// 			min_idx = i;
-		// 		}
-		// 	}
-		// 	return [normalize(ev`${this.center} - ${corners[min_idx]}`)];
-		// }
-
 		return [normalize(ev`${this.center} - ${otherCollider.center}`)];
 	}
 
