@@ -50,7 +50,7 @@ const creators: Record<SerializedGameObject["type"], Creator> = {
 audio.unlockOnFirstInteraction();
 // TODO: we should make audio ID a constnat defined in messages.ts / common
 audio.preload({
-	baseTheme: "./assets/music/BaseTheme.wav",
+	baseTheme: "./assets/music/BaseThemeVar.wav",
 	footstep: [
 		"./assets/sounds/Footstep1.wav",
 		"./assets/sounds/Footstep2.wav",
