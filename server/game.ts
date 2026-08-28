@@ -1,6 +1,6 @@
 import { type GameObject, subVec, vecLength, vecLengthSquared, type WholeFkingGameState } from "@common";
 import { generateDiffPayload } from "@common/json-optimizer";
-import type { ClientMessage, PartialFkingGameStateMessage, Particle, ServerMessage } from "@common/messages";
+import type { ClientMessage, PartialFkingGameStateMessage, Particle, ServerMessage, SoundEvent } from "@common/messages";
 import { Explosion, Meatball, Player, SEED_COOLDOWN, Seed, StaticThing } from "@server/gameobjects";
 import type { WebSocket } from "ws";
 import { BoxCollider, type Collider } from "./collision";
@@ -47,6 +47,7 @@ export class Game {
 	private tiles: ChunkEntryMap;
 	private onTileEdit: (tiles: ChunkEntryMap) => void;
 	private particleQueue: Particle[] = [];
+	private soundQueue: SoundEvent[] = [];
 
 	constructor(tiles: ChunkEntryMap, onTileEdit: (tiles: ChunkEntryMap) => void) {
 		this.tiles = tiles;
@@ -140,6 +141,7 @@ export class Game {
 			const KNIFE_DAMAGE = 5.5; // as proclaimed by nick
 			const knife = player.getKnifeLocation();
 			if (knife) {
+				const particle: Particle = { color: [6, 89, 36], count: 20, x: knife.x, y: knife.y, lifetime:500,radius:2,xvSpread:100,yvSpread:100,yvBase: -100, yvGravity:500 }
 				for (const entity of this.gameObjects) {
 					if (player === entity) continue;
 					if (entity instanceof Player) {
@@ -147,7 +149,7 @@ export class Game {
 							if (!player.knivesInside.has(entity)) {
 								player.knivesInside.add(entity);
 								entity.setHp(entity.getHp() - KNIFE_DAMAGE);
-								this.particleQueue.push({ color: [6, 0.89, 0.36], count: 20, x: knife.x, y: knife.y });
+								this.particleQueue.push(particle);
 							}
 						} else {
 							player.knivesInside.delete(entity);
@@ -158,7 +160,7 @@ export class Game {
 								if (!player.knivesInside.has(entity)) {
 									player.knivesInside.add(entity);
 									entity.takeDamageIfPossible(KNIFE_DAMAGE);
-									this.particleQueue.push({ color: [6, 0.89, 0.36], count: 20, x: knife.x, y: knife.y });
+									this.particleQueue.push(particle);
 								}
 							} else {
 								player.knivesInside.delete(entity);
@@ -217,10 +219,16 @@ export class Game {
 			if (this.particleQueue.length > 0) {
 				send(conn.socket, "particles", this.particleQueue);
 			}
+			if (this.soundQueue.length > 0) {
+				send(conn.socket, "sound", this.soundQueue);
+			}
 		}
 		this.lastSentGameState = { gameState, versionId };
 		if (this.particleQueue.length > 0) {
 			this.particleQueue = [];
+		}
+		if (this.soundQueue.length > 0) {
+			this.soundQueue = [];
 		}
 	}
 
@@ -400,7 +408,7 @@ conn.socket.send(
 					this.addGameObject(
 						meatball,
 					);
-					this.broadcast('sound',{name:'baaa',x:opts.x,y:opts.y,detectableDistance:200,playbackRate: 1 + Math.random() * 0.2})
+					this.soundQueue.push({name:'baaa',x:opts.x,y:opts.y,detectableDistance:200,playbackRate: 1 + Math.random() * 0.2})
 					player.wasBaaing = true;
 				}
 			} else {
@@ -454,7 +462,7 @@ conn.socket.send(
 
 			if (player.velocity.x !== 0 || player.velocity.y !== 0) {
 				if (Date.now() >= player.nextFootsoundCanBePlayedAt) {
-					this.broadcast('sound',{name:'footstep',...player.position,
+					this.soundQueue.push({name:'footstep',...player.position,
 						// detectableDistance:50,
 					})
 					player.nextFootsoundCanBePlayedAt = Date.now() + 300 ///+ Math.random() * 200

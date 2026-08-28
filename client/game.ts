@@ -30,6 +30,7 @@ import { Arena } from "./render/arena";
 import type { RenderableObject } from "./render/render";
 import { Room } from "./render/room";
 import { renderTiles } from "./tiles";
+import { ClientParticle } from "./render/particle";
 
 type Creator = () => RenderableObject;
 
@@ -87,6 +88,8 @@ export class Game {
 	private debugColldiers: SerializedCollider[] = [];
 	private currPlayerState?: NetPlayer;
 	private tiles: ChunkMap = {};
+	private particles: ClientParticle[] = []
+	private lastRenderTime = Date.now()
 
 	private camera: Camera = { x: 0, y: 0, scale: 1 };
 
@@ -204,6 +207,7 @@ export class Game {
 
 	// width, height = screen size (useful for centering things)
 	render(canvas: Canvas) {
+		const now = Date.now()
 		// if (this.id == -1) return
 
 		const player = this.currPlayerState;
@@ -290,6 +294,14 @@ export class Game {
 			// ...this.seeds.values()
 		]);
 
+		const djt = (now - this.lastRenderTime)/1000
+		this.particles = this.particles.filter(particle => {
+			if (particle.shouldRemove()) return false
+			particle.tick(djt)
+			particle.render(canvas)
+			return true
+		})
+
 		if (this.__debugTileEditor != null && this.__debugTileEditor.isRenderCollider) {
 			c.strokeStyle = "red";
 			for (const collider of this.debugColldiers) {
@@ -343,6 +355,8 @@ export class Game {
 			c.fillText(`room: ${player.roomId}`, 10, 35);
 			c.fillText(`position: ${player.x.toFixed(1)}, ${player.y.toFixed(1)}`, 10, 50);
 		}
+
+		this.lastRenderTime = now
 	}
 
 	private paintLines(c: CanvasRenderingContext2D) {
@@ -411,6 +425,6 @@ export class Game {
 	}
 
 	spawnParticles(particle: Particle): void {
-		// TODO
+		for (let i =0; i < particle.count;i++)this.particles.push(new ClientParticle(particle))
 	}
 }

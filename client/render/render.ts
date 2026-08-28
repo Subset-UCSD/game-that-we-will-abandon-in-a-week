@@ -2,7 +2,10 @@ import type { SerializedGameObject } from "@common";
 import type { Canvas } from "./canvas";
 
 interface RenderableObject {
-	// Objects with a higher index render over top of objects with a lower index
+	/**
+	 * Objects with a higher index render over top of objects with a lower index
+	 * this should just be the y position. idk why nick renamed this to index
+	 */
 	index: number;
 	render(canvas: Canvas): void;
 	renderShadow?(canvas: Canvas): void;

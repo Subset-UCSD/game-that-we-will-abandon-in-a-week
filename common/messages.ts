@@ -71,12 +71,22 @@ export const partialFkingGameStateMessage = $message(
 export type PartialFkingGameStateMessage = z.infer<typeof partialFkingGameStateMessage>;
 
 const particleSchema = z.object({
-	// hsl format
+	// hsl format: h(0 to 360), s(0 to 100), l(0 to 100)
 	color: z.tuple([z.number(), z.number(), z.number()]),
 	count: z.number(),
 	x: z.number(),
 	y: z.number(),
+	radius: z.number(),
+	// init xv = 0 +/- xvSpread
+	xvSpread: z.number().optional(),
+	// init yv = yvBase +/- yvSpread
+	yvSpread: z.number().optional(),
+	yvBase: z.number().optional(),
+	yvGravity: z.number().optional(),
+	// age in milliseconds
+	lifetime: z.number(),
 	// TODO: how customizable do we want this to be
+	// option ideas: x/y spread, customizable gravity, init x/y velocity base and spread
 });
 export type Particle = z.infer<typeof particleSchema>;
 
@@ -91,7 +101,7 @@ const soundSchema = z.object({
 	playbackRate: z.number().optional(),
 })
 export type SoundEvent = z.infer<typeof soundSchema>
-const soundMessage = $message("sound", soundSchema);
+const soundMessage = $message("sound", soundSchema.array());
 
 export const joinResponse = $message(
 	"join-response",

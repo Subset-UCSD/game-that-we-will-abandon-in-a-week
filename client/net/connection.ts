@@ -77,7 +77,9 @@ class Connection {
 				break;
 			}
 			case 'sound': {
-				this.game.playAudioAtPosition(message.value)
+				for (const sound of message.value) {
+				this.game.playAudioAtPosition(sound)
+				}
 				break
 			}
 			default: {

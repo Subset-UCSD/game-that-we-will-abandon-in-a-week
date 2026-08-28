@@ -3,6 +3,7 @@
  * called by webhook workflow
  */
 
+// import { title } from "node:process"
 import z from "zod"
 
 // https://docs.github.com/en/webhooks/webhook-events-and-payloads#push
@@ -24,6 +25,7 @@ const commitSchema = z.object({
     name: z.string(),
     username: z.string().optional()
   }),
+  id: z.string(),
   message: z.string()
 }).array()
 
@@ -56,12 +58,21 @@ await fetch(discordWebhook, {
   headers: {'content-type': 'application/json'},
   method:'POST',
   body: JSON.stringify({
-    embeds: commits.map(({message, author: {username,name}}) => ({
-      description: message,
+    username: 'tech bro',
+    content: 'i LOVE ai',
+    embeds: commits.map(({message, author: {username,name},id}) => {
+      const [first, ...rest] = message.split(/\r?\n/)
+      return ({
+        url: `https://github.com/Subset-UCSD/game-that-we-will-abandon-in-a-week/commit/${id}`,
+        title: first,
+      description: rest.join('\n'),
       author: {
         // is guy gender neutral
-        name: username ?? `some guy named ${name}`
+        name: username ?? `some guy named ${name}`,
+        icon_url: username ? `https://github.com/${username}.png` : undefined,
+        url: username ? `https://github.com/${username}` : undefined,
       }
-    }))
+    })
+    })
   })
 })
