@@ -200,6 +200,10 @@ export class BoxCollider implements PolygonCollider {
 		if ("getAxes" in collider) {
 			const ploygonCollider = collider as PolygonCollider;
 			const [isColliding, overlapAmount, direction] = SATSolver(this, ploygonCollider);
+			
+			if (isColliding) {
+				this.cb(scaleVec(direction, overlapAmount));
+			}
 			return scaleVec(direction, overlapAmount);
 		}
 
@@ -209,7 +213,7 @@ export class BoxCollider implements PolygonCollider {
 		throw new Error("Method not implemented.");
 	}
 	onCollide(cb: (mts: Vec2) => void): void {
-		throw new Error("Method not implemented.");
+		this.cb = cb;
 	}
 
 	updateLocation(center: Vec2): void {
