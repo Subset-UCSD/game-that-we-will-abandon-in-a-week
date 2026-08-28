@@ -462,9 +462,7 @@ conn.socket.send(
 
 			if (player.velocity.x !== 0 || player.velocity.y !== 0) {
 				if (Date.now() >= player.nextFootsoundCanBePlayedAt) {
-					this.soundQueue.push({name:'footstep',...player.position,
-						// detectableDistance:50,
-					})
+					this.soundQueue.push({name:'footstep',...player.position,volume:0.2,playbackRate: 1 + Math.random() * 0.2})
 					player.nextFootsoundCanBePlayedAt = Date.now() + 300 ///+ Math.random() * 200
 				}
 			}
