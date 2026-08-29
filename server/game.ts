@@ -142,6 +142,15 @@ export class Game {
 					if (vecLength(subVec(entity.position, meatball.publicState)) < explosion.radius) {
 						entity.takeDamageIfPossible(EXPLOSION_DAMAGE);
 					}
+				} else if (entity instanceof Enemy) {
+					const explosionToPlayer = subVec(entity.publicState, meatball.publicState);
+					const dist = vecLength(explosionToPlayer);
+					if (dist < explosion.radius) {
+									entity.publicState.healthPoint-=EXPLOSION_DAMAGE
+									if (entity.publicState.healthPoint<0)entity.publicState.healthPoint=0
+						// entity.setHp(entity.getHp() - EXPLOSION_DAMAGE);
+						entity.applyImpulse(ev`(${explosionToPlayer} / ${dist}) * ${(explosion.radius - dist) * 1.5}`);
+					}
 				}
 			}
 		}
@@ -205,6 +214,20 @@ export class Game {
 									player.knivesInside.add(entity);
 									entity.takeDamageIfPossible(KNIFE_DAMAGE);
 									this.particleQueue.push(particle);
+								}
+							} else {
+								player.knivesInside.delete(entity);
+							}
+						}
+					}else if (entity instanceof Enemy) {
+						if (entity.collider) {
+							if (entity.collider?.isInsideMe(knife)) {
+								if (!player.knivesInside.has(entity)) {
+									player.knivesInside.add(entity);
+									entity.publicState.healthPoint-=KNIFE_DAMAGE
+									if (entity.publicState.healthPoint<0)entity.publicState.healthPoint=0
+									this.particleQueue.push(particle);
+								entity.applyImpulse(ev`${player.getKnifeVelocityDir()} * ${40}`);
 								}
 							} else {
 								player.knivesInside.delete(entity);

@@ -28,9 +28,20 @@ export class Anemone implements RenderableObject {
 
 		const frame = frames[Math.floor(Date.now() / (770 + ((this.state.id * Math.PI) % 50))) % frames.length];
 
-		const { x, y } = this.state;
+		const { x, y,healthPMax,healthPoint } = this.state;
 
 		c.drawImage(frame, x - SHEEP_WIDTH / 2, y - 42, SHEEP_WIDTH, 50);
+
+		
+		if (healthPMax !== undefined && healthPoint !== undefined) {
+			const actualhealthpercent = healthPoint / healthPMax;
+			if (actualhealthpercent < 1) {
+				c.fillStyle = "#ff025f";
+				c.fillRect(x - 20, y - 10  - 42, 40 * actualhealthpercent, 5);
+				c.strokeStyle = "black";
+				c.strokeRect(x - 20.5, y - 10.8 - 42 , 41, 6);
+			}
+		}
 	}
 
 	update(objState: SerializedGameObject): void {

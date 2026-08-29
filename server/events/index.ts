@@ -1,4 +1,4 @@
-import { randomBytes } from "node:crypto";
+// import { randomBytes } from "node:crypto";
 import { type Event, eventNameSchema } from "./events";
 
 /**
@@ -53,10 +53,10 @@ export function subscribe<T extends Event["type"], V extends Extract<Event, { ty
 		registeredEvents.set(name, new Map());
 	}
 	const handlers = registeredEvents.get(name)!;
-	let id = randomBytes(SUBSCRIBER_ID_NUM_BYTES).toHex();
+	let id = crypto.randomUUID()
 	let n_iter = 0;
 	while (handlers.has(id)) {
-		id = randomBytes(SUBSCRIBER_ID_NUM_BYTES).toHex();
+		id = crypto.randomUUID()
 		if (n_iter > RAND_ATTEMPT_THRESHOLD) {
 			throw new Error(
 				`bro i tried ${RAND_ATTEMPT_THRESHOLD} times to generate a random number to let you LIKE AND SUBSCRIBE to ${name}` +

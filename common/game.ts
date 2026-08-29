@@ -57,6 +57,8 @@ const explosionSchema = worldObjectSchema.extend({
 
 const enemySchema = worldObjectSchema.extend({
 	type: z.literal("enemy"),
+	healthPoint:z.number(),
+	healthPMax:z.number(),
 });
 
 const seedSchema = worldObjectSchema.extend({
