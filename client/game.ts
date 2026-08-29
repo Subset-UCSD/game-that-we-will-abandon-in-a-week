@@ -32,6 +32,7 @@ import { ClientParticle } from "./render/particle";
 import type { RenderableObject } from "./render/render";
 import { Room } from "./render/room";
 import { renderTiles } from "./tiles";
+import { mat4 } from "gl-matrix";
 
 type Creator = () => RenderableObject;
 
@@ -234,13 +235,22 @@ export class Game {
 
 		// c.fillStyle = this.__debugTileEditor?.isRenderCollider ? "rgba(40, 50, 50, 1)" : "black";
 		// gl.clearColor(...(this.__debugTileEditor?.isRenderCollider ? [40/255, 50/255, 50/255 ]as const : [0,0,0]as const),1)
-		if (this.__debugTileEditor?.isRenderCollider ) {
-			gl.clearColor(40/255, 50/255, 50/255 ,1)
-		} else {
-			gl.clearColor(0,0,0,1)
-		}
-		gl.clear(gl.COLOR_BUFFER_BIT | gl.DEPTH_BUFFER_BIT)
+		gl.clear(this.__debugTileEditor?.isRenderCollider ? [40/255, 50/255, 50/255 ] : [0,0,0])
+		// if (this.__debugTileEditor?.isRenderCollider ) {
+		// 	gl.clearColor(40/255, 50/255, 50/255 ,1)
+		// } else {
+		// 	gl.clearColor(0,0,0,1)
+		// }
+		// gl.clear(gl.COLOR_BUFFER_BIT | gl.DEPTH_BUFFER_BIT)
 		c.clearRect(0, 0, canvas.width, canvas.height);
+
+			gl.beginRender();
+
+			gl.testShader.use()
+			gl.gl.uniformMatrix4fv(gl.testShader.uniform("u_view"), false, mat4.create());
+
+			
+	gl.applyFilters();
 
 		c.save();
 		c.translate(canvas.width / 2, canvas.height / 2);

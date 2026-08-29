@@ -39,6 +39,10 @@ const clientConfigPromise = esbuild.context({
 	define: {
 		IS_SERVING: isServe ? "true" : "false",
 	},
+	loader: {
+		".vert": "text",
+		".frag": "text",
+	},
 });
 
 const [serverConfig, clientConfig] = await Promise.all([serverConfigPromise, clientConfigPromise]);
