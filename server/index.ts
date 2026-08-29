@@ -40,14 +40,14 @@ const wss = new WebSocketServer({
 declare const IS_SERVING: boolean;
 
 server.on("request", app);
-app.use(express.static("public"));
+if (IS_SERVING) {
 app.get("/", (_, res) => {
-	if (IS_SERVING) {
 		res.redirect("http://localhost:6767/");
-		return;
-	}
-	res.sendFile(join(__dirname, "public/index.html"));
-});
+		// return;
+		// res.sendFile(join(__dirname, "public/index.html"));
+	});
+}
+app.use(express.static("public"));
 
 const tiles = deserializeTiles(
 	await readFile("tiles.txt", "utf-8").catch((error) =>

@@ -36,6 +36,8 @@ class Polyhedron3D implements Renderable3DObject {
 	rotateY: number = 45;
 	rotateZ: number = 0;
 
+	private autorotate: boolean
+
 	update(objState: D20Schema): void {
 		console.log(objState.x, this.x);
 		this.x = objState.x;
@@ -49,9 +51,10 @@ class Polyhedron3D implements Renderable3DObject {
 	//     // return false
 	// }
 
-	constructor(vertrices: Vec3[], faces: number[][]) {
+	constructor(vertrices: Vec3[], faces: number[][], autorotate = false) {
 		this.vertrices = vertrices;
 		this.faces = faces;
+		this.autorotate = autorotate
 	}
 
 	// may need to become a input to the
@@ -113,6 +116,11 @@ class Polyhedron3D implements Renderable3DObject {
 		matrix.scaleSelf(10, 10, 10);
 		this.rotateX += 0.5 * this.x_vel;
 		this.rotateY += 0.5 * this.y_vel;
+		// for loading screen while connecitng to server
+		if (this.autorotate) {
+			        this.rotateX += 0.1;
+        this.rotateY -= 0.1;
+		}
 		// this.rotateZ--;
 
 		//TEMP
@@ -231,7 +239,7 @@ export const Pyramid = new Polyhedron3D(
 
 const GOLDEN_RATIO = (1 + Math.sqrt(5)) / 2;
 
-export const D20 = () =>
+export const D20 = (autoRotate?:boolean) =>
 	new Polyhedron3D(
 		//verticies
 		[
@@ -270,5 +278,5 @@ export const D20 = () =>
 			[5, 9, 11], //18
 			[11, 9, 7], //19
 			[6, 8, 10], //20
-		],
+		],autoRotate
 	);

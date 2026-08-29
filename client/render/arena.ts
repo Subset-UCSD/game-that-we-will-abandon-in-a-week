@@ -1,5 +1,5 @@
 // logic for rendering "rooms", or segments of the map
-import type { Canvas } from "../canvas";
+import type { Canvas } from "./canvas";
 
 export class Arena {
 	public readonly width: number;

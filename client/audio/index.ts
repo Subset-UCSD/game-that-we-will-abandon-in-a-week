@@ -164,20 +164,23 @@ export class AudioManager {
 		this.currentMusic?.source.stop();
 		this.currentMusic = { name, source };
 
-		document.addEventListener("visibilitychange", (e) => {
+		document.addEventListener("blur", (e) => {
 			if (!this.context) return;
-			if (document.hidden) {
+			// if (document.hidden) {
 				// console.log('muting')
 				// this.updateMasterVolume(0)
 				// https://stackoverflow.com/a/29128551 otherwise it sounds choppy (at least in firefox)
 				this.masterGain?.gain.setValueAtTime(this.muted ? 0 : this.volume, 0);
 				this.masterGain?.gain.linearRampToValueAtTime(0, this.context.currentTime + 0.3);
-			} else {
+		});
+		document.addEventListener("focus", (e) => {
+			if (!this.context) return;
+			// } else {
 				// console.log('welcome back')
 				// this.updateMasterVolume()
 				this.masterGain?.gain.setValueAtTime(0, 0);
 				this.masterGain?.gain.linearRampToValueAtTime(this.muted ? 0 : this.volume, this.context.currentTime + 0.3);
-			}
+			// }
 		});
 	}
 

@@ -25,6 +25,8 @@ import { D20 } from "./gameobjects/d20";
 import { Enemy } from "./gameobjects/enemy";
 import { send } from "./net/send";
 import { type ChunkEntryMap, setTile } from "./tile-manager";
+import { emit } from "./events";
+// import { emit } from "cluster";
 
 declare const IS_SERVING: boolean;
 
@@ -53,7 +55,10 @@ export class Game {
 			interactive: true,
 			hp: 10000,
 			maxHp: 10000,
-			collider: new BoxCollider(-50, -150, 40, 70),
+			collider: new BoxCollider(
+				{position:vec2(-50,-150),width:40,height:70}
+				// -50, -150, 40, 70
+			),
 		}),
 		new Enemy({
 			x: -300,
@@ -106,6 +111,9 @@ export class Game {
 		for (const meatball of this.gameObjects) {
 			meatball.tick();
 		}
+				// if (!isVecEq(oldPos,this.position)) {
+				// }
+				emit('players:move', this.players.values().map(({id,position:{x,y}}) =>({id:id+'',x,y}) ).toArray())
 		for (const meatball of this.gameObjects) {
 			if (!meatball.shouldDelete || !(meatball instanceof Meatball)) continue;
 			const explosion = new Explosion({

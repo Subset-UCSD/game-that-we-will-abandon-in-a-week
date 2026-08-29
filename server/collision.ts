@@ -1,4 +1,5 @@
 import { ev, normalize, ortho, projVec, rotate, type SerializedCollider, scaleVec, type Vec2, vec2 } from "@common";
+import { isP2FurtherPoint, SATSolver } from "./collision2";
 
 export interface Collider {
 	debug: boolean;
@@ -47,12 +48,22 @@ export interface PolygonCollider extends SATCollider {
 
 //TODO: FIND A POINT FURTHER DOWN RELATIVE TO ANOTHER POINT
 
+type BoxColliderProps = {
+
+	height: number
+position: Vec2
+radians?: number
+width: number
+center?: Vec2
+}
+
 // question: do we need a distinction between objects that cant be moved vs entities that would be walking into these objects | yes
 export class BoxCollider implements PolygonCollider {
 	private corners: Vec2[];
 	private width: number;
 	private height: number;
 	private radians: number;
+	private position :Vec2
 	center: Vec2;
 
 	debug = false;
@@ -61,11 +72,12 @@ export class BoxCollider implements PolygonCollider {
 	// nick: idk what center means here. i think i know what it should be but idk what it currently is.
 	// in my head center is the position of a point this collider should rotate around, but it
 	// looks like it's used a synonym for position in some methods here
-	constructor({ height, position, radians, width, center }: BoxColliderProps) {
+	constructor({ height, position, radians=0, width, center=position }: BoxColliderProps) {
 		this.radians = radians;
 		this.width = width;
 		this.height = height;
 		this.center = center;
+		this.position=position
 		this.corners = this.getCorners();
 	}
 
@@ -135,17 +147,19 @@ export class BoxCollider implements PolygonCollider {
 	serialize(): SerializedCollider {
 		return {
 			type: "box",
-			...this.position,
+			// ...this.position,
+						x: this.position.x - this.width / 2,
+			y: this.position.y - this.height / 2,
 			width: this.width,
 			height: this.height,
 		};
 	}
 	isInsideMe(point: Vec2): boolean {
 		return (
-			this.x - this.width / 2 <= point.x &&
-			point.x <= this.x + this.width / 2 &&
-			this.y - this.height / 2 <= point.y &&
-			point.y <= this.y + this.height / 2
+			this.position.x - this.width / 2 <= point.x &&
+			point.x <= this.position.x + this.width / 2 &&
+			this.position.y - this.height / 2 <= point.y &&
+			point.y <= this.position.y + this.height / 2
 		);
 	}
 }

@@ -1,5 +1,6 @@
 import { dot, ev, type Vec2, vec2, vec2Schema, vecLength } from "@common";
 import z from "zod";
+import { SATCollider } from "./collision";
 
 /** 
  * This is a rework/port/cleanup of the work Sean did in collision.ts that
@@ -49,23 +50,42 @@ type Polygon = z.infer<typeof polygonCollider>;
 export type Collider = z.infer<typeof colliderSchema>;
 
 function collide(a: Collider, b: Collider) {
-	const t = `${a.type}-${b.type}` as const;
-	if (t === "circle-circle" as const) {
-		// whatever dude someone should submit a pr to typescript that fixes ts
-		// this should totally narrow a string union but it doesn't
-		return collideCircleCircle(a, b);
-	}
-	switch() {
-		case "circle-circle":
-		case "circle-box":
-			return collideCircleBox(a, b);
-		case "box-circle":
-			return collideCircleBox(b, a);
-		case "circle-polygon":
+	main: switch (a.type) {
+		case "box": switch (b.type) {
+			case "box": break main
+			case "circle":return collideCircleBox(b, a);
+			case "polygon":break main
+		}
+		case "circle": switch (b.type) {
 
-		default:
-			throw "I cannot deal with you TOUCHING right now 🤮"
+			case "box":return collideCircleBox(a, b);
+			case "circle":return collideCircleCircle(a, b);
+			case "polygon":break main
+		}
+		case "polygon": switch (b.type) {
+
+			case "box":break main
+			case "circle":break main
+			case "polygon":break main
+		}
 	}
+	// const t = `${a.type}-${b.type}` as const;
+	// if (t === "circle-circle" ) {
+	// 	// whatever dude someone should submit a pr to typescript that fixes ts
+	// 	// this should totally narrow a string union but it doesn't
+	// 	return collideCircleCircle(a, b);
+	// }
+	// switch(t) {
+	// 	case "circle-circle":
+	// 	case "circle-box":
+	// 		return collideCircleBox(a, b);
+	// 	case "box-circle":
+	// 		return collideCircleBox(b, a);
+	// 	case "circle-polygon":
+
+	// 	default:
+	// 	}
+		throw "I cannot deal with you TOUCHING right now 🤮"
 }
 
 function collideCircleCircle<C extends Extract<Collider, {type: "circle"}>>(a: C, b: Circle) {}
@@ -77,14 +97,14 @@ function collideCircleBox(a: Circle, b: Box) {}
 
 // Get the ratio of p1 on the line to point 2
 // assumes points are on the same line
-const isP2FurtherPoint = (p1: Vec2, p2: Vec2, axis: Vec2): boolean => {
+export const isP2FurtherPoint = (p1: Vec2, p2: Vec2, axis: Vec2): boolean => {
 	return dot(p1, axis) <= dot(p2, axis);
 };
 
 // https://dyn4j.org/20102010/01/sat/ <- algorithm to detect collisons in convex polygon
 // Nolan is a roman
 /** sats lover */
-const SATSolver = (
+export const SATSolver = (
 	collider1: SATCollider,
 	collider2: SATCollider,
 ): [isColliding: boolean, overlapAmount: number, direction: Vec2] => {

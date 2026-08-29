@@ -1,10 +1,11 @@
-import { ev, isZeroVec, normalize, subVec, type Vec2, vec2, vecLengthSquared } from "@common";
+import { ev, isVecEq, isZeroVec, normalize, subVec, type Vec2, vec2, vecLengthSquared } from "@common";
 import { type GameObject, KNIFE_OFFSET_Y, type Player as NetPlayer } from "@common/game";
 import { defaultInputs, type Inputs } from "@common/input";
 import { BoxCollider } from "@server/collision";
 import type { Game } from "@server/game";
 import { generateId } from "@server/id-manager";
 import { Corpse } from "./corpse";
+import { emit } from "@server/events";
 
 const MAX_HP = 67;
 const LINE_START_AGE = 5_000;
@@ -52,7 +53,10 @@ export class Player implements GameObject {
 		this.game = game;
 		this.inputs = { ...defaultInputs };
 		this.id = generateId(); //Player.next_id++;
-		this.collider = new BoxCollider(this.position.x, this.position.y - 20, 30, 30, 0);
+		this.collider = new BoxCollider(
+			{height:30,width:30,position:this.position,radians:0},
+			// this.position.x, this.position.y - 20, 30, 30, 0
+		);
 	}
 
 	setPosition(x: number, y: number) {
@@ -133,7 +137,11 @@ export class Player implements GameObject {
 		// v = v0 + at (assumes constant acceleration but whatever)
 		this.velocity = ev`${this.velocity} + ${this.acceleration}`;
 		// x = x0 + average v * t
+		const oldPos = this.position
 		this.position = ev`${this.position} + (${oldVelocity} + ${this.velocity}) / 2`;
+		// if (!isVecEq(oldPos,this.position)) {
+		// 	emit('players:move', [{id:`${this.id}`,...this.position}])
+		// }
 
 		if (this.hp <= 0) {
 			this.hp = MAX_HP;

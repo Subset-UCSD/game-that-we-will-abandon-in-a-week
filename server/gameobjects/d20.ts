@@ -14,8 +14,8 @@ export class D20 implements GameObject {
 	#moving = false;
 	constructor() {
 		this.publicState = {
-			x: 0,
-			y: 0,
+			x: 200,
+			y: -50,
 			x_vel: 0,
 			y_vel: 0,
 			radius: 30,

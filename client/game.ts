@@ -117,7 +117,7 @@ export class Game {
 		this.inputListener.listen();
 
 		// show D20 while connecting
-		const d20 = D20();
+		const d20 = D20(true);
 
 		this.cilentState.set(-1, d20);
 	}

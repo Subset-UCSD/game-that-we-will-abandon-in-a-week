@@ -1,4 +1,5 @@
 import { clamp, ev, evN, type GameObject, type Enemy as NetEnemy, normalize, vec2 } from "@common";
+import { BoxCollider, Collider } from "@server/collision";
 import { subscribe } from "@server/events";
 import { generateId } from "@server/id-manager";
 
@@ -11,6 +12,8 @@ let nextId = 0;
 export class Enemy implements GameObject {
 	partyId = "";
 	shouldDelete: boolean = false;
+	collider = new BoxCollider({width:30,height:30,position:vec2(),})
+	hp = 50
 
 	publicState: NetEnemy;
 
@@ -28,6 +31,7 @@ export class Enemy implements GameObject {
 		subscribe(
 			"players:move",
 			(players) => {
+				// console.log('pm',players)
 				let shortestPlayer;
 				let shortestDist = Infinity;
 				for (const [i, player] of players.entries()) {
@@ -37,7 +41,8 @@ export class Enemy implements GameObject {
 						shortestPlayer = i;
 					}
 				}
-				if (!shortestPlayer) return;
+				// console.log('pm',this.target)
+				if (shortestPlayer===undefined) return;
 				const selected = players[shortestPlayer];
 				this.target = vec2(selected.x, selected.y);
 			},
@@ -53,6 +58,9 @@ export class Enemy implements GameObject {
 		this.velocity = clamp(ev`${this.velocity} + ${this.acceleration}`, MAX_VELOCITY);
 
 		this.publicState = { ...this.publicState, ...ev`${this.velocity} + ${this.publicState}` };
+
+		// this.collider.center = this.publicState
+		this.collider.updateLocation(this.publicState)
 	}
 
 	playerMoved() {}
