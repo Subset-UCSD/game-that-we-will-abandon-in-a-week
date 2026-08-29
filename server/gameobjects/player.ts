@@ -6,6 +6,7 @@ import type { Game } from "@server/game";
 import { generateId } from "@server/id-manager";
 import { Corpse } from "./corpse";
 import { emit } from "@server/events";
+import { StaticThing } from "./static-thing";
 
 const MAX_HP = 67;
 const LINE_START_AGE = 5_000;
@@ -48,6 +49,13 @@ export class Player implements GameObject {
 	private knifeState = { angle: 0, radius: 0 };
 	knivesInside = new Set<GameObject>();
 	nextFootsoundCanBePlayedAt = 0;
+	dialogue ?:{
+		messagfe:string,
+		options:string[]
+		resopondTo: StaticThing
+	}
+	optionIndex = 0
+	optionTimer = 0
 
 	constructor(game: Game) {
 		this.game = game;
@@ -80,6 +88,7 @@ export class Player implements GameObject {
 
 	serialize(): NetPlayer {
 		const v = vecLengthSquared(this.velocity) < 0.5 ? vec2():this.velocity
+		const di = this.dialogue
 		return {
 			...this.position,
 			x_vel: this.velocity.x,
@@ -104,6 +113,7 @@ export class Player implements GameObject {
 			knifeRadius: +this.knifeState.radius.toFixed(3),
 			knifeAngle: this.knifeState.angle,
 			thought: this.thought,
+			dialogue: di&&{messagfe:di.messagfe,options:di.options.map((option,i) => ({text:option,active:(this.optionIndex%di.options.length === i) ? this.optionTimer : undefined}))},
 			type: "player",
 		};
 	}
@@ -168,6 +178,17 @@ export class Player implements GameObject {
 		}
 		if (this.knifeState.radius > 0) {
 			this.knifeState.angle += -0.2;
+		}
+
+
+
+
+
+		if (this.optionTimer <= 0) {
+			this.optionTimer = 40
+			this.optionIndex++
+		} else {
+			this.optionTimer--
 		}
 	}
 

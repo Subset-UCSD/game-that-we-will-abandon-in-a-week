@@ -44,11 +44,43 @@ export class Game {
 	private idForConnection: Map<WebSocket, string> = new Map();
 	private joinedSockets: Set<WebSocket> = new Set();
 	private collision_world = new CollisionWorld(this);
+	private optionStep = 0
+	private optionTimer = 0
 	gameObjects: GameObject[] = [
 		d20,
 		new StaticThing({ kind: "tree", x: -100, y: -100 }),
 		new StaticThing({ kind: "campfire", x: -0, y: -100 }),
-		new StaticThing({
+		new (class extends StaticThing {
+			// static {
+			// 	type State = 'first' | 'second'
+			// }
+			#playerState = new Map<Player,  'first' | 'second'>()
+
+			// this is extremely unergonomic and no one is going to use this shtiy siystsem
+			interact(player: Player, option:string|null): void {
+				if (option !== null) {
+					const state = this.#playerState.get(player) ?? 'first'
+					if (state==='first'){
+						
+						player.dialogue = {
+					messagfe: `ok... ${option.toUpperCase()} to YOU too!!!!!`,
+					options:['ok'],
+					resopondTo:this,
+				}
+				this.#playerState.set(player,'second')
+					} else {
+						player.dialogue = undefined
+					}
+				} else {
+					player.dialogue = {
+					messagfe: 'fuCK you!',
+					options:['fuck me','fuck you'],
+					resopondTo:this,
+				}
+				this.#playerState.set(player,'first')
+				}
+			}
+		})({
 			kind: "techbro",
 			x: -50,
 			y: -120,
@@ -546,6 +578,13 @@ export class Game {
 	handlePlayerInteractingWithThing(player: Player, thing: StaticThing): void {
 		// TODO: how should we handle dialog? should tech bro extend StaticThing and implement a method with interaction logic?
 		// do we want to send a message to the client to render a dialog pop up, or to represent it as state? if latter, do we want to send this to everyone?
+		if (player.dialogue){
+			if (player.dialogue.resopondTo===thing){
+				thing.interact(player,player.dialogue.options[ player.optionIndex % player.dialogue.options.length])
+			}
+		} else {
+			thing.interact(player,null)
+		}
 	}
 
 	handleDisconnect(ws: WebSocket) {

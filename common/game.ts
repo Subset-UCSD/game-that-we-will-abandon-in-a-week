@@ -39,6 +39,13 @@ const playerSchema = worldObjectSchema.extend({
 	canInteractWith: z.number().array(),
 	knifeRadius: z.number(),
 	knifeAngle: z.number(),
+	dialogue:z.object({
+		messagfe:z.string(),
+		options:z.object({
+			text:z.string(),
+			active:z.number().optional(),
+		}).array(),
+	}).optional(),
 	// wtf is "collied"
 	// like the dog ?
 	// probably idk man, i'm not the one whose bat at spelling

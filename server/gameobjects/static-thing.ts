@@ -1,6 +1,7 @@
 import type { GameObject, SerializedThing, Vec2 } from "@common";
 import type { Collider } from "@server/collision";
 import { generateId } from "@server/id-manager";
+import { Player } from "./player";
 
 /**
  * for things that don't move ("static") like trees, signs, and tech bros ig
@@ -46,4 +47,6 @@ export class StaticThing implements GameObject {
 			this.#state.hp = Math.max(0, this.#state.hp - damage);
 		}
 	}
+
+	interact (player:Player, option: string|null): void {}
 }
