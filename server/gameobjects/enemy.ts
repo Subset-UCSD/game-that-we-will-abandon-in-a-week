@@ -54,9 +54,7 @@ export class Enemy implements GameObject {
 			}
 		this.key=subscribe(
 			"players:move",
-		yee,
-			this,
-		);
+		yee);
 		// this.youch  = () =>
 	}
 	// p;prvia 
