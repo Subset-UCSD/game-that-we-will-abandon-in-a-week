@@ -1,6 +1,7 @@
 # Game that we will abandon in 6 or 7 days.
 
 <img src="docs/sheep.png" alt="sheep" height="300">
+<img src="docs/2026-08-26-23-51.png" alt="sheep and meatball" height="300">
 
 High level idea: we make a box and we hit people in the box
 
@@ -26,6 +27,14 @@ Check types:
 
 ```sh
 npx tsc
+```
+
+Make code biomatic[^biome]:
+
+[^biome]: biome
+
+```sh
+npx biome check --write
 ```
 
 Final build:

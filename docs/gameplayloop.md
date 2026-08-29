@@ -35,6 +35,7 @@
 6. resources system
 7. unlockable system
 8. interactable system
+9. pet system
 
 ### Tangent ideas
 1. overarching story design

@@ -1,6 +1,7 @@
-import type { GameObject, SerializedThing, Vec2 } from "@common";
+import type { GameObject, SerializedGameObject, SerializedThing, Vec2 } from "@common";
 import type { Collider } from "@server/collision";
 import { generateId } from "@server/id-manager";
+import { Player } from "./player";
 
 /**
  * for things that don't move ("static") like trees, signs, and tech bros ig
@@ -25,7 +26,7 @@ export class StaticThing implements GameObject {
 		// static things dont do anything
 	}
 
-	serialize(): SerializedThing {
+	serialize(): SerializedGameObject {
 		return this.#state;
 	}
 
@@ -46,4 +47,30 @@ export class StaticThing implements GameObject {
 			this.#state.hp = Math.max(0, this.#state.hp - damage);
 		}
 	}
+
+				#playerState = new Map<Player, Generator<{message:string,options:string[]},void,string>>()
+
+;*				logic (player:Player): Generator<{message:string,options:string[]},void,string> {
+								//
+							}
+				
+							// this is extremely unergonomic and no one is going to use this shtiy siystsem
+							interact(player: Player, option:string|null): void {
+								const state = this.#playerState.getOrInsertComputed(player, () => this.logic(player))
+								let resultresult = state.next(option ?? '')
+								if (resultresult.done) {
+									
+								player.dialogue = undefined
+								this.#playerState.delete(player)
+								} else {
+				
+									player.dialogue = {
+									messagfe: resultresult.value.message,
+									options:resultresult.value.options,
+									resopondTo:this,
+								}
+								}
+								// while ((result = state.next(option ?? ''), !result.done)) {
+								// }
+							}
 }

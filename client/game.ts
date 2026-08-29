@@ -45,13 +45,13 @@ const creators: Record<SerializedGameObject["type"], Creator> = {
 	// tree:() => new ThingRenderer(),
 	// campfire:() => new ThingRenderer(),
 	thing: () => new ThingRenderer(),
-	corpse: () => new ClientCorpse(),
+	// corpse: () => new ClientCorpse(),
 };
 
 audio.unlockOnFirstInteraction();
 // TODO: we should make audio ID a constnat defined in messages.ts / common
 audio.preload({
-	baseTheme: "./assets/music/BaseThemeVar - Slowed - Fasten.wav",
+	baseTheme: "./assets/music/ShopTheme.wav",
 	footstep: [
 		"./assets/sounds/Footstep1.wav",
 		"./assets/sounds/Footstep2.wav",
@@ -343,6 +343,33 @@ export class Game {
 		}
 
 		c.restore();
+
+		if (player?.dialogue) {
+			c.fillStyle = 'black'
+			c.beginPath()
+			c.moveTo(35 - Math.random() * 40, canvas.height - 40 - 200 - 5 - Math.random() * 40)
+			c.lineTo(canvas.width-35 + Math.random() * 40, canvas.height - 40 - 200 - 5 - Math.random() * 40)
+			c.lineTo(canvas.width-35 + Math.random() * 40, canvas.height - 35 + Math.random() * 40)
+			c.lineTo(35 - Math.random() * 40, canvas.height - 35 + Math.random() * 40)
+			c.fill()
+			c.fillStyle='white'
+			c.fillRect(40, canvas.height - 40 - 200, canvas.width - 80, 200)
+			c.fillStyle='black'
+			c.fillText(player.dialogue.messagfe, 80, canvas.height - 40 - 150)
+			c.strokeStyle = 'black'
+			for (const [i, {text,active}] of player.dialogue.options.entries()) {
+				c.strokeRect (80 + i*100, canvas.height - 80, 90, 20)
+				c.fillText(text, 80 + i*100, canvas.height - 70)
+				if (active) {
+				c.strokeRect (80 + i*100, canvas.height - 82, 90, 20)
+					c.fillText('v'.repeat(active), 80 + i*100, canvas.height - 80)
+				}
+// c.fill
+			}
+			c.fillStyle = 'grey'
+			c.fillText('hint: press SPACE when the v is above the option yo ulike', 80, canvas.height - 100)
+
+		}
 
 		if (this.debugInfoVisible && player) {
 			c.fillStyle = "black";

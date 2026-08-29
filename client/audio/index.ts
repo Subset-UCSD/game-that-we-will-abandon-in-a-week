@@ -61,7 +61,7 @@ export class AudioManager {
 		}
 
 		if (this.pendingMusic) {
-			this.startMusic(this.pendingMusic);
+			this.startMusic(this.pendingMusic, { volume: 0.3 });
 		}
 	}
 

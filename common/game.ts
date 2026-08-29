@@ -39,6 +39,13 @@ const playerSchema = worldObjectSchema.extend({
 	canInteractWith: z.number().array(),
 	knifeRadius: z.number(),
 	knifeAngle: z.number(),
+	dialogue:z.object({
+		messagfe:z.string(),
+		options:z.object({
+			text:z.string(),
+			active:z.number().optional(),
+		}).array(),
+	}).optional(),
 	// wtf is "collied"
 	// like the dog ?
 	// probably idk man, i'm not the one whose bat at spelling
@@ -68,7 +75,7 @@ const seedSchema = worldObjectSchema.extend({
 
 const thingSchema = worldObjectSchema.extend({
 	type: z.literal("thing"),
-	kind: z.literal(["tree", "campfire", "techbro"]),
+	kind: z.literal(["tree", "campfire", "techbro",'corpse','corpse-left','altar']),
 	interactive: z.boolean().optional(),
 	hp: z.number().optional(),
 	maxHp: z.number().optional(),
@@ -102,7 +109,7 @@ const allGameObjectSchemas = z.discriminatedUnion("type", [
 	enemySchema,
 	seedSchema,
 	thingSchema,
-	corpseSchema,
+	// corpseSchema,
 ]);
 export type SerializedGameObject = z.infer<typeof allGameObjectSchemas>;
 
