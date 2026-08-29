@@ -75,7 +75,7 @@ const seedSchema = worldObjectSchema.extend({
 
 const thingSchema = worldObjectSchema.extend({
 	type: z.literal("thing"),
-	kind: z.literal(["tree", "campfire", "techbro",'corpse','corpse-left']),
+	kind: z.literal(["tree", "campfire", "techbro",'corpse','corpse-left','altar']),
 	interactive: z.boolean().optional(),
 	hp: z.number().optional(),
 	maxHp: z.number().optional(),

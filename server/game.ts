@@ -65,7 +65,7 @@ if (knowledge.happy) {
 	yield {message:`go away ${knowledge.name}`,options:['no','ok']}
 }
 		}else
-		if (player.clouds >= 10) {
+		if (player.clouds >= 3) {
 yield {message:'WOW holy shit',options:['language']}
 yield {message:'cloud compute.',options:['sorry?']}
 player.maxHp*=2
@@ -78,7 +78,7 @@ if (response1!=='thanks') {
 }
 		}else
 		if (player.clouds >0 ) {
-yield {message:`hey ${knowledge.name} so you have ${player.clouds} cloud which is not TEN cloud i think i will have to mark this on your performance review are we aligned`,options:['can we circle back']}
+yield {message:`hey ${knowledge.name} so you have ${player.clouds} cloud which is not THREE cloud i think i will have to mark this on your performance review are we aligned`,options:['can we circle back']}
 		} else {
 			yield {message:`hi ${knowledge.name} where tf are my clouds i dont wish to speak to u rn sry`,options:['ok fuck you too']}
 		}
@@ -105,7 +105,7 @@ yield {message:`hey ${knowledge.name} so you have ${player.clouds} cloud which i
 									yield {message:'?',options:['sory']}
 								}
 								yield {message:'everything must be CLOUD',options:['so ?']}
-								yield {message:'i want TEN cloud',options:['ok']}
+								yield {message:'i want THREE cloud',options:['ok']}
 								this.#playerState.set(player,{name,})
 							}
 			// ;*#
@@ -120,6 +120,20 @@ yield {message:`hey ${knowledge.name} so you have ${player.clouds} cloud which i
 				{position:vec2(-50,-150),width:40,height:70}
 				// -50, -150, 40, 70
 			),
+		}),
+		new (class extends StaticThing {
+;*				logic (player:Player): Generator<{message:string,options:string[]},void,string> {
+const action = yield {message:'this is the temple of john typescript',options:['pray','leave']}
+if (action==='pray') {
+	yield {message:`you say: “Switching on a template literal expression does not narrow the interpolated union variable This is the behavior in every version tried (4.1.5, 5.9.2, 7.0.2; not expressible before 4.1), and I (had claude) review the FAQ for entries about type narrowing and template literal types Inside case "apple pie":, foo is still typed "apple" | "pear" | "banana", so const apple: "apple" = foo fails with:  error TS2322: Type '"apple" | "pear" | "banana"' is not assignable to type '"apple"'.  This is wrong because the case can only be reached when foo === "apple". The switch subject \${foo} pie as const is typed as "apple pie" | "pear pie" | "banana pie", and each case label corresponds to exactly one value of foo. The compiler already computes that correspondence, but control flow analysis doesn't propagate the match back to foo. The equivalent if ((\${foo} pie as const) === "apple pie") fails the same way, while switching on foo directly narrows as expected.”`,options:['meditate']}
+}
+}
+			// ;*#
+		})({
+			kind: "altar",
+			x: -980,
+			y: -1650,
+			interactive: true,
 		}),
 		new Enemy({
 			x: -300,
@@ -198,7 +212,7 @@ yield {message:`hey ${knowledge.name} so you have ${player.clouds} cloud which i
 							vecLength(subVec(x.end, meatball.publicState)) >= explosion.radius ||
 							vecLength(subVec(x.start, meatball.publicState)) >= explosion.radius,
 					);
-					// const explosionToPlayer = ev`(${entity.position} - ${explosion.publicState})`
+					// const explosionToPlayer = ev`(${entity.position} - ${explosion.publicState})\`
 				} else if (entity instanceof StaticThing) {
 					if (vecLength(subVec(entity.position, meatball.publicState)) < explosion.radius) {
 						entity.takeDamageIfPossible(EXPLOSION_DAMAGE);
@@ -467,6 +481,13 @@ yield {message:`hey ${knowledge.name} so you have ${player.clouds} cloud which i
 	handlePlayerInputs() {
 		for (const [_, player] of this.players) {
 			const movementDir = vec2();
+			if (player.inputs.left) {
+				player.facingLeft = true;
+			}
+			if (player.inputs.right) {
+				player.facingLeft = false;
+			}
+			if (!player.dialogue){
 			if (player.inputs.up) {
 				movementDir.y = -1;
 			}
@@ -475,13 +496,11 @@ yield {message:`hey ${knowledge.name} so you have ${player.clouds} cloud which i
 			}
 
 			if (player.inputs.left) {
-				player.facingLeft = true;
 				movementDir.x = -1;
 			}
 			if (player.inputs.right) {
-				player.facingLeft = false;
 				movementDir.x = 1;
-			}
+			}}
 			if (vecLengthSquared(movementDir) > 0) {
 				// im so scared of touching this but i think acceleration and friction need to be equal ?
 				player.acceleration = ev`${normalize(movementDir)} * ${10}`;

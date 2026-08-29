@@ -11,6 +11,8 @@ type RegisteredThing = {
 	shadowScale?: number;
 	/** applied BEFORE scale (so basically height of transparent pixels at bottom of original texture) */
 	offsetY?: number;
+	/** @default true */
+	shadow?:boolean
 };
 type Renderable = SerializedThing["kind"];
 const corpse = Promise.all(["./assets/what-do-sheep-become-when-they-die1.png", "./assets/what-do-sheep-become-when-they-die2.png"].values().map(url => fetch(url).then(r=>r.blob()).then(createImageBitmap))).then((frames):RegisteredThing=>({
@@ -81,6 +83,24 @@ const thingsToRender = new Map<Renderable, Promise<RegisteredThing>>([
 	[
 		'corpse-left',corpse
 	],
+	[
+		"altar",
+		Promise.all(
+			["./assets/altar.png"].values().map((url) =>
+				fetch(url)
+					.then((r) => r.blob())
+					.then(createImageBitmap),
+			),
+		).then(
+			(frames): RegisteredThing => ({
+				frames,
+				imageSize: { width: 325, height: 383 },
+				scale:0.6,
+				offsetY:20,
+				shadow:false,
+			}),
+		),
+	]
 ]);
 const resolved = new Map(
 	await Promise.all(thingsToRender.entries().map(async ([key, vallue]) => [key, await vallue] as const)),
@@ -170,7 +190,8 @@ export class ThingRenderer implements RenderableObject {
 		const rendered = resolved.get(this.thing.kind);
 		if (!rendered) return;
 
-		const { imageSize, scale = 1, shadowScale = 1 } = rendered;
+		const { imageSize, scale = 1, shadowScale = 1,shadow=true } = rendered;
+		if (!shadow) return
 		const width = imageSize.width * scale * shadowScale;
 		c.moveTo(this.thing.x + width / 2, this.thing.y);
 		c.ellipse(this.thing.x, this.thing.y, width / 2, width / 10, 0, 0, Math.PI * 2);
