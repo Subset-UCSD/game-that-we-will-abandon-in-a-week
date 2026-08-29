@@ -11,8 +11,11 @@
 // import { SerializedCollider } from "../../common/messages";
 import { ShaderProgram } from "./ShaderProgram";
 
-import testFragShader from "./shaders/test.frag";
 import testVertShader from "./shaders/test.vert";
+import testFragShader from "./shaders/test.frag";
+import filterVertShader from "./shaders/filter.vert";
+import tilesFragShader from "./shaders/tiles.frag";
+import { TILE_SIZE } from "@common";
 
 export type TextureType = "2d" | "cubemap";
 
@@ -159,6 +162,7 @@ export class Gl extends GlBase {
 		MAX_LIGHTS: `${+this.gl.getParameter(this.gl.MAX_TEXTURE_IMAGE_UNITS) - 4}`,
 		NEAR: "0.001",
 		FAR: "100.0",
+    TILE_SIZE: `${TILE_SIZE}`,
 	};
 
 	/** peepee (post-processing) effects */
@@ -167,6 +171,7 @@ export class Gl extends GlBase {
 	framebuffer = this.gl.createFramebuffer();
 
 	//#region  shaders here
+  #filterVertShader = this.createShader('vertex', filterVertShader, 'filter.vert')
   testShader = new ShaderProgram(
 		this,
 		this.createProgram(
@@ -174,6 +179,13 @@ export class Gl extends GlBase {
 			this.createShader("fragment", testFragShader, "test.frag"),
 		),
 	)
+  tileShader = new ShaderProgram(
+    this,
+    this.createProgram(
+      this.#filterVertShader,
+      this.createShader('fragment', tilesFragShader, 'tiles.frag')
+    )
+  )
 
 	/**
 	 * A helper method for compiling a shader. Useful for creating `Material`s.

@@ -80,9 +80,15 @@ function getTile(tiles: ChunkMap, coord: Vec2): TileId | null {
 	return tiles[`${chunkCoord.x} ${chunkCoord.y}`]?.[localCoord.y * CHUNK_SIZE + localCoord.x] ?? null;
 }
 
+export function renderTilesGl (canvas: Canvas, camera: Camera, tiles: ChunkMap): void {
+	const screenSize = vec2(canvas.width, canvas.height)
+	const minChunkSize = vecMap1(screenSize, dim => Math.ceil(dim / (CHUNK_SIZE * TILE_SIZE)) + 1)
+	const screenStart = ev`${camera} - ${screenSize} / 2 / ${camera.scale}`
+	const screenEnd = ev`${camera} + ${screenSize} / 2 / ${camera.scale}`
+}
+
 // this is kinda inefficient but whatever
 // if we wanted speed we'd use webgl
-
 export function renderTiles(canvas: Canvas, camera: Camera, tiles: ChunkMap, enableDebug = false): void {
 	// TEMP: for debugging
 	// renderTilesOld(canvas, camera, tiles)

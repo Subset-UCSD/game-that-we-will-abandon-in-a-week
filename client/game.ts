@@ -12,6 +12,7 @@ import {
 	type SerializedGameObject,
 	type SoundEvent,
 	subVec,
+	vec2,
 	vecLength,
 } from "@common";
 import type { Line, Player as NetPlayer, SerializedCollider, WholeFkingGameState } from "@common/game";
@@ -145,7 +146,8 @@ export class Game {
 		gl.bufferData(gl.ARRAY_BUFFER, new Float32Array([-10, -10, 10, -10, 10, 10]), gl.STATIC_DRAW);
 
 		//GET ATTRIBUTE IN .VERT		
-		const location = this.canvas.gl.testShader.attrib('a_position');
+		const location = this.canvas.gl.testShader.attribMaybe('a_position');
+		if (location !== null){
 		// BIND ATT TO OUR BUFFERS
 		gl.enableVertexAttribArray(location);
 		gl.vertexAttribPointer(location, 
@@ -155,10 +157,32 @@ export class Game {
 			0, // stride; 0 means "tightly packed"
 			0, // offset
 		);
+}
 
 		//cleanup
 		gl.bindVertexArray(null);
 		gl.bindBuffer(gl.ARRAY_BUFFER, null);
+
+		
+		{
+			const location = this.canvas.gl.tileShader.attribMaybe('a_position');
+		if (location !== null){
+		// BIND ATT TO OUR BUFFERS
+		gl.bindBuffer(gl.ARRAY_BUFFER, this.canvas.gl.imagePlanePositions)
+		gl.enableVertexAttribArray(location);
+		gl.vertexAttribPointer(location, 
+			2, // vec2
+			gl.FLOAT,
+			false, // normalized - has no effect on floats
+			0, // stride; 0 means "tightly packed"
+			0, // offset
+		);
+}
+
+		//cleanup
+		gl.bindVertexArray(null);
+		gl.bindBuffer(gl.ARRAY_BUFFER, null);
+	}
 
 
 		
@@ -312,14 +336,27 @@ export class Game {
 		mat4.translate(cameraTransformation, cameraTransformation, vec3.fromValues(-this.camera.x, -this.camera.y, 0))
 		const screenShakeAngle = Math.random() * 2 * Math.PI;
 		if (screenShake > 0) {
-			const shake = scaleVec(randomInCircle(), screenShake)
-			// Math.cos(screenShakeAngle) * screenShake, Math.sin(screenShakeAngle) * screenShake
+			// const shake = scaleVec(randomInCircle(), screenShake)
+			const shake = vec2(Math.cos(screenShakeAngle) * screenShake, Math.sin(screenShakeAngle) * screenShake)
 			c.translate(shake.x, shake.y);
 		mat4.translate(cameraTransformation, cameraTransformation, vec3.fromValues(shake.x, shake.y, 0))
 		}
 
+		const cameraTransformationInverse = mat4.create()
+		mat4.invert(cameraTransformationInverse, cameraTransformation)
+
 			//TEMP HOW TO USE WEBGL
 			gl.beginRender();
+
+
+			gl.tileShader.use()
+			gl.gl.uniformMatrix4fv(gl.tileShader.uniform("u_view_inv"), false, cameraTransformationInverse);
+				gl.gl.drawArraysInstanced(
+				gl.gl.TRIANGLES,
+				0, //Start index
+				6, //number of vertices 
+				1  // number of instances
+			);
 
 			gl.testShader.use()
 
@@ -332,6 +369,7 @@ export class Game {
 				3, //number of vertices 
 				1  // number of instances
 			);
+			gl.gl.bindVertexArray(null)
 			
 		gl.applyFilters();
 
