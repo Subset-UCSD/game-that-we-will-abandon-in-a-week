@@ -1,4 +1,4 @@
-import { ev, isVecEq, isZeroVec, normalize, subVec, type Vec2, vec2, vecLengthSquared } from "@common";
+import { ev, isVecEq, isZeroVec, normalize, randomInCircle, scaleVec, subVec, type Vec2, vec2, vecLengthSquared } from "@common";
 import { type GameObject, KNIFE_OFFSET_Y, type Player as NetPlayer } from "@common/game";
 import { defaultInputs, type Inputs } from "@common/input";
 import { BoxCollider } from "@server/collision";
@@ -19,7 +19,7 @@ export class Player implements GameObject {
 	max_speed: number = 5;
 	// represents player movement
 	acceleration = vec2();
-	position: Vec2 = { x: (Math.random() - 0.5) * 1000, y: (Math.random() - 0.5) * 1000 };
+	position: Vec2 =scaleVec( randomInCircle(),1000);
 	velocity: Vec2 = { x: 0, y: 0 };
 	id;
 	static next_id = 0;
@@ -28,6 +28,7 @@ export class Player implements GameObject {
 	wasInteracting = false;
 	thought: string = "";
 	hp: number = 67;
+	maxHp = MAX_HP
 	facingLeft = false;
 	connected = false;
 	lastInputTime = 0;
@@ -56,6 +57,7 @@ export class Player implements GameObject {
 	}
 	optionIndex = 0
 	optionTimer = 0
+	clouds = 0
 
 	constructor(game: Game) {
 		this.game = game;
@@ -102,7 +104,7 @@ export class Player implements GameObject {
 			// nvm
 			probablyafk: ((Date.now() - this.lastInputTime) / 1000) * 1000 > SLEEP_TIME,
 			healthpercent: this.hp,
-			maxHp: MAX_HP,
+			maxHp: this.maxHp,
 			lines: this.lines.map(({ start, end, committed }) => ({
 				start,
 				end,
@@ -155,7 +157,7 @@ export class Player implements GameObject {
 		// }
 
 		if (this.hp <= 0) {
-			this.hp = MAX_HP;
+			this.hp = this.maxHp;
 			this.game.addGameObject(
 				new Corpse({
 					...this.position,
@@ -163,7 +165,7 @@ export class Player implements GameObject {
 				}),
 			);
 			// TODO: respawn
-			this.position = { x: (Math.random() - 0.5) * 1000, y: (Math.random() - 0.5) * 1000 };
+			this.position = scaleVec( randomInCircle(),1000)
 		}
 		this.seedCooldownTicks = Math.max(this.seedCooldownTicks - 1, 0);
 		this.collider.updateLocation(subVec(this.position, { x: 0, y: 10 }));

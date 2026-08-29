@@ -1,6 +1,7 @@
 import type { SerializedGameObject, SerializedThing } from "@common";
 import type { Canvas } from "./canvas";
 import type { RenderableObject } from "./render";
+import { SHEEP_WIDTH } from "./player";
 
 type RegisteredThing = {
 	frames: ImageBitmap[];
@@ -12,6 +13,13 @@ type RegisteredThing = {
 	offsetY?: number;
 };
 type Renderable = SerializedThing["kind"];
+const corpse = Promise.all(["./assets/what-do-sheep-become-when-they-die1.png", "./assets/what-do-sheep-become-when-they-die2.png"].values().map(url => fetch(url).then(r=>r.blob()).then(createImageBitmap))).then((frames):RegisteredThing=>({
+	frames,
+	imageSize: {width:SHEEP_WIDTH,height:50},
+	offsetY: 8,
+	timePerFrame:770,
+	shadowScale:0.4,
+}))
 const thingsToRender = new Map<Renderable, Promise<RegisteredThing>>([
 	[
 		"tree",
@@ -67,6 +75,12 @@ const thingsToRender = new Map<Renderable, Promise<RegisteredThing>>([
 			}),
 		),
 	],
+	[
+		'corpse',corpse
+	],
+	[
+		'corpse-left',corpse
+	],
 ]);
 const resolved = new Map(
 	await Promise.all(thingsToRender.entries().map(async ([key, vallue]) => [key, await vallue] as const)),
@@ -78,25 +92,53 @@ const resolved = new Map(
 export class ThingRenderer implements RenderableObject {
 	canInteract = false;
 	// renderType: Renderable
-	private thing?: SerializedThing;
+	 thing?: SerializedThing;
 	get index() {
 		return this.thing?.y ?? 0;
 	}
 
-	render({ c }: Canvas) {
+	// renderEverythingElse ({c}:Canvas,heightOffset:number) {
+	// 	if (!this.thing) return;
+
+	// }
+
+	render(canvas: Canvas) {
+		const {c}=canvas
 		if (!this.thing) return;
 		const rendered = resolved.get(this.thing.kind);
 		if (!rendered) return;
 
 		const { frames, timePerFrame = 1000, imageSize, scale = 1, offsetY = 0 } = rendered;
 		const frame = frames[Math.floor(Date.now() / (timePerFrame + ((this.thing.id * Math.PI) % 50))) % frames.length];
+
+
+		let renderOffsetY = offsetY
+		let renderX = this.thing.x
+
+		
+		// TODO: it would be nice if custom rendering logic like this didn't pollute the thing renderer
+		if (this.thing.kind ==='corpse'||this.thing.kind==='corpse-left'){
+			renderOffsetY += Math.sin(Date.now() / (900 + ((this.thing.id * Math.PI) % 100))) * 5
+		}
+		if (this.thing.kind==='corpse-left') {
+			renderX = -renderX
+			c.save();
+			c.scale(-1, 1);
+		}
+
 		c.drawImage(
 			frame,
-			this.thing.x - (imageSize.width * scale) / 2,
-			this.index - imageSize.height * scale + offsetY * scale,
+			renderX- (imageSize.width * scale) / 2,
+			this.index - imageSize.height * scale + renderOffsetY * scale,
 			imageSize.width * scale,
 			imageSize.height * scale,
 		);
+
+		
+		if (this.thing.kind==='corpse-left') {
+			c.restore();
+		}
+
 
 		//  const {imageSize,scale=1,offsetY=0} = rendered
 		const { x, y, hp, maxHp } = this.thing;
@@ -120,6 +162,7 @@ export class ThingRenderer implements RenderableObject {
 				c.strokeRect(x - 20.5, y - 10.8 + heightOffset, 41, 6);
 			}
 		}
+		// this.renderEverythingElse(canvas,heightOffset)
 	}
 
 	renderShadow({ c }: Canvas): void {

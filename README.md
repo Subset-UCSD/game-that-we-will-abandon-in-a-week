@@ -29,6 +29,14 @@ Check types:
 npx tsc
 ```
 
+Make code biomatic[^biome]:
+
+[^biome]: biome
+
+```sh
+npx biome check --write
+```
+
 Final build:
 
 ```sh

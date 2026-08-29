@@ -54,32 +54,61 @@ export class Game {
 			// static {
 			// 	type State = 'first' | 'second'
 			// }
-			#playerState = new Map<Player,  'first' | 'second'>()
-
-			// this is extremely unergonomic and no one is going to use this shtiy siystsem
-			interact(player: Player, option:string|null): void {
-				if (option !== null) {
-					const state = this.#playerState.get(player) ?? 'first'
-					if (state==='first'){
-						
-						player.dialogue = {
-					messagfe: `ok... ${option.toUpperCase()} to YOU too!!!!!`,
-					options:['ok'],
-					resopondTo:this,
-				}
-				this.#playerState.set(player,'second')
-					} else {
-						player.dialogue = undefined
-					}
-				} else {
-					player.dialogue = {
-					messagfe: 'fuCK you!',
-					options:['fuck me','fuck you'],
-					resopondTo:this,
-				}
-				this.#playerState.set(player,'first')
-				}
-			}
+			#playerState = new Map<Player, {name:string,happy?:boolean}>()
+;*				logic (player:Player): Generator<{message:string,options:string[]},void,string> {
+	const knowledge = this.#playerState.get(player)
+	if (knowledge) {
+		if (knowledge.happy!==undefined){
+if (knowledge.happy) {
+	yield {message:`hey ${knowledge.name}`,options:['hi']}
+} else {
+	yield {message:`go away ${knowledge.name}`,options:['no','ok']}
+}
+		}else
+		if (player.clouds >= 10) {
+yield {message:'WOW holy shit',options:['language']}
+yield {message:'cloud compute.',options:['sorry?']}
+player.maxHp*=2
+const response1 = yield {message:'i dont have much to reward you with so i will double your max hp',options:['thanks','um wont this make it harder for me to get clouds from myself']}
+if (response1!=='thanks') {
+	knowledge.happy = false
+	yield {message:'ok fuck off u ungrateful shit',options:['...']}
+} else {
+	knowledge.happy = true
+}
+		}else
+		if (player.clouds >0 ) {
+yield {message:`hey ${knowledge.name} so you have ${player.clouds} cloud which is not TEN cloud i think i will have to mark this on your performance review are we aligned`,options:['can we circle back']}
+		} else {
+			yield {message:`hi ${knowledge.name} where tf are my clouds i dont wish to speak to u rn sry`,options:['ok fuck you too']}
+		}
+		return
+	}
+								yield {
+									message: 'yo',
+									options:['sup tech bro'],
+								}
+								const name = yield {
+									message: 'what is ur name',
+									options:['alice','bob','charlies','daisy',
+										// i keep soft locking myself
+										// 'I am Benjamin Netanyahu.'
+									],
+								}
+								if (name.includes('Ben')) {
+									yield { message: ' hey so fuck',options:[]}
+								}
+								yield { message: `hey ${name} what r ur thoughts on ai`,options:['i love ai',' i hate ai']}
+								yield {message:' i dont care',options:['...']}
+								const respone1= yield {message:'i am a tech bro',options:['yes','no']}
+								if (respone1 === 'no') {
+									yield {message:'?',options:['sory']}
+								}
+								yield {message:'everything must be CLOUD',options:['so ?']}
+								yield {message:'i want TEN cloud',options:['ok']}
+								this.#playerState.set(player,{name,})
+							}
+			// ;*#
 		})({
 			kind: "techbro",
 			x: -50,
@@ -579,7 +608,7 @@ export class Game {
 		// TODO: how should we handle dialog? should tech bro extend StaticThing and implement a method with interaction logic?
 		// do we want to send a message to the client to render a dialog pop up, or to represent it as state? if latter, do we want to send this to everyone?
 		if (player.dialogue){
-			if (player.dialogue.resopondTo===thing){
+			if (player.dialogue.resopondTo===thing && player.dialogue.options.length > 0){
 				thing.interact(player,player.dialogue.options[ player.optionIndex % player.dialogue.options.length])
 			}
 		} else {

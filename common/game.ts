@@ -75,7 +75,7 @@ const seedSchema = worldObjectSchema.extend({
 
 const thingSchema = worldObjectSchema.extend({
 	type: z.literal("thing"),
-	kind: z.literal(["tree", "campfire", "techbro"]),
+	kind: z.literal(["tree", "campfire", "techbro",'corpse','corpse-left']),
 	interactive: z.boolean().optional(),
 	hp: z.number().optional(),
 	maxHp: z.number().optional(),
@@ -109,7 +109,7 @@ const allGameObjectSchemas = z.discriminatedUnion("type", [
 	enemySchema,
 	seedSchema,
 	thingSchema,
-	corpseSchema,
+	// corpseSchema,
 ]);
 export type SerializedGameObject = z.infer<typeof allGameObjectSchemas>;
 

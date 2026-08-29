@@ -45,7 +45,7 @@ const creators: Record<SerializedGameObject["type"], Creator> = {
 	// tree:() => new ThingRenderer(),
 	// campfire:() => new ThingRenderer(),
 	thing: () => new ThingRenderer(),
-	corpse: () => new ClientCorpse(),
+	// corpse: () => new ClientCorpse(),
 };
 
 audio.unlockOnFirstInteraction();

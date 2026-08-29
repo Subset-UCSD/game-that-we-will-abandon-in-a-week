@@ -2,6 +2,7 @@ import type { SerializedCorpse, SerializedGameObject } from "@common/game";
 import type { Canvas } from "./canvas";
 import { SHEEP_WIDTH } from "./player";
 import type { RenderableObject } from "./render";
+import { ThingRenderer } from "./thing-renderer";
 
 const frames = await Promise.all(
 	["./assets/what-do-sheep-become-when-they-die1.png", "./assets/what-do-sheep-become-when-they-die2.png"].map(
@@ -9,29 +10,26 @@ const frames = await Promise.all(
 	),
 );
 
-export class ClientCorpse implements RenderableObject {
+export class ClientCorpse extends ThingRenderer {
 	// index = 1;
-	state?: SerializedCorpse;
+	// state?: SerializedCorpse;
 
-	get index() {
-		return this.state?.y ?? 0;
-	}
 
 	renderShadow({ c }: Canvas): void {
-		if (!this.state) return;
-		const { x, y } = this.state;
+		if (!this.thing) return;
+		const { x, y } = this.thing;
 		c.moveTo(x + SHEEP_WIDTH * 0.4, y);
 		c.ellipse(x, y, SHEEP_WIDTH * 0.4, SHEEP_WIDTH * 0.08, 0, 0, Math.PI * 2);
 	}
 
 	render({ c }: Canvas) {
-		if (!this.state) return;
+		if (!this.thing) return;
 
-		const frame = frames[Math.floor(Date.now() / (770 + ((this.state.id * Math.PI) % 50))) % frames.length];
+		const frame = frames[Math.floor(Date.now() / (770 + ((this.thing.id * Math.PI) % 50))) % frames.length];
 
-		const { x, y } = this.state;
-		const offset = Math.sin(Date.now() / (900 + ((this.state.id * Math.PI) % 100))) * 5;
-		if (this.state.facingLeft) {
+		const { x, y } = this.thing;
+		const offset = Math.sin(Date.now() / (900 + ((this.thing.id * Math.PI) % 100))) * 5;
+		if (this.thing.kind==='corpse-left') {
 			c.save();
 			c.scale(-1, 1);
 			c.drawImage(frame, -x - SHEEP_WIDTH / 2, y - 42 + offset, SHEEP_WIDTH, 50);
@@ -41,8 +39,8 @@ export class ClientCorpse implements RenderableObject {
 		}
 	}
 
-	update(objState: SerializedGameObject): void {
-		if (objState.type !== "corpse") return;
-		this.state = objState;
-	}
+	// update(objState: SerializedGameObject): void {
+	// 	if (objState.type !== "corpse") return;
+	// 	this.state = objState;
+	// }
 }
