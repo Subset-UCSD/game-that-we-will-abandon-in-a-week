@@ -1,24 +1,24 @@
-import { dot, ev, type Vec2, vec2, vec2Schema, vecLength } from "@common";
+import { dot, ev, normalize, ortho, type Vec2, vec2, vec2Schema, vecLength } from "@common";
 import z from "zod";
 import { SATCollider } from "./collision";
 
-/** 
+/**
  * This is a rework/port/cleanup of the work Sean did in collision.ts that
- * replaces collision done with rich classes with dumb collision objects 
- * that can be stored directly on game objects and passed to a collide 
+ * replaces collision done with rich classes with dumb collision objects
+ * that can be stored directly on game objects and passed to a collide
  * function within this file that knows how to collide those two things
  */
 
 /**
  * Methodology here is that colliders are very dumb, they are just plain
  * JS objects. We have a function `collide` that takes in two objects and
- * it knows how to collide them. 
+ * it knows how to collide them.
  */
 // nick: I intend for transform schema values to be spread onto the collider when
 // preparing the object to pass to collide(), but implementation can vary ig
 const transformSchema = z.object({
 	position: vec2Schema,
-	rotation: z.number()
+	rotation: z.number(),
 });
 const baseCollider = transformSchema.extend({
 	offet: vec2Schema,
@@ -26,7 +26,7 @@ const baseCollider = transformSchema.extend({
 const boxCollider = baseCollider.extend({
 	type: z.literal("box"),
 	width: z.number().nonnegative(),
-	height: z.number().nonnegative()
+	height: z.number().nonnegative(),
 });
 const circleCollider = baseCollider.extend({
 	type: z.literal("circle"),
@@ -34,14 +34,9 @@ const circleCollider = baseCollider.extend({
 });
 const polygonCollider = baseCollider.extend({
 	type: z.literal("polygon"),
-	points: z.array(vec2Schema).min(3),
-
+	corners: z.array(vec2Schema).min(3),
 });
-const colliderSchema = z.discriminatedUnion("type", [
-	boxCollider, 
-	circleCollider,
-	polygonCollider
-]);
+const colliderSchema = z.discriminatedUnion("type", [boxCollider, circleCollider, polygonCollider]);
 
 type Circle = z.infer<typeof circleCollider>;
 type Box = z.infer<typeof boxCollider>;
@@ -50,50 +45,81 @@ type Polygon = z.infer<typeof polygonCollider>;
 export type Collider = z.infer<typeof colliderSchema>;
 
 function collide(a: Collider, b: Collider) {
-	main: switch (a.type) {
-		case "box": switch (b.type) {
-			case "box": break main
-			case "circle":return collideCircleBox(b, a);
-			case "polygon":break main
-		}
-		case "circle": switch (b.type) {
-
-			case "box":return collideCircleBox(a, b);
-			case "circle":return collideCircleCircle(a, b);
-			case "polygon":break main
-		}
-		case "polygon": switch (b.type) {
-
-			case "box":break main
-			case "circle":break main
-			case "polygon":break main
-		}
+	switch (a.type) {
+		case "box":
+			switch (b.type) {
+				case "box":
+					return collideBoxBox(a, b);
+				case "circle":
+					return collideCircleBox(b, a);
+				case "polygon":
+					return collideBoxPolygon(a, b);
+			}
+		case "circle":
+			switch (b.type) {
+				case "box":
+					return collideCircleBox(a, b);
+				case "circle":
+					return collideCircleCircle(a, b);
+				case "polygon":
+					return collideCirclePolygon(a, b);
+			}
+		case "polygon":
+			switch (b.type) {
+				case "box":
+					return collideBoxPolygon(b, a);
+				case "circle":
+					return collideCirclePolygon(b, a);
+				case "polygon":
+					return collidePolygonPolygon(a, b);
+			}
 	}
-	// const t = `${a.type}-${b.type}` as const;
-	// if (t === "circle-circle" ) {
-	// 	// whatever dude someone should submit a pr to typescript that fixes ts
-	// 	// this should totally narrow a string union but it doesn't
-	// 	return collideCircleCircle(a, b);
-	// }
-	// switch(t) {
-	// 	case "circle-circle":
-	// 	case "circle-box":
-	// 		return collideCircleBox(a, b);
-	// 	case "box-circle":
-	// 		return collideCircleBox(b, a);
-	// 	case "circle-polygon":
-
-	// 	default:
-	// 	}
-		throw "I cannot deal with you TOUCHING right now 🤮"
+	throw "I cannot deal with you TOUCHING right now 🤮";
 }
 
-function collideCircleCircle<C extends Extract<Collider, {type: "circle"}>>(a: C, b: Circle) {}
+function collideBoxBox(a: Box, b: Box) {}
+function collideCircleCircle(a: Circle, b: Circle) {}
 function collideCircleBox(a: Circle, b: Box) {}
+function collideCirclePolygon(a: Circle, b: Polygon) {}
+function collideBoxPolygon(a: Box, b: Polygon) {}
+function collidePolygonPolygon(a: Polygon, b: Polygon) {}
 
+function getAxes(a: Collider, reference?: Collider) {
+	switch (a.type) {
+		case "circle": switch(reference?.type) {
+			case "circle": throw new Error("not going to be implemented");
+			case "box":
+			case "polygon":
+				const axes = getAxes(reference);
+				axes.push()
+		}
 
+		case "box":
+			// https://www.desmos.com/calculator/l8k5red0mg
+			const cos = Math.cos(a.rotation);
+			const sin = Math.sin(a.rotation);
+			return [vec2(sin, cos), vec2(cos, -sin)];
+		case "polygon":
+			// go through all edges, get their normals
+			const vec_list = a.corners;
+			const axes: Vec2[] = [];
+			for (let i = 0; i < vec_list.length; i++) {
+				const p1 = vec_list[i];
+				const p2 = vec_list[i + 1 < vec_list.length ? i + 1 : 0];
+				axes.push(normalize(ortho(ev`${p1} - ${p2}`)));
+			}
+			return axes;
+	}
+}
 
-
+/**
+ * Collide anything with anything using SAT assuming it is:
+ * a) convex shape
+ * b) has edges
+ * problem: this is SLOW, so prefer more specialized collision first
+ * before using this
+ */
+function collideAnythingAnything_SLOW(a: Collider, b: Collider) {}
 
 // Get the ratio of p1 on the line to point 2
 // assumes points are on the same line
