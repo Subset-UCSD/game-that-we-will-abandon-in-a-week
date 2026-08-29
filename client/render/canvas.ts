@@ -45,8 +45,9 @@ export class Canvas {
 	constructor() {
 		this.#observer.observe(this.canvas);
 
-		this.gl.gl.enable(this.gl.gl.CULL_FACE);
-this.gl.gl.enable(this.gl.gl.DEPTH_TEST);
+		// turn off back facing culling since we're viewing the underside of triangles
+		// this.gl.gl.enable(this.gl.gl.CULL_FACE);
+		// this.gl.gl.enable(this.gl.gl.DEPTH_TEST);
 	}
 
 	/**

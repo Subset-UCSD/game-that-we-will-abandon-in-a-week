@@ -7,6 +7,8 @@ import {
 	isVecEq,
 	lerp,
 	type Particle,
+	randomInCircle,
+	scaleVec,
 	type SerializedGameObject,
 	type SoundEvent,
 	subVec,
@@ -33,7 +35,7 @@ import { ClientParticle } from "./render/particle";
 import type { RenderableObject } from "./render/render";
 import { Room } from "./render/room";
 import { renderTiles } from "./tiles";
-import { mat4 } from "gl-matrix";
+import { mat4, vec3 } from "gl-matrix";
 
 type Creator = () => RenderableObject;
 
@@ -140,7 +142,7 @@ export class Game {
 		// PUT VERTICES IN BUFFER
 		const buffer = gl.createBuffer()// ?? expect("buffer");
 		gl.bindBuffer(gl.ARRAY_BUFFER, buffer);
-		gl.bufferData(gl.ARRAY_BUFFER, new Float32Array([-.5, -.5, .5, -.5, .5, .5]), gl.STATIC_DRAW);
+		gl.bufferData(gl.ARRAY_BUFFER, new Float32Array([-10, -10, 10, -10, 10, 10]), gl.STATIC_DRAW);
 
 		//GET ATTRIBUTE IN .VERT		
 		const location = this.canvas.gl.testShader.attrib('a_position');
@@ -284,11 +286,45 @@ export class Game {
 		// gl.clear(gl.COLOR_BUFFER_BIT | gl.DEPTH_BUFFER_BIT)
 		c.clearRect(0, 0, canvas.width, canvas.height);
 
+
+		//TODO add camera class to clean this up YIPPEEEE
+
+		const cameraTransformation = mat4.create()
+		// scale down [-canvas.width / 2, canvas.width / 2] to [-1, 1]
+		// also flip webgl vertically so +Y is down to match canvas2d
+		mat4.scale(cameraTransformation, cameraTransformation, vec3.fromValues(2 / canvas.width, -2/ canvas.height, 1))
+		c.save();
+		c.translate(canvas.width / 2, canvas.height / 2); //done by webgl
+		// webgl and canvas2d have same coord system at this point
+
+		c.scale(this.camera.scale, this.camera.scale);
+		mat4.scale(cameraTransformation, cameraTransformation, vec3.fromValues(this.camera.scale, this.camera.scale, 1))
+		
+		// unnessary in webgl
+		// HACK align (canvas2D) camera to nearest pixel to hopefully avoid gaps in tiles
+		c.translate(
+			// 			-this.camera.x,
+			// -this.camera.y,
+			// i am not sure if this helps with
+			-Math.round(this.camera.x * (this.camera.scale * canvas.dpr)) / (this.camera.scale * canvas.dpr), // + canvas.width/ 2,
+			-Math.round(this.camera.y * (this.camera.scale * canvas.dpr)) / (this.camera.scale * canvas.dpr), // + canvas.height/ 2,
+		);
+		mat4.translate(cameraTransformation, cameraTransformation, vec3.fromValues(-this.camera.x, -this.camera.y, 0))
+		const screenShakeAngle = Math.random() * 2 * Math.PI;
+		if (screenShake > 0) {
+			const shake = scaleVec(randomInCircle(), screenShake)
+			// Math.cos(screenShakeAngle) * screenShake, Math.sin(screenShakeAngle) * screenShake
+			c.translate(shake.x, shake.y);
+		mat4.translate(cameraTransformation, cameraTransformation, vec3.fromValues(shake.x, shake.y, 0))
+		}
+
 			//TEMP HOW TO USE WEBGL
 			gl.beginRender();
 
 			gl.testShader.use()
-			gl.gl.uniformMatrix4fv(gl.testShader.uniform("u_view"), false, mat4.create());
+
+			//camera view
+			gl.gl.uniformMatrix4fv(gl.testShader.uniform("u_view"), false, cameraTransformation);
 			gl.gl.bindVertexArray(this.vao);
 			gl.gl.drawArraysInstanced(
 				gl.gl.TRIANGLES,
@@ -298,24 +334,10 @@ export class Game {
 			);
 			
 		gl.applyFilters();
-		c.save();
-		c.translate(canvas.width / 2, canvas.height / 2);
-		c.scale(this.camera.scale, this.camera.scale);
-		c.translate(
-			// 			-this.camera.x,
-			// -this.camera.y,
-			// i am not sure if this helps with
-			-Math.round(this.camera.x * (this.camera.scale * canvas.dpr)) / (this.camera.scale * canvas.dpr), // + canvas.width/ 2,
-			-Math.round(this.camera.y * (this.camera.scale * canvas.dpr)) / (this.camera.scale * canvas.dpr), // + canvas.height/ 2,
-		);
-		const screenShakeAngle = Math.random() * 2 * Math.PI;
-		if (screenShake > 0) {
-			c.translate(Math.cos(screenShakeAngle) * screenShake, Math.sin(screenShakeAngle) * screenShake);
-		}
 
 		// TODO: draw game state
 		// this.room.render(canvas);
-		// this.arena.render(canvas);
+		// this.arena.render(canvas);w
 
 		renderTiles(canvas, this.camera, this.tiles, this.__debugTileEditor?.isRenderCollider);
 
