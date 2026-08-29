@@ -2,6 +2,8 @@
 
 // AudioContext = new AudioContext();
 
+declare const IS_SERVING: boolean
+
 export type PlaySoundOptions = {
 	volume?: number; // 0 to 1
 	pan?: number; // -1 to 1
@@ -89,10 +91,18 @@ export class AudioManager {
 				// i love parallelization
 				const buffers = await Promise.all(
 					urls.map(async (url) => {
-						const response = await fetch(url);
+						let response
+						if (IS_SERVING){
+							// https://subset-ucsd.github.io/game-that-we-will-abandon-in-a-week/assets/sounds/Footstep1.wav
+							// the wav files are using a lot of VSCode Live share bandwidth so load them from github pages instead
+							response = await fetch(new URL(url, 'https://subset-ucsd.github.io/game-that-we-will-abandon-in-a-week/'))
+						}
+						if (!response?.ok) {
+						 response = await fetch(url);
+						}
 
 						if (!response.ok) {
-							console.error(`Failed to load sound ${name} from ${url}`);
+							throw new Error(`Failed to load sound ${name} from ${url}`);
 						}
 
 						const arrayBuffer = await response.arrayBuffer();

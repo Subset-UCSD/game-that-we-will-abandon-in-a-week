@@ -2,10 +2,10 @@ import { DebugTileEditor } from "./debug/tile-editor";
 import { Game } from "./game";
 import { Canvas } from "./render";
 
-using canvas = new Canvas();
-const c = canvas.context;
-document.body.append(canvas.glCanvas);
-document.body.append(canvas.canvas);
+// using canvas = new Canvas();
+// const c = canvas.context;
+// document.body.append(canvas.glCanvas);
+// document.body.append(canvas.canvas);
 
 const game = new Game();
 
@@ -21,7 +21,7 @@ while (true) {
 
 	// TEMP: just for demo purposes, please ignore
 
-	game.render(canvas);
+	game.render();
 
 	// arena.render(canvas)
 

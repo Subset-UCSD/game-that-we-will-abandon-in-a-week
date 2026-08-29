@@ -3,6 +3,7 @@ import { Player } from "@client/render/player";
 import {
 	addVec,
 	type ChunkMap,
+	expect,
 	isVecEq,
 	lerp,
 	type Particle,
@@ -17,7 +18,7 @@ import type { DebugTileEditor } from "./debug/tile-editor";
 import { InputListener } from "./input-listener";
 import { Connection } from "./net/connection";
 import {
-	type Canvas,
+	Canvas,
 	ClientCorpse,
 	ClientExplosion,
 	ClientMeatball,
@@ -92,6 +93,9 @@ export class Game {
 	private tiles: ChunkMap = {};
 	private particles: ClientParticle[] = [];
 	private lastRenderTime = Date.now();
+	private canvas = new Canvas();
+	// TEMP
+	private vao = this.canvas.gl.gl.createVertexArray()
 
 	private camera: Camera = { x: 0, y: 0, scale: 1 };
 
@@ -121,6 +125,41 @@ export class Game {
 		const d20 = D20(true);
 
 		this.cilentState.set(-1, d20);
+
+		document.body.append(this.canvas.glCanvas);
+		document.body.append(this.canvas.canvas);
+
+
+		//TEMP HOW TO USE WEBGL
+
+		const gl =this.canvas.gl.gl
+
+		/// We can initialize vertices once here
+		gl.bindVertexArray(this.vao);
+		
+		// PUT VERTICES IN BUFFER
+		const buffer = gl.createBuffer()// ?? expect("buffer");
+		gl.bindBuffer(gl.ARRAY_BUFFER, buffer);
+		gl.bufferData(gl.ARRAY_BUFFER, new Float32Array([-.5, -.5, .5, -.5, .5, .5]), gl.STATIC_DRAW);
+
+		//GET ATTRIBUTE IN .VERT		
+		const location = this.canvas.gl.testShader.attrib('a_position');
+		// BIND ATT TO OUR BUFFERS
+		gl.enableVertexAttribArray(location);
+		gl.vertexAttribPointer(location, 
+			2, // vec2
+			gl.FLOAT,
+			false, // normalized - has no effect on floats
+			0, // stride; 0 means "tightly packed"
+			0, // offset
+		);
+
+		//cleanup
+		gl.bindVertexArray(null);
+		gl.bindBuffer(gl.ARRAY_BUFFER, null);
+
+
+		
 	}
 
 	updateGameState(gameState: WholeFkingGameState) {
@@ -202,7 +241,8 @@ export class Game {
 	};
 
 	// width, height = screen size (useful for centering things)
-	render(canvas: Canvas) {
+	render() {
+		const canvas = this.canvas
 		const now = Date.now();
 		// if (this.id == -1) return
 
@@ -244,14 +284,20 @@ export class Game {
 		// gl.clear(gl.COLOR_BUFFER_BIT | gl.DEPTH_BUFFER_BIT)
 		c.clearRect(0, 0, canvas.width, canvas.height);
 
+			//TEMP HOW TO USE WEBGL
 			gl.beginRender();
 
 			gl.testShader.use()
 			gl.gl.uniformMatrix4fv(gl.testShader.uniform("u_view"), false, mat4.create());
-
+			gl.gl.bindVertexArray(this.vao);
+			gl.gl.drawArraysInstanced(
+				gl.gl.TRIANGLES,
+				0, //Start index
+				3, //number of vertices 
+				1  // number of instances
+			);
 			
-	gl.applyFilters();
-
+		gl.applyFilters();
 		c.save();
 		c.translate(canvas.width / 2, canvas.height / 2);
 		c.scale(this.camera.scale, this.camera.scale);
