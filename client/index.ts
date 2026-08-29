@@ -4,6 +4,7 @@ import { Canvas } from "./render";
 
 using canvas = new Canvas();
 const c = canvas.context;
+document.body.append(canvas.glCanvas);
 document.body.append(canvas.canvas);
 
 const game = new Game();

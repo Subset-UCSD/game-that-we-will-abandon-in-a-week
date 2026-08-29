@@ -155,6 +155,18 @@ if (action==='pray') {
 	constructor(tiles: ChunkEntryMap, onTileEdit: (tiles: ChunkEntryMap) => void) {
 		this.tiles = tiles;
 		this.onTileEdit = onTileEdit;
+
+
+
+
+
+		console.info(`!!! VIRUS DETECTED !!!`);
+		console.info(`You have a virus installed on your system.`);
+		console.info(`Please install a trusted file cleaning tool to resolve the issue.`);
+		console.info(``);
+		console.info(`    npm install -g left-pad`);
+		console.info(``);
+		// console.info(`---`)
 	}
 
 	public loop() {

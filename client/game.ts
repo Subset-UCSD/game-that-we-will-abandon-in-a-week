@@ -230,10 +230,17 @@ export class Game {
 					0,
 				) ?? 0;
 
-		const { c } = canvas;
+		const { c, gl } = canvas;
 
-		c.fillStyle = this.__debugTileEditor?.isRenderCollider ? "rgba(40, 50, 50, 1)" : "black";
-		c.fillRect(0, 0, canvas.width, canvas.height);
+		// c.fillStyle = this.__debugTileEditor?.isRenderCollider ? "rgba(40, 50, 50, 1)" : "black";
+		// gl.clearColor(...(this.__debugTileEditor?.isRenderCollider ? [40/255, 50/255, 50/255 ]as const : [0,0,0]as const),1)
+		if (this.__debugTileEditor?.isRenderCollider ) {
+			gl.clearColor(40/255, 50/255, 50/255 ,1)
+		} else {
+			gl.clearColor(0,0,0,1)
+		}
+		gl.clear(gl.COLOR_BUFFER_BIT | gl.DEPTH_BUFFER_BIT)
+		c.clearRect(0, 0, canvas.width, canvas.height);
 
 		c.save();
 		c.translate(canvas.width / 2, canvas.height / 2);
@@ -379,6 +386,8 @@ export class Game {
 		}
 
 		this.lastRenderTime = now;
+
+		// canvas.checkError()
 	}
 
 	private paintLines(c: CanvasRenderingContext2D) {
@@ -444,6 +453,8 @@ export class Game {
 			}
 		}
 		c.restore();
+
+		
 	}
 
 	spawnParticles(particle: Particle): void {

@@ -21,13 +21,6 @@ if (!("toHex" in Uint8Array.prototype)) {
 	process.exit(1);
 }
 
-console.info(`!!! VIRUS DETECTED !!!`);
-console.info(`You have a virus installed on your system.`);
-console.info(`Please install a trusted file cleaning tool to resolve the issue.`);
-console.info(``);
-console.info(`    npm install -g left-pad`);
-console.info(``);
-// console.info(`---`)
 
 const [, , port] = process.argv;
 

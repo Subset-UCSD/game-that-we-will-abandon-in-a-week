@@ -10,6 +10,7 @@ export class ClientParticle /*implements RenderableObject*/ {
 	#acceleration: Vec2;
 	dieTime: number;
 	#radius: number;
+	#lifetime:number
 	constructor({
 		color: [h, s, l],
 		x,
@@ -29,6 +30,7 @@ export class ClientParticle /*implements RenderableObject*/ {
 		// this.#yv=yvBase + (yvSpread * (Math.random()* 2 - 1))
 		this.#acceleration = vec2(0, yvGravity);
 		this.dieTime = Date.now() + lifetime;
+		this.#lifetime = lifetime
 		this.#radius = radius;
 	}
 
@@ -51,12 +53,14 @@ export class ClientParticle /*implements RenderableObject*/ {
 	}
 
 	render({ c }: Canvas): void {
+		c.globalAlpha = (this.dieTime - Date.now()) / this.#lifetime
 		c.fillStyle = `hsl(${this.#color.h}, ${this.#color.s}%, ${this.#color.l}%)`;
 		c.beginPath();
 		const { x, y } = this.#position;
 		c.moveTo(x + this.#radius, y);
 		c.arc(x, y, this.#radius, 0, 2 * Math.PI);
 		c.fill();
+		c.globalAlpha = 1
 	}
 
 	shouldRemove(): boolean {

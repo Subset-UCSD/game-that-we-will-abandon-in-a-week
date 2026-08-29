@@ -33,6 +33,7 @@
 	"dependencies": {
 		"@biomejs/biome": "^2.5.10",
 		"express": "^5.2.1",
+		"gl-matrix": "^3.4.4",
 		"ws": "^8.21.3",
 		"zod": "^4.4.3"
 	},
