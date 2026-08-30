@@ -211,6 +211,18 @@ this.#lastData = reinterpret
 		// - but we want cameraTransformationInverse to turn [-1, 1] -> (x, y) into texture
 		//   which maybe we can do by messing with cameraTransformationInverse
 
+		// first, subtract chunkStart so that chunkStart becomes the origin
+		mat4.translate(cameraTransformation, cameraTransformation, vec3.fromValues(
+			chunkStart.x * CHUNK_SIZE * TILE_SIZE,
+			chunkStart.y * CHUNK_SIZE * TILE_SIZE,0,
+		))
+		// then, shrink the coordinate space so that [0, dataSize * TILE_SIZE] -> [0, 1]
+		mat4.scale(cameraTransformation, cameraTransformation, vec3.fromValues(
+			 (dataSize.x * TILE_SIZE), 
+			 (dataSize.y * TILE_SIZE),
+			 1))
+		// and i think we did it
+
 		
 		const cameraTransformationInverse = mat4.create()
 		mat4.invert(cameraTransformationInverse, cameraTransformation)
@@ -218,18 +230,11 @@ this.#lastData = reinterpret
 		// now we need to make world coord -> tile (x, y)
 		// isnt this what we did above
 
-		// first, subtract chunkStart so that chunkStart becomes the origin
-		mat4.translate(cameraTransformationInverse, cameraTransformationInverse, vec3.fromValues(
-			-chunkStart.x * CHUNK_SIZE * TILE_SIZE,
-			-chunkStart.y * CHUNK_SIZE * TILE_SIZE,0,
-		))
-		// then, shrink the coordinate space so 1 unit = 1 tile rather than 1 pixel
-		mat4.scale(cameraTransformationInverse, cameraTransformationInverse, vec3.fromValues(1 / TILE_SIZE, 1 / TILE_SIZE, 1))
-		// and i think we did it
-
+		
 		canvas.gl.tileShader.use()
 			
 		gl.uniformMatrix4fv(canvas.gl.tileShader.uniform("u_view_inv"), false, cameraTransformationInverse);
+		gl.uniform2f(canvas.gl.tileShader.uniform("data_size"), dataSize.x, dataSize.y);
 
 		// canvas.gl.bindTexture(0, "2d", texture);
 		// 0 here is the 0 we passed into bindTexture above
@@ -286,6 +291,7 @@ export function renderTiles(canvas: Canvas, camera: Camera, tiles: ChunkMap, ena
 
 	// HELP!! 🚨🚨 can someone format this file pleasee
 
+	if (enableDebug) {
 	c.strokeStyle = "blue";
 	for (let y = tileStart.y; y < tileEnd.y; y++)
 		for (let x = tileStart.x; x < tileEnd.x; x++) {
@@ -313,20 +319,20 @@ export function renderTiles(canvas: Canvas, camera: Camera, tiles: ChunkMap, ena
 				const [tile] = allTiles;
 				const indiv = individualTileTextures.get(tile);
 				if (indiv) {
-					if (indiv.type === "color") {
-						c.fillStyle = indiv.color;
-						c.fillRect(...vecToArray(tileBase), ...vecToArray(vec2(TILE_SIZE)));
-					} else if (indiv.type === "tilemap") {
-						c.drawImage(
-							indiv.image,
-							...vecToArray(
-								vecMap2(vec2(indiv.tileSize), pairTilePositions[indiv.side === "bl" ? "::" : "  "], (a, b) => a * b),
-							),
-							...vecToArray(vec2(indiv.tileSize)),
-							...vecToArray(tileBase),
-							...vecToArray(vec2(TILE_SIZE)),
-						);
-					}
+					// if (indiv.type === "color") {
+					// 	c.fillStyle = indiv.color;
+					// 	c.fillRect(...vecToArray(tileBase), ...vecToArray(vec2(TILE_SIZE)));
+					// } else if (indiv.type === "tilemap") {
+					// 	c.drawImage(
+					// 		indiv.image,
+					// 		...vecToArray(
+					// 			vecMap2(vec2(indiv.tileSize), pairTilePositions[indiv.side === "bl" ? "::" : "  "], (a, b) => a * b),
+					// 		),
+					// 		...vecToArray(vec2(indiv.tileSize)),
+					// 		...vecToArray(tileBase),
+					// 		...vecToArray(vec2(TILE_SIZE)),
+					// 	);
+					// }
 				}
 			} else {
 				let drew = false;
@@ -344,23 +350,23 @@ export function renderTiles(canvas: Canvas, camera: Camera, tiles: ChunkMap, ena
 							break tilePair;
 						}
 					}
-					c.drawImage(
-						pairImage.image,
-						...vecToArray(
-							vecMap2(
-								vec2(pairImage.tileSize),
-								pairTilePositions[
-									`${tileBL === bl ? (tileTL === bl ? ":" : ".") : tileTL === bl ? "'" : " "}${
-										tileBR === bl ? (tileTR === bl ? ":" : ".") : tileTR === bl ? "'" : " "
-									}`
-								],
-								(a, b) => a * b,
-							),
-						),
-						...vecToArray(vec2(pairImage.tileSize)),
-						...vecToArray(tileBase),
-						...vecToArray(vec2(TILE_SIZE)),
-					);
+					// c.drawImage(
+					// 	pairImage.image,
+					// 	...vecToArray(
+					// 		vecMap2(
+					// 			vec2(pairImage.tileSize),
+					// 			pairTilePositions[
+					// 				`${tileBL === bl ? (tileTL === bl ? ":" : ".") : tileTL === bl ? "'" : " "}${
+					// 					tileBR === bl ? (tileTR === bl ? ":" : ".") : tileTR === bl ? "'" : " "
+					// 				}`
+					// 			],
+					// 			(a, b) => a * b,
+					// 		),
+					// 	),
+					// 	...vecToArray(vec2(pairImage.tileSize)),
+					// 	...vecToArray(tileBase),
+					// 	...vecToArray(vec2(TILE_SIZE)),
+					// );
 					drew = true;
 				}
 
@@ -373,25 +379,25 @@ export function renderTiles(canvas: Canvas, camera: Camera, tiles: ChunkMap, ena
 						if (!indiv) continue;
 						if (indiv.type === "color") {
 							c.fillStyle = indiv.color;
-							c.fillRect(
-								...vecToArray(ev`${tileBase} + ${offset} * ${TILE_SIZE / 2}`),
-								...vecToArray(vec2(TILE_SIZE / 2)),
-							);
+							// c.fillRect(
+							// 	...vecToArray(ev`${tileBase} + ${offset} * ${TILE_SIZE / 2}`),
+							// 	...vecToArray(vec2(TILE_SIZE / 2)),
+							// );
 						} else if (indiv.type === "tilemap") {
 							hasTile = true;
-							c.drawImage(
-								indiv.image,
-								...vecToArray(
-									ev`${vecMap2(
-										vec2(indiv.tileSize),
-										pairTilePositions[indiv.side === "bl" ? "::" : "  "],
-										(a, b) => a * b,
-									)} + ${offset} * ${indiv.tileSize / 2}`,
-								),
-								...vecToArray(vec2(indiv.tileSize / 2)),
-								...vecToArray(ev`${tileBase} + ${offset} * ${TILE_SIZE / 2}`),
-								...vecToArray(vec2(TILE_SIZE / 2)),
-							);
+							// c.drawImage(
+							// 	indiv.image,
+							// 	...vecToArray(
+							// 		ev`${vecMap2(
+							// 			vec2(indiv.tileSize),
+							// 			pairTilePositions[indiv.side === "bl" ? "::" : "  "],
+							// 			(a, b) => a * b,
+							// 		)} + ${offset} * ${indiv.tileSize / 2}`,
+							// 	),
+							// 	...vecToArray(vec2(indiv.tileSize / 2)),
+							// 	...vecToArray(ev`${tileBase} + ${offset} * ${TILE_SIZE / 2}`),
+							// 	...vecToArray(vec2(TILE_SIZE / 2)),
+							// );
 						}
 					}
 					if (hasTile && enableDebug) {
@@ -419,7 +425,7 @@ export function renderTiles(canvas: Canvas, camera: Camera, tiles: ChunkMap, ena
 				}
 				c.stroke();
 			}
-		}
+		}}
 	// TEMP
 	// c.strokeStyle = 'red'
 	// c.strokeRect(left+TILE_SIZE, top+TILE_SIZE, right - left - 2*TILE_SIZE, bottom-top - 2*TILE_SIZE)
