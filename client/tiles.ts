@@ -3,6 +3,8 @@ import {
 	CHUNK_SIZE,
 	type ChunkMap,
 	ev,
+	isVecEq,
+	scaleVec,
 	TILE_SIZE,
 	type TileId,
 	type Vec2,
@@ -13,6 +15,7 @@ import {
 } from "@common";
 import type { Camera } from "./game";
 import type { Canvas } from "./render";
+import { mat4, vec3 } from "gl-matrix";
 
 type TileRegistryEntry = { tile: TileId; color: string } | { bl: TileId; mid: TileId; path: string };
 
@@ -70,6 +73,181 @@ const pairTilePositions = {
 	".:": vec2(3, 3),
 };
 
+const tileNumbers = new Map<TileId, number>([
+	['dirt', 1],
+	['grass', 2],
+	['bad_wall', 3],
+])
+
+export class GlTileRenderer {
+	#texture?: {size:Vec2, texture:WebGLTexture}
+	#lastData?: Uint32Array
+	
+	/**
+	 * shake is a separate parameter so that it doesn't rapidly unload/reload
+	 * chunks if the player is unlucky
+	 *
+	 * refs:
+	 * - [updating textures][texture-update]
+	 *
+	 * [texture-update]:
+	 * https://dannywoodz.wordpress.com/2015/10/14/webgl-from-scratch-updating-textures/
+	 */
+	renderTilesGl (canvas: Canvas, camera: Camera, shake:Vec2, tiles: ChunkMap): void {
+		const gl = canvas.gl.gl
+		const screenSize = vec2(canvas.width, canvas.height)
+		// add a tile size to each dimension since we read 2x2 (i am not sure if my logic is sound but whatever)
+		const minChunkSize = vecMap1(screenSize, dim => Math.ceil((dim + TILE_SIZE) / (CHUNK_SIZE * TILE_SIZE)) + 1)
+		let isNew = false
+		if (!this.#texture || !isVecEq(this.#texture.size, minChunkSize)) {
+	console.log('detected min chunk count change, regenerating tile data texture')
+			// Only resize the texture when needed (this should only happen when the canvas resizes)
+			if (this.#texture) {
+				gl.deleteTexture(this.#texture.texture)
+			}
+			this.#texture = {
+				size: minChunkSize,
+				texture: gl.createTexture()
+			}
+			canvas.gl.bindTexture(0,"2d",this.#texture.texture)    
+					gl.texParameteri(
+						gl.TEXTURE_2D, gl.TEXTURE_MAG_FILTER, gl.NEAREST);
+					gl.texParameteri(
+						gl.TEXTURE_2D, gl.TEXTURE_MIN_FILTER, gl.NEAREST);
+						// allow default wrap of repeat
+						isNew = true
+						this.#lastData = undefined
+		} else {
+			canvas.gl.bindTexture(0,"2d",this.#texture.texture)         	
+		}
+
+		const screenStart = ev`${camera} - ${screenSize} / 2 / ${camera.scale}`
+		const screenEnd = ev`${camera} + ${screenSize} / 2 / ${camera.scale}`
+	const chunkStart = vecMap1(screenStart, (coord) => Math.floor((coord - TILE_SIZE / 2) / (TILE_SIZE * CHUNK_SIZE)));
+	const tileStart = vecMap1(screenStart, (coord) => Math.floor((coord - TILE_SIZE / 2) / TILE_SIZE));
+	const tileEnd = vecMap1(screenEnd, (coord) => Math.ceil((coord - TILE_SIZE / 2) / TILE_SIZE));
+
+	const dataSize = scaleVec(minChunkSize, CHUNK_SIZE)
+	const data = new Uint8Array(
+		// round up to multiple of 4 bytes so this can be reinterpreted as uint32 for faster diff
+		Math.ceil((dataSize.x * dataSize.y) / 4) * 4
+	)
+	for (let cx = 0; cx < minChunkSize.x; cx++)
+	for (let cy = 0; cy < minChunkSize.y; cy++) {
+		const chunk = tiles[`${chunkStart.x + cx} ${chunkStart.y + cy}`]
+		if (!chunk) continue
+		// is it more efficient to just iterate through all the tiles in the chunks or try limiting the umbero f iterations
+		for (const [i, tile] of chunk.entries()) {
+			const num = tile && tileNumbers.get(tile)
+			if (num) {
+				const x = cx * CHUNK_SIZE + i % CHUNK_SIZE
+				const y = cy * CHUNK_SIZE + Math.floor(i / CHUNK_SIZE)
+				data[y * dataSize.x + x] = num
+			}
+		}
+}
+
+	const reinterpret = new Uint32Array(data.buffer)
+if (isNew) {
+	gl.texImage2D(
+		gl.TEXTURE_2D, // target
+		0, // level (mipmap level)
+	gl.R8,	// internalformat
+dataSize.x,		// width
+		dataSize.y,// height
+0,		// border (must be 0)
+	gl.RED,	// format
+	gl.UNSIGNED_BYTE,	// type
+	data,	// srcData
+	// 0	// srcOffset
+	
+	);
+	this.#lastData = reinterpret
+} else {
+	// (we can assume lastData is already set)
+	// only send tile data if tiles have changed
+if (this.#lastData?.some((n, i) => n !== reinterpret[i])) {
+	console.log('detected tile change, reuploading tile data')
+	gl.texSubImage2D(
+	gl.TEXTURE_2D, //target
+	0, //level
+	// it may be faster to only send the parts visible on screen
+	0, //xoffset
+	0, //yoffset
+	dataSize.x, //width
+	dataSize.y, //height
+	gl.RED, //format
+	gl.UNSIGNED_BYTE, //type
+	data, //srcData
+	// srcOffset
+)
+this.#lastData = reinterpret
+}
+}
+
+
+
+		// now that we have uploaded the texture data we can render
+
+		// This is different than the cameraTransformation we constructed outside
+		// To keep floats small, we should go for a coordinate system of [-1, 1] -> [0, dataSize] i think
+		// or maybe the shader can figure that out?
+		// tbh this is probably the shader's problem. but we still need to apply camera transformation
+		const cameraTransformation = mat4.create()
+				mat4.scale(cameraTransformation, cameraTransformation, vec3.fromValues(2 / canvas.width, -2/ canvas.height, 1))
+						mat4.scale(cameraTransformation, cameraTransformation, vec3.fromValues(camera.scale, camera.scale, 1))
+		mat4.translate(cameraTransformation, cameraTransformation, vec3.fromValues(-camera.x, -camera.y, 0))
+		mat4.translate(cameraTransformation, cameraTransformation, vec3.fromValues(shake.x, shake.y, 0))
+
+		// At this point cameraTransformation is the same as constructed outside
+		// now i think we need two things:
+		// 1. make 1 tile = 1 px (so scale out by TILE_SIZE)
+		// 2. adjust translation so that (0, 0) is the origin of our `data` rather than the world (so translate by chunkStart)
+		// hmm
+		// i guess ultimately, it is calling u_view_inv * v_position
+		// so,
+		// - outside cameraTransformation turns world coord -> [-1, 1]
+		// - so outside cameraTransformationInverse would turn [-1, 1] -> world coord
+		// - but we want cameraTransformationInverse to turn [-1, 1] -> (x, y) into texture
+		//   which maybe we can do by messing with cameraTransformationInverse
+
+		
+		const cameraTransformationInverse = mat4.create()
+		mat4.invert(cameraTransformationInverse, cameraTransformation)
+		// currently this matrix turns [-1, 1] -> world coord
+		// now we need to make world coord -> tile (x, y)
+		// isnt this what we did above
+
+		// first, subtract chunkStart so that chunkStart becomes the origin
+		mat4.translate(cameraTransformationInverse, cameraTransformationInverse, vec3.fromValues(
+			-chunkStart.x * CHUNK_SIZE * TILE_SIZE,
+			-chunkStart.y * CHUNK_SIZE * TILE_SIZE,0,
+		))
+		// then, shrink the coordinate space so 1 unit = 1 tile rather than 1 pixel
+		mat4.scale(cameraTransformationInverse, cameraTransformationInverse, vec3.fromValues(1 / TILE_SIZE, 1 / TILE_SIZE, 1))
+		// and i think we did it
+
+		canvas.gl.tileShader.use()
+			
+		gl.uniformMatrix4fv(canvas.gl.tileShader.uniform("u_view_inv"), false, cameraTransformationInverse);
+
+		// canvas.gl.bindTexture(0, "2d", texture);
+		// 0 here is the 0 we passed into bindTexture above
+					gl.uniform1i(canvas.gl.tileShader.uniform('u_tilemap'), 0);
+
+				gl.drawArraysInstanced(
+				gl.TRIANGLES,
+				0, //Start index
+				6, //number of vertices 
+				1  // number of instances
+			);
+
+
+			
+		canvas.gl.bindTexture(0,"2d",null)
+	}
+}
+
 const offsets = [vec2(1), vec2(0, 1), vec2(0, 0), vec2(1, 0)];
 
 // according to chrome performance tab, the cum performance impact of this function (because it's called so often)
@@ -80,12 +258,6 @@ function getTile(tiles: ChunkMap, coord: Vec2): TileId | null {
 	return tiles[`${chunkCoord.x} ${chunkCoord.y}`]?.[localCoord.y * CHUNK_SIZE + localCoord.x] ?? null;
 }
 
-export function renderTilesGl (canvas: Canvas, camera: Camera, tiles: ChunkMap): void {
-	const screenSize = vec2(canvas.width, canvas.height)
-	const minChunkSize = vecMap1(screenSize, dim => Math.ceil(dim / (CHUNK_SIZE * TILE_SIZE)) + 1)
-	const screenStart = ev`${camera} - ${screenSize} / 2 / ${camera.scale}`
-	const screenEnd = ev`${camera} + ${screenSize} / 2 / ${camera.scale}`
-}
 
 // this is kinda inefficient but whatever
 // if we wanted speed we'd use webgl

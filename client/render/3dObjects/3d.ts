@@ -39,7 +39,7 @@ class Polyhedron3D implements Renderable3DObject {
 	private autorotate: boolean
 
 	update(objState: D20Schema): void {
-		console.log(objState.x, this.x);
+		// console.log(objState.x, this.x);
 		this.x = objState.x;
 		this.y = objState.y;
 

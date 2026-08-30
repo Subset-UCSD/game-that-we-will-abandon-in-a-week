@@ -35,7 +35,7 @@ import { Anemone } from "./render/enemy";
 import { ClientParticle } from "./render/particle";
 import type { RenderableObject } from "./render/render";
 import { Room } from "./render/room";
-import { renderTiles } from "./tiles";
+import { GlTileRenderer, renderTiles } from "./tiles";
 import { mat4, vec3 } from "gl-matrix";
 
 type Creator = () => RenderableObject;
@@ -99,6 +99,7 @@ export class Game {
 	private canvas = new Canvas();
 	// TEMP
 	private vao = this.canvas.gl.gl.createVertexArray()
+	private tileRenderer = new GlTileRenderer()
 
 	private camera: Camera = { x: 0, y: 0, scale: 1 };
 
@@ -335,28 +336,20 @@ export class Game {
 		);
 		mat4.translate(cameraTransformation, cameraTransformation, vec3.fromValues(-this.camera.x, -this.camera.y, 0))
 		const screenShakeAngle = Math.random() * 2 * Math.PI;
+		let shake = vec2()
 		if (screenShake > 0) {
 			// const shake = scaleVec(randomInCircle(), screenShake)
-			const shake = vec2(Math.cos(screenShakeAngle) * screenShake, Math.sin(screenShakeAngle) * screenShake)
+			shake = vec2(Math.cos(screenShakeAngle) * screenShake, Math.sin(screenShakeAngle) * screenShake)
 			c.translate(shake.x, shake.y);
 		mat4.translate(cameraTransformation, cameraTransformation, vec3.fromValues(shake.x, shake.y, 0))
 		}
 
-		const cameraTransformationInverse = mat4.create()
-		mat4.invert(cameraTransformationInverse, cameraTransformation)
 
 			//TEMP HOW TO USE WEBGL
 			gl.beginRender();
 
 
-			gl.tileShader.use()
-			gl.gl.uniformMatrix4fv(gl.tileShader.uniform("u_view_inv"), false, cameraTransformationInverse);
-				gl.gl.drawArraysInstanced(
-				gl.gl.TRIANGLES,
-				0, //Start index
-				6, //number of vertices 
-				1  // number of instances
-			);
+			this.tileRenderer.renderTilesGl(canvas, this.camera, shake, this.tiles, )
 
 			gl.testShader.use()
 
