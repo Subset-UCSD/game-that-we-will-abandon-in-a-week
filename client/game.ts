@@ -417,7 +417,7 @@ export class Game {
 				// console.log(collider.type)
 				switch (collider.type) {
 					case "box": {
-						c.strokeRect(collider.position.x, collider.position.y, collider.width, collider.height);
+						c.strokeRect(collider.position.x-collider.width/2, collider.position.y-collider.height/2, collider.width, collider.height);
 						break;
 					}
 					case "circle": {
