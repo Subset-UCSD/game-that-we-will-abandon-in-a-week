@@ -1,6 +1,6 @@
 // https://github.com/Subset-UCSD/cave-game/blob/main/client/render/ShaderProgram.ts
 
-import { Gl } from "./gl";
+import type { Gl } from "./gl";
 
 /**
  * A material represents a shader program.

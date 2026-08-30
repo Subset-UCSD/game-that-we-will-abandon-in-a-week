@@ -1,5 +1,18 @@
-import { dot, ev, normalize, ortho, type Vec2, vec2, vec2Schema, vecLength, projVec, rotate } from "@common";
-import { Collider, BoxCollider, CircleCollider, PolygonCollider } from "@common";
+import {
+	type BoxCollider,
+	type CircleCollider,
+	type Collider,
+	dot,
+	ev,
+	normalize,
+	ortho,
+	type PolygonCollider,
+	projVec,
+	rotate,
+	type Vec2,
+	vec2,
+	vecLength,
+} from "@common";
 
 export function collide(a: Collider, b: Collider) {
 	switch (a.type) {
@@ -69,9 +82,8 @@ function getCorners(collider: Collider): Vec2[] {
 		// easy
 	}
 
-	throw Error("How did you fuck up getCorners")
+	throw Error("How did you fuck up getCorners");
 }
-
 
 function getAxes(a: Collider, reference: Collider): Vec2[] {
 	switch (a.type) {
@@ -111,10 +123,10 @@ function projShape(collider: Collider, axis: Vec2) {
 			}
 			return [startPoint, endPoint];
 		case "circle":
-			const {position, rotation, offset} = collider;
+			const { position, rotation, offset } = collider;
 			return [
-				ev`${position} + ${offset} - (${axis} * ${rotation})`, 
-				ev`${position} + ${offset} + (${axis} * ${rotation})`
+				ev`${position} + ${offset} - (${axis} * ${rotation})`,
+				ev`${position} + ${offset} + (${axis} * ${rotation})`,
 			];
 		case "polygon":
 			throw new Error(`ts is TOUGH`);
@@ -191,16 +203,14 @@ export const SATSolver = (
 	return [true, smallestOverlapAmount, mtvAxis];
 };
 
-
 function isInsideMe(point: Vec2, collider: Collider) {
-	switch(collider.type) {
+	switch (collider.type) {
 		case "box":
-			
-			// is point inside of box
-		case "circle":
-			// is point inside of circle
-		case "polygon":
-			// is point inside of polygon
-	}
 
+		// is point inside of box
+		case "circle":
+		// is point inside of circle
+		case "polygon":
+		// is point inside of polygon
+	}
 }

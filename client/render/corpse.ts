@@ -1,7 +1,5 @@
-import type { SerializedCorpse, SerializedGameObject } from "@common/game";
 import type { Canvas } from "./canvas";
 import { SHEEP_WIDTH } from "./player";
-import type { RenderableObject } from "./render";
 import { ThingRenderer } from "./thing-renderer";
 
 const frames = await Promise.all(
@@ -13,7 +11,6 @@ const frames = await Promise.all(
 export class ClientCorpse extends ThingRenderer {
 	// index = 1;
 	// state?: SerializedCorpse;
-
 
 	renderShadow({ c }: Canvas): void {
 		if (!this.thing) return;
@@ -29,7 +26,7 @@ export class ClientCorpse extends ThingRenderer {
 
 		const { x, y } = this.thing;
 		const offset = Math.sin(Date.now() / (900 + ((this.thing.id * Math.PI) % 100))) * 5;
-		if (this.thing.kind==='corpse-left') {
+		if (this.thing.kind === "corpse-left") {
 			c.save();
 			c.scale(-1, 1);
 			c.drawImage(frame, -x - SHEEP_WIDTH / 2, y - 42 + offset, SHEEP_WIDTH, 50);

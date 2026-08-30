@@ -1,7 +1,6 @@
 import type { Vec2 } from "@common";
-import {colliderSchema, Collider } from "@common/colliders";
+import { type Collider, colliderSchema } from "@common/colliders";
 import z from "zod";
-import { chunkMapSchema } from "./tiles";
 
 const idSchema = z.number();
 
@@ -39,13 +38,17 @@ const playerSchema = worldObjectSchema.extend({
 	canInteractWith: z.number().array(),
 	knifeRadius: z.number(),
 	knifeAngle: z.number(),
-	dialogue:z.object({
-		messagfe:z.string(),
-		options:z.object({
-			text:z.string(),
-			active:z.number().optional(),
-		}).array(),
-	}).optional(),
+	dialogue: z
+		.object({
+			messagfe: z.string(),
+			options: z
+				.object({
+					text: z.string(),
+					active: z.number().optional(),
+				})
+				.array(),
+		})
+		.optional(),
 	// wtf is "collied"
 	// like the dog ?
 	// probably idk man, i'm not the one whose bat at spelling
@@ -64,8 +67,8 @@ const explosionSchema = worldObjectSchema.extend({
 
 const enemySchema = worldObjectSchema.extend({
 	type: z.literal("enemy"),
-	healthPoint:z.number(),
-	healthPMax:z.number(),
+	healthPoint: z.number(),
+	healthPMax: z.number(),
 });
 
 const seedSchema = worldObjectSchema.extend({
@@ -75,7 +78,7 @@ const seedSchema = worldObjectSchema.extend({
 
 const thingSchema = worldObjectSchema.extend({
 	type: z.literal("thing"),
-	kind: z.literal(["tree", "campfire", "techbro",'corpse','corpse-left','altar']),
+	kind: z.literal(["tree", "campfire", "techbro", "corpse", "corpse-left", "altar"]),
 	interactive: z.boolean().optional(),
 	hp: z.number().optional(),
 	maxHp: z.number().optional(),

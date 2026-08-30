@@ -1,7 +1,5 @@
-import type { GameObject,  SerializedCorpse } from "@common/game";
-import { generateId } from "@server/id-manager";
+import type { Player } from "./player";
 import { StaticThing } from "./static-thing";
-import { Player } from "./player";
 
 export class Corpse extends StaticThing {
 	partyId = "";
@@ -9,8 +7,8 @@ export class Corpse extends StaticThing {
 	shouldDelete = false;
 	// #publicState: SerializedCorpse;
 
-	constructor({x,y,facingLeft}: {x:number,y:number,facingLeft:boolean}) {
-		super({kind:facingLeft?'corpse-left':'corpse', x,y,interactive:true})
+	constructor({ x, y, facingLeft }: { x: number; y: number; facingLeft: boolean }) {
+		super({ kind: facingLeft ? "corpse-left" : "corpse", x, y, interactive: true });
 		// this.#publicState = { ...publicState, id: generateId(), type: "corpse" };
 	}
 
@@ -26,16 +24,16 @@ export class Corpse extends StaticThing {
 	// 	return this.#publicState;
 	// }
 
-	*logic (player:Player): Generator<{message:string,options:string[]},void,string> {
-									yield {message:'hello iam the courpse  anyways congratulations you have now a cloud',options:['thanks']}
-								}
+	*logic(player: Player): Generator<{ message: string; options: string[] }, void, string> {
+		yield { message: "hello iam the courpse  anyways congratulations you have now a cloud", options: ["thanks"] };
+	}
 
-	interact(player: Player, option:string|null): void {
-		super.interact(player,option)
+	interact(player: Player, option: string | null): void {
+		super.interact(player, option);
 		if (!player.dialogue) {
 			// they have finished convo so give them a cloud
-			player.clouds++
-			this.shouldDelete=true
+			player.clouds++;
+			this.shouldDelete = true;
 		}
 	}
 }

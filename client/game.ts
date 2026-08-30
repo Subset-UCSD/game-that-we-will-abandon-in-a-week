@@ -3,12 +3,9 @@ import { Player } from "@client/render/player";
 import {
 	addVec,
 	type ChunkMap,
-	expect,
 	isVecEq,
 	lerp,
 	type Particle,
-	randomInCircle,
-	scaleVec,
 	type SerializedGameObject,
 	type SoundEvent,
 	subVec,
@@ -17,18 +14,11 @@ import {
 } from "@common";
 import type { Line, Player as NetPlayer, SerializedCollider, WholeFkingGameState } from "@common/game";
 import { defaultInputs, keymap } from "@common/input";
+import { mat4, vec3 } from "gl-matrix";
 import type { DebugTileEditor } from "./debug/tile-editor";
 import { InputListener } from "./input-listener";
 import { Connection } from "./net/connection";
-import {
-	Canvas,
-	ClientCorpse,
-	ClientExplosion,
-	ClientMeatball,
-	ClientSeed,
-	render,
-	ThingRenderer,
-} from "./render";
+import { Canvas, ClientExplosion, ClientMeatball, ClientSeed, render, ThingRenderer } from "./render";
 import { D20 } from "./render/3dObjects/3d";
 import { Arena } from "./render/arena";
 import { Anemone } from "./render/enemy";
@@ -36,7 +26,6 @@ import { ClientParticle } from "./render/particle";
 import type { RenderableObject } from "./render/render";
 import { Room } from "./render/room";
 import { GlTileRenderer, renderTiles } from "./tiles";
-import { mat4, vec3 } from "gl-matrix";
 
 type Creator = () => RenderableObject;
 
@@ -98,8 +87,8 @@ export class Game {
 	private lastRenderTime = Date.now();
 	private canvas = new Canvas();
 	// TEMP
-	private vao = this.canvas.gl.gl.createVertexArray()
-	private tileRenderer = new GlTileRenderer(this.canvas)
+	private vao = this.canvas.gl.gl.createVertexArray();
+	private tileRenderer = new GlTileRenderer(this.canvas);
 
 	private camera: Camera = { x: 0, y: 0, scale: 1 };
 
@@ -133,64 +122,61 @@ export class Game {
 		document.body.append(this.canvas.glCanvas);
 		document.body.append(this.canvas.canvas);
 
-
 		//TEMP HOW TO USE WEBGL
 
-		const gl =this.canvas.gl.gl
+		const gl = this.canvas.gl.gl;
 
 		/// We can initialize vertices once here
 		gl.bindVertexArray(this.vao);
-		
+
 		// PUT VERTICES IN BUFFER
-		const buffer = gl.createBuffer()// ?? expect("buffer");
+		const buffer = gl.createBuffer(); // ?? expect("buffer");
 		gl.bindBuffer(gl.ARRAY_BUFFER, buffer);
 		gl.bufferData(gl.ARRAY_BUFFER, new Float32Array([-10, -10, 10, -10, 10, 10]), gl.STATIC_DRAW);
 
-		//GET ATTRIBUTE IN .VERT		
-		const location = this.canvas.gl.testShader.attribMaybe('a_position');
-		if (location !== null){
-		// BIND ATT TO OUR BUFFERS
-		gl.enableVertexAttribArray(location);
-		gl.vertexAttribPointer(location, 
-			2, // vec2
-			gl.FLOAT,
-			false, // normalized - has no effect on floats
-			0, // stride; 0 means "tightly packed"
-			0, // offset
-		);
-}
+		//GET ATTRIBUTE IN .VERT
+		const location = this.canvas.gl.testShader.attribMaybe("a_position");
+		if (location !== null) {
+			// BIND ATT TO OUR BUFFERS
+			gl.enableVertexAttribArray(location);
+			gl.vertexAttribPointer(
+				location,
+				2, // vec2
+				gl.FLOAT,
+				false, // normalized - has no effect on floats
+				0, // stride; 0 means "tightly packed"
+				0, // offset
+			);
+		}
 
 		//cleanup
 		gl.bindVertexArray(null);
 		gl.bindBuffer(gl.ARRAY_BUFFER, null);
 
-		
 		{
-			const location = this.canvas.gl.tileShader.attribMaybe('a_position');
-		if (location !== null){
-		// BIND ATT TO OUR BUFFERS
-		gl.bindBuffer(gl.ARRAY_BUFFER, this.canvas.gl.imagePlanePositions)
-		gl.enableVertexAttribArray(location);
-		gl.vertexAttribPointer(location, 
-			2, // vec2
-			gl.FLOAT,
-			false, // normalized - has no effect on floats
-			0, // stride; 0 means "tightly packed"
-			0, // offset
-		);
-}
+			const location = this.canvas.gl.tileShader.attribMaybe("a_position");
+			if (location !== null) {
+				// BIND ATT TO OUR BUFFERS
+				gl.bindBuffer(gl.ARRAY_BUFFER, this.canvas.gl.imagePlanePositions);
+				gl.enableVertexAttribArray(location);
+				gl.vertexAttribPointer(
+					location,
+					2, // vec2
+					gl.FLOAT,
+					false, // normalized - has no effect on floats
+					0, // stride; 0 means "tightly packed"
+					0, // offset
+				);
+			}
 
-		//cleanup
-		gl.bindVertexArray(null);
-		gl.bindBuffer(gl.ARRAY_BUFFER, null);
+			//cleanup
+			gl.bindVertexArray(null);
+			gl.bindBuffer(gl.ARRAY_BUFFER, null);
+		}
 	}
 
-
-		
-	}
-
-	recieveTRiles (tiles:ChunkMap) {
-		this.tiles = tiles
+	recieveTRiles(tiles: ChunkMap) {
+		this.tiles = tiles;
 	}
 
 	updateGameState(gameState: WholeFkingGameState) {
@@ -267,7 +253,7 @@ export class Game {
 
 	// width, height = screen size (useful for centering things)
 	render() {
-		const canvas = this.canvas
+		const canvas = this.canvas;
 		const now = Date.now();
 		// if (this.id == -1) return
 
@@ -300,7 +286,7 @@ export class Game {
 
 		// c.fillStyle = this.__debugTileEditor?.isRenderCollider ? "rgba(40, 50, 50, 1)" : "black";
 		// gl.clearColor(...(this.__debugTileEditor?.isRenderCollider ? [40/255, 50/255, 50/255 ]as const : [0,0,0]as const),1)
-		gl.clear(this.__debugTileEditor?.isRenderCollider ? [40/255, 50/255, 50/255 ] : [0,0,0])
+		gl.clear(this.__debugTileEditor?.isRenderCollider ? [40 / 255, 50 / 255, 50 / 255] : [0, 0, 0]);
 		// if (this.__debugTileEditor?.isRenderCollider ) {
 		// 	gl.clearColor(40/255, 50/255, 50/255 ,1)
 		// } else {
@@ -309,20 +295,19 @@ export class Game {
 		// gl.clear(gl.COLOR_BUFFER_BIT | gl.DEPTH_BUFFER_BIT)
 		c.clearRect(0, 0, canvas.width, canvas.height);
 
-
 		//TODO add camera class to clean this up YIPPEEEE
 
-		const cameraTransformation = mat4.create()
+		const cameraTransformation = mat4.create();
 		// scale down [-canvas.width / 2, canvas.width / 2] to [-1, 1]
 		// also flip webgl vertically so +Y is down to match canvas2d
-		mat4.scale(cameraTransformation, cameraTransformation, vec3.fromValues(2 / canvas.width, -2/ canvas.height, 1))
+		mat4.scale(cameraTransformation, cameraTransformation, vec3.fromValues(2 / canvas.width, -2 / canvas.height, 1));
 		c.save();
 		c.translate(canvas.width / 2, canvas.height / 2); //done by webgl
 		// webgl and canvas2d have same coord system at this point
 
 		c.scale(this.camera.scale, this.camera.scale);
-		mat4.scale(cameraTransformation, cameraTransformation, vec3.fromValues(this.camera.scale, this.camera.scale, 1))
-		
+		mat4.scale(cameraTransformation, cameraTransformation, vec3.fromValues(this.camera.scale, this.camera.scale, 1));
+
 		// unnessary in webgl
 		// HACK align (canvas2D) camera to nearest pixel to hopefully avoid gaps in tiles
 		c.translate(
@@ -332,36 +317,34 @@ export class Game {
 			-Math.round(this.camera.x * (this.camera.scale * canvas.dpr)) / (this.camera.scale * canvas.dpr), // + canvas.width/ 2,
 			-Math.round(this.camera.y * (this.camera.scale * canvas.dpr)) / (this.camera.scale * canvas.dpr), // + canvas.height/ 2,
 		);
-		mat4.translate(cameraTransformation, cameraTransformation, vec3.fromValues(-this.camera.x, -this.camera.y, 0))
+		mat4.translate(cameraTransformation, cameraTransformation, vec3.fromValues(-this.camera.x, -this.camera.y, 0));
 		const screenShakeAngle = Math.random() * 2 * Math.PI;
-		let shake = vec2()
+		let shake = vec2();
 		if (screenShake > 0) {
 			// const shake = scaleVec(randomInCircle(), screenShake)
-			shake = vec2(Math.cos(screenShakeAngle) * screenShake, Math.sin(screenShakeAngle) * screenShake)
+			shake = vec2(Math.cos(screenShakeAngle) * screenShake, Math.sin(screenShakeAngle) * screenShake);
 			c.translate(shake.x, shake.y);
-		mat4.translate(cameraTransformation, cameraTransformation, vec3.fromValues(shake.x, shake.y, 0))
+			mat4.translate(cameraTransformation, cameraTransformation, vec3.fromValues(shake.x, shake.y, 0));
 		}
 
+		//TEMP HOW TO USE WEBGL
+		gl.beginRender();
 
-			//TEMP HOW TO USE WEBGL
-			gl.beginRender();
+		this.tileRenderer.renderTilesGl(this.camera, shake, this.tiles);
 
+		gl.testShader.use();
 
-			this.tileRenderer.renderTilesGl( this.camera, shake, this.tiles, )
+		//camera view
+		gl.gl.uniformMatrix4fv(gl.testShader.uniform("u_view"), false, cameraTransformation);
+		gl.gl.bindVertexArray(this.vao);
+		gl.gl.drawArraysInstanced(
+			gl.gl.TRIANGLES,
+			0, //Start index
+			3, //number of vertices
+			1, // number of instances
+		);
+		gl.gl.bindVertexArray(null);
 
-			gl.testShader.use()
-
-			//camera view
-			gl.gl.uniformMatrix4fv(gl.testShader.uniform("u_view"), false, cameraTransformation);
-			gl.gl.bindVertexArray(this.vao);
-			gl.gl.drawArraysInstanced(
-				gl.gl.TRIANGLES,
-				0, //Start index
-				3, //number of vertices 
-				1  // number of instances
-			);
-			gl.gl.bindVertexArray(null)
-			
 		gl.applyFilters();
 
 		// TODO: draw game state
@@ -417,7 +400,12 @@ export class Game {
 				// console.log(collider.type)
 				switch (collider.type) {
 					case "box": {
-						c.strokeRect(collider.position.x-collider.width/2, collider.position.y-collider.height/2, collider.width, collider.height);
+						c.strokeRect(
+							collider.position.x - collider.width / 2,
+							collider.position.y - collider.height / 2,
+							collider.width,
+							collider.height,
+						);
 						break;
 					}
 					case "circle": {
@@ -459,30 +447,29 @@ export class Game {
 		c.restore();
 
 		if (player?.dialogue) {
-			c.fillStyle = 'black'
-			c.beginPath()
-			c.moveTo(35 - Math.random() * 40, canvas.height - 40 - 200 - 5 - Math.random() * 40)
-			c.lineTo(canvas.width-35 + Math.random() * 40, canvas.height - 40 - 200 - 5 - Math.random() * 40)
-			c.lineTo(canvas.width-35 + Math.random() * 40, canvas.height - 35 + Math.random() * 40)
-			c.lineTo(35 - Math.random() * 40, canvas.height - 35 + Math.random() * 40)
-			c.fill()
-			c.fillStyle='white'
-			c.fillRect(40, canvas.height - 40 - 200, canvas.width - 80, 200)
-			c.fillStyle='black'
-			c.fillText(player.dialogue.messagfe, 80, canvas.height - 40 - 150)
-			c.strokeStyle = 'black'
-			for (const [i, {text,active}] of player.dialogue.options.entries()) {
-				c.strokeRect (80 + i*100, canvas.height - 80, 90, 20)
-				c.fillText(text, 80 + i*100, canvas.height - 70)
+			c.fillStyle = "black";
+			c.beginPath();
+			c.moveTo(35 - Math.random() * 40, canvas.height - 40 - 200 - 5 - Math.random() * 40);
+			c.lineTo(canvas.width - 35 + Math.random() * 40, canvas.height - 40 - 200 - 5 - Math.random() * 40);
+			c.lineTo(canvas.width - 35 + Math.random() * 40, canvas.height - 35 + Math.random() * 40);
+			c.lineTo(35 - Math.random() * 40, canvas.height - 35 + Math.random() * 40);
+			c.fill();
+			c.fillStyle = "white";
+			c.fillRect(40, canvas.height - 40 - 200, canvas.width - 80, 200);
+			c.fillStyle = "black";
+			c.fillText(player.dialogue.messagfe, 80, canvas.height - 40 - 150);
+			c.strokeStyle = "black";
+			for (const [i, { text, active }] of player.dialogue.options.entries()) {
+				c.strokeRect(80 + i * 100, canvas.height - 80, 90, 20);
+				c.fillText(text, 80 + i * 100, canvas.height - 70);
 				if (active) {
-				c.strokeRect (80 + i*100, canvas.height - 82, 90, 20)
-					c.fillText('v'.repeat(active), 80 + i*100, canvas.height - 80)
+					c.strokeRect(80 + i * 100, canvas.height - 82, 90, 20);
+					c.fillText("v".repeat(active), 80 + i * 100, canvas.height - 80);
 				}
-// c.fill
+				// c.fill
 			}
-			c.fillStyle = 'grey'
-			c.fillText('hint: press SPACE when the v is above the option yo ulike', 80, canvas.height - 100)
-
+			c.fillStyle = "grey";
+			c.fillText("hint: press SPACE when the v is above the option yo ulike", 80, canvas.height - 100);
 		}
 
 		if (this.debugInfoVisible && player) {
@@ -560,8 +547,6 @@ export class Game {
 			}
 		}
 		c.restore();
-
-		
 	}
 
 	spawnParticles(particle: Particle): void {
