@@ -20,7 +20,7 @@ uniform sampler2DArray u_tile_textures;
 void main() {
   vec2 tile_position = (u_view_inv * vec4(v_position, 0.0, 1.0)).xy;
 
-  float tile_id = texture(u_tilemap, tile_position / data_size).r * 255.0;
+  float tile_id = texture(u_tilemap, (floor(tile_position) + vec2(0.5)) / data_size).r * 255.0;
 
   fragColor = texture(u_tile_textures, vec3(fract(tile_position), tile_id));
 }
