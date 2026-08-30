@@ -1,6 +1,5 @@
 import { DebugTileEditor } from "./debug/tile-editor";
 import { Game } from "./game";
-import { Canvas } from "./render";
 
 // using canvas = new Canvas();
 // const c = canvas.context;

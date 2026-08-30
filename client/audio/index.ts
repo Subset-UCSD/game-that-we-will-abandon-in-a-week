@@ -2,7 +2,7 @@
 
 // AudioContext = new AudioContext();
 
-declare const IS_SERVING: boolean
+declare const IS_SERVING: boolean;
 
 export type PlaySoundOptions = {
 	volume?: number; // 0 to 1
@@ -91,14 +91,16 @@ export class AudioManager {
 				// i love parallelization
 				const buffers = await Promise.all(
 					urls.map(async (url) => {
-						let response
-						if (IS_SERVING){
+						let response;
+						if (IS_SERVING) {
 							// https://subset-ucsd.github.io/game-that-we-will-abandon-in-a-week/assets/sounds/Footstep1.wav
 							// the wav files are using a lot of VSCode Live share bandwidth so load them from github pages instead
-							response = await fetch(new URL(url, 'https://subset-ucsd.github.io/game-that-we-will-abandon-in-a-week/'))
+							response = await fetch(
+								new URL(url, "https://subset-ucsd.github.io/game-that-we-will-abandon-in-a-week/"),
+							);
 						}
 						if (!response?.ok) {
-						 response = await fetch(url);
+							response = await fetch(url);
 						}
 
 						if (!response.ok) {
@@ -177,19 +179,19 @@ export class AudioManager {
 		document.addEventListener("blur", (e) => {
 			if (!this.context) return;
 			// if (document.hidden) {
-				// console.log('muting')
-				// this.updateMasterVolume(0)
-				// https://stackoverflow.com/a/29128551 otherwise it sounds choppy (at least in firefox)
-				this.masterGain?.gain.setValueAtTime(this.muted ? 0 : this.volume, 0);
-				this.masterGain?.gain.linearRampToValueAtTime(0, this.context.currentTime + 0.3);
+			// console.log('muting')
+			// this.updateMasterVolume(0)
+			// https://stackoverflow.com/a/29128551 otherwise it sounds choppy (at least in firefox)
+			this.masterGain?.gain.setValueAtTime(this.muted ? 0 : this.volume, 0);
+			this.masterGain?.gain.linearRampToValueAtTime(0, this.context.currentTime + 0.3);
 		});
 		document.addEventListener("focus", (e) => {
 			if (!this.context) return;
 			// } else {
-				// console.log('welcome back')
-				// this.updateMasterVolume()
-				this.masterGain?.gain.setValueAtTime(0, 0);
-				this.masterGain?.gain.linearRampToValueAtTime(this.muted ? 0 : this.volume, this.context.currentTime + 0.3);
+			// console.log('welcome back')
+			// this.updateMasterVolume()
+			this.masterGain?.gain.setValueAtTime(0, 0);
+			this.masterGain?.gain.linearRampToValueAtTime(this.muted ? 0 : this.volume, this.context.currentTime + 0.3);
 			// }
 		});
 	}

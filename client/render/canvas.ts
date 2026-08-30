@@ -20,20 +20,21 @@ export class Canvas {
 			throw new Error("holy fuck");
 		}
 		return context;
-	})(this.canvas.getContext("2d", {  }));
+	})(this.canvas.getContext("2d", {}));
 	/** alias for `context` */
 	get c() {
 		return this.context;
 	}
 
-	glCanvas = document.createElement('canvas')
-	gl = new Gl(((context: WebGL2RenderingContext | null) => {
-		if (!context) {
-			throw new Error("holy fuck (webgl eddition)");
-		}
-		return context;
-	})(this.glCanvas.getContext("webgl2")));
-
+	glCanvas = document.createElement("canvas");
+	gl = new Gl(
+		((context: WebGL2RenderingContext | null) => {
+			if (!context) {
+				throw new Error("holy fuck (webgl eddition)");
+			}
+			return context;
+		})(this.glCanvas.getContext("webgl2")),
+	);
 
 	/** width of canvas, in CSS pixels */
 	width = 0;
@@ -81,5 +82,4 @@ export class Canvas {
 	};
 	// This obsers resizing so that the window resizes CLEANLY
 	#observer = new ResizeObserver(this.#resize);
-
 }

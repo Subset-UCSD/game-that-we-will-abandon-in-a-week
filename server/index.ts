@@ -4,7 +4,6 @@ import { Game } from "@server/game";
 import express from "express";
 import { readFile, rename, writeFile } from "fs/promises";
 import { createServer } from "http";
-import { join } from "path";
 import { WebSocketServer } from "ws";
 import { deserializeTiles, serializeTiles } from "./tile-manager";
 
@@ -21,7 +20,6 @@ if (!("toHex" in Uint8Array.prototype)) {
 	process.exit(1);
 }
 
-
 const [, , port] = process.argv;
 
 const server = createServer();
@@ -34,7 +32,7 @@ declare const IS_SERVING: boolean;
 
 server.on("request", app);
 if (IS_SERVING) {
-app.get("/", (_, res) => {
+	app.get("/", (_, res) => {
 		res.redirect("http://localhost:6767/");
 		// return;
 		// res.sendFile(join(__dirname, "public/index.html"));

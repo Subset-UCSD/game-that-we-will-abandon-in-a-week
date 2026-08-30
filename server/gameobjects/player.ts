@@ -1,12 +1,11 @@
-import { ev, isVecEq, isZeroVec, normalize, Particle, randomInCircle, scaleVec, subVec, type Vec2, vec2, vecLengthSquared } from "@common";
+import { ev, isZeroVec, normalize, randomInCircle, scaleVec, subVec, type Vec2, vec2, vecLengthSquared } from "@common";
+import type { BoxCollider } from "@common/colliders";
 import { type GameObject, KNIFE_OFFSET_Y, type Player as NetPlayer } from "@common/game";
 import { defaultInputs, type Inputs } from "@common/input";
-import { BoxCollider } from "@common/colliders";
 import type { Game } from "@server/game";
 import { generateId } from "@server/id-manager";
 import { Corpse } from "./corpse";
-import { emit } from "@server/events";
-import { StaticThing } from "./static-thing";
+import type { StaticThing } from "./static-thing";
 
 const MAX_HP = 67;
 const LINE_START_AGE = 5_000;
@@ -28,7 +27,7 @@ export class Player implements GameObject {
 	wasInteracting = false;
 	thought: string = "";
 	hp: number = 67;
-	maxHp = MAX_HP
+	maxHp = MAX_HP;
 	facingLeft = false;
 	connected = false;
 	lastInputTime = 0;
@@ -51,13 +50,13 @@ export class Player implements GameObject {
 	knivesInside = new Set<GameObject>();
 	nextFootsoundCanBePlayedAt = 0;
 	dialogue?: {
-		messagfe: string,
-		options: string[]
-		resopondTo: StaticThing
-	}
-	optionIndex = 0
-	optionTimer = 0
-	clouds = 0
+		messagfe: string;
+		options: string[];
+		resopondTo: StaticThing;
+	};
+	optionIndex = 0;
+	optionTimer = 0;
+	clouds = 0;
 
 	constructor(game: Game) {
 		this.game = game;
@@ -69,8 +68,8 @@ export class Player implements GameObject {
 			position: this.position,
 			offset: vec2(),
 			rotation: 0,
-			type: "box"
-		}
+			type: "box",
+		};
 	}
 
 	setPosition(x: number, y: number) {
@@ -93,8 +92,8 @@ export class Player implements GameObject {
 	}
 
 	serialize(): NetPlayer {
-		const v = vecLengthSquared(this.velocity) < 0.5 ? vec2() : this.velocity
-		const di = this.dialogue
+		const v = vecLengthSquared(this.velocity) < 0.5 ? vec2() : this.velocity;
+		const di = this.dialogue;
 		return {
 			...this.position,
 			x_vel: this.velocity.x,
@@ -119,7 +118,13 @@ export class Player implements GameObject {
 			knifeRadius: +this.knifeState.radius.toFixed(3),
 			knifeAngle: this.knifeState.angle,
 			thought: this.thought,
-			dialogue: di && { messagfe: di.messagfe, options: di.options.map((option, i) => ({ text: option, active: (this.optionIndex % di.options.length === i) ? this.optionTimer : undefined })) },
+			dialogue: di && {
+				messagfe: di.messagfe,
+				options: di.options.map((option, i) => ({
+					text: option,
+					active: this.optionIndex % di.options.length === i ? this.optionTimer : undefined,
+				})),
+			},
 			type: "player",
 		};
 	}
@@ -146,15 +151,15 @@ export class Player implements GameObject {
 			// this.velocity = ev`${this.velocity} - ${friction}`;
 			if (vecLengthSquared(friction) > vecLengthSquared(this.velocity)) {
 				// friction is more than velocity, so set it to zero
-				this.velocity = vec2()
+				this.velocity = vec2();
 			} else {
-				this.velocity = ev`${this.velocity} - ${friction}`
+				this.velocity = ev`${this.velocity} - ${friction}`;
 			}
 		}
 		// v = v0 + at (assumes constant acceleration but whatever)
 		this.velocity = ev`${this.velocity} + ${this.acceleration}`;
 		// x = x0 + average v * t
-		const oldPos = this.position
+		const oldPos = this.position;
 		this.position = ev`${this.position} + (${oldVelocity} + ${this.velocity}) / 2`;
 		// if (!isVecEq(oldPos,this.position)) {
 		// 	emit('players:move', [{id:`${this.id}`,...this.position}])
@@ -169,10 +174,10 @@ export class Player implements GameObject {
 				}),
 			);
 			// TODO: respawn
-			this.position = scaleVec(randomInCircle(), 1000)
+			this.position = scaleVec(randomInCircle(), 1000);
 		}
 		this.seedCooldownTicks = Math.max(this.seedCooldownTicks - 1, 0);
-		this.collider.position = subVec(this.position, { x: 0, y: 10 })
+		this.collider.position = subVec(this.position, { x: 0, y: 10 });
 
 		const MAX_RADIUS = 30;
 		if (this.inputs.knife) {
@@ -187,15 +192,11 @@ export class Player implements GameObject {
 			this.knifeState.angle += -0.2;
 		}
 
-
-
-
-
 		if (this.optionTimer <= 0) {
-			this.optionTimer = 40
-			this.optionIndex++
+			this.optionTimer = 40;
+			this.optionIndex++;
 		} else {
-			this.optionTimer--
+			this.optionTimer--;
 		}
 	}
 

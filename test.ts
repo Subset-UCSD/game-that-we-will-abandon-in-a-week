@@ -28,5 +28,12 @@ const polygonCollider = baseCollider.extend({
 export const colliderSchema = z.discriminatedUnion("type", [boxCollider, circleCollider, polygonCollider]);
 
 // make sure colliderSchema
-console.log('testing colliderSchema in common/colliders.ts!')
-z.safeParse(colliderSchema,{type:'box',position:{x:0,y:0},rotation:0,offset:{x:0,y:0,},width:1,height:1,})
+console.log("testing colliderSchema in common/colliders.ts!");
+z.safeParse(colliderSchema, {
+	type: "box",
+	position: { x: 0, y: 0 },
+	rotation: 0,
+	offset: { x: 0, y: 0 },
+	width: 1,
+	height: 1,
+});

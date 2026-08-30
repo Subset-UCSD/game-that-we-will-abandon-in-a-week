@@ -1,7 +1,6 @@
-import type { GameObject, SerializedGameObject, SerializedThing, Vec2 } from "@common";
-import type { Collider } from "@common";
+import type { Collider, GameObject, SerializedGameObject, SerializedThing, Vec2 } from "@common";
 import { generateId } from "@server/id-manager";
-import { Player } from "./player";
+import type { Player } from "./player";
 
 /**
  * for things that don't move ("static") like trees, signs, and tech bros ig
@@ -48,29 +47,26 @@ export class StaticThing implements GameObject {
 		}
 	}
 
-				#playerState = new Map<Player, Generator<{message:string,options:string[]},void,string>>()
+	#playerState = new Map<Player, Generator<{ message: string; options: string[] }, void, string>>();
+	*logic(player: Player): Generator<{ message: string; options: string[] }, void, string> {
+		//
+	}
 
-;*				logic (player:Player): Generator<{message:string,options:string[]},void,string> {
-								//
-							}
-				
-							// this is extremely unergonomic and no one is going to use this shtiy siystsem
-							interact(player: Player, option:string|null): void {
-								const state = this.#playerState.getOrInsertComputed(player, () => this.logic(player))
-								let resultresult = state.next(option ?? '')
-								if (resultresult.done) {
-									
-								player.dialogue = undefined
-								this.#playerState.delete(player)
-								} else {
-				
-									player.dialogue = {
-									messagfe: resultresult.value.message,
-									options:resultresult.value.options,
-									resopondTo:this,
-								}
-								}
-								// while ((result = state.next(option ?? ''), !result.done)) {
-								// }
-							}
+	// this is extremely unergonomic and no one is going to use this shtiy siystsem
+	interact(player: Player, option: string | null): void {
+		const state = this.#playerState.getOrInsertComputed(player, () => this.logic(player));
+		let resultresult = state.next(option ?? "");
+		if (resultresult.done) {
+			player.dialogue = undefined;
+			this.#playerState.delete(player);
+		} else {
+			player.dialogue = {
+				messagfe: resultresult.value.message,
+				options: resultresult.value.options,
+				resopondTo: this,
+			};
+		}
+		// while ((result = state.next(option ?? ''), !result.done)) {
+		// }
+	}
 }

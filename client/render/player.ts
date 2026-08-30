@@ -60,7 +60,7 @@ export class Player implements RenderableObject {
 			connected,
 			knifeAngle,
 			knifeRadius,
-			dialogue
+			dialogue,
 		} = this.props;
 		const sleeping = probablyafk || !connected;
 		/** in milliseconds */
@@ -106,7 +106,7 @@ export class Player implements RenderableObject {
 			c.strokeRect(x - 20.5, y - 10.8 - 42, 41, 6);
 		}
 
-		const realThought = connected ? thought || (dialogue ?'...':'') : "ded";
+		const realThought = connected ? thought || (dialogue ? "..." : "") : "ded";
 		if (realThought) {
 			c.drawImage(frameThought, x + SHEEP_WIDTH / 2, y - THOUGHT_HEIGHT - 42, THOUGHT_WIDTH, THOUGHT_HEIGHT);
 			c.fillStyle = "black";

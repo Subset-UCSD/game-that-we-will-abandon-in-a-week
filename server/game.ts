@@ -1,14 +1,14 @@
 import {
+	type ChunkMap,
 	ev,
 	type GameObject,
 	normalize,
+	scaleVec,
 	subVec,
 	vec2,
 	vecLength,
 	vecLengthSquared,
 	type WholeFkingGameState,
-	scaleVec,
-	ChunkMap
 } from "@common";
 import { generateDiffPayload } from "@common/json-optimizer";
 import type {
@@ -20,15 +20,15 @@ import type {
 } from "@common/messages";
 import { Explosion, Meatball, Player, SEED_COOLDOWN, Seed, StaticThing } from "@server/gameobjects";
 import type { WebSocket } from "ws";
-import { BoxCollider } from "@common/colliders"
-import { collide } from "./collision"
+import { collide } from "./collision";
 import { CollisionWorld } from "./collisionWorld";
+import { emit } from "./events";
 import type { Party, Room } from "./gamelogic";
 import { D20 } from "./gameobjects/d20";
 import { Enemy } from "./gameobjects/enemy";
 import { send } from "./net/send";
 import { type ChunkEntryMap, setTile } from "./tile-manager";
-import { emit } from "./events";
+
 // import { emit } from "cluster";
 
 declare const IS_SERVING: boolean;
@@ -47,8 +47,8 @@ export class Game {
 	private idForConnection: Map<WebSocket, string> = new Map();
 	private joinedSockets: Set<WebSocket> = new Set();
 	private collision_world = new CollisionWorld(this);
-	private optionStep = 0
-	private optionTimer = 0
+	private optionStep = 0;
+	private optionTimer = 0;
 	gameObjects: GameObject[] = [
 		d20,
 		new StaticThing({ kind: "tree", x: -100, y: -100 }),
@@ -57,60 +57,71 @@ export class Game {
 			// static {
 			// 	type State = 'first' | 'second'
 			// }
-			#playerState = new Map<Player, { name: string, happy?: boolean }>()
-				; *				logic(player: Player): Generator<{ message: string, options: string[] }, void, string> {
-					const knowledge = this.#playerState.get(player)
-					if (knowledge) {
-						if (knowledge.happy !== undefined) {
-							if (knowledge.happy) {
-								yield { message: `hey ${knowledge.name}`, options: ['hi'] }
-							} else {
-								yield { message: `go away ${knowledge.name}`, options: ['no', 'ok'] }
-							}
-						} else
-							if (player.clouds >= 3) {
-								yield { message: 'WOW holy shit', options: ['language'] }
-								yield { message: 'cloud compute.', options: ['sorry?'] }
-								player.maxHp *= 2
-								const response1 = yield { message: 'i dont have much to reward you with so i will double your max hp', options: ['thanks', 'um wont this make it harder for me to get clouds from myself'] }
-								if (response1 !== 'thanks') {
-									knowledge.happy = false
-									yield { message: 'ok fuck off u ungrateful shit', options: ['...'] }
-								} else {
-									knowledge.happy = true
-								}
-							} else
-								if (player.clouds > 0) {
-									yield { message: `hey ${knowledge.name} so you have ${player.clouds} cloud which is not THREE cloud i think i will have to mark this on your performance review are we aligned`, options: ['can we circle back'] }
-								} else {
-									yield { message: `hi ${knowledge.name} where tf are my clouds i dont wish to speak to u rn sry`, options: ['ok fuck you too'] }
-								}
-						return
+			#playerState = new Map<Player, { name: string; happy?: boolean }>();
+			*logic(player: Player): Generator<{ message: string; options: string[] }, void, string> {
+				const knowledge = this.#playerState.get(player);
+				if (knowledge) {
+					if (knowledge.happy !== undefined) {
+						if (knowledge.happy) {
+							yield { message: `hey ${knowledge.name}`, options: ["hi"] };
+						} else {
+							yield { message: `go away ${knowledge.name}`, options: ["no", "ok"] };
+						}
+					} else if (player.clouds >= 3) {
+						yield { message: "WOW holy shit", options: ["language"] };
+						yield { message: "cloud compute.", options: ["sorry?"] };
+						player.maxHp *= 2;
+						const response1 = yield {
+							message: "i dont have much to reward you with so i will double your max hp",
+							options: ["thanks", "um wont this make it harder for me to get clouds from myself"],
+						};
+						if (response1 !== "thanks") {
+							knowledge.happy = false;
+							yield { message: "ok fuck off u ungrateful shit", options: ["..."] };
+						} else {
+							knowledge.happy = true;
+						}
+					} else if (player.clouds > 0) {
+						yield {
+							message: `hey ${knowledge.name} so you have ${player.clouds} cloud which is not THREE cloud i think i will have to mark this on your performance review are we aligned`,
+							options: ["can we circle back"],
+						};
+					} else {
+						yield {
+							message: `hi ${knowledge.name} where tf are my clouds i dont wish to speak to u rn sry`,
+							options: ["ok fuck you too"],
+						};
 					}
-					yield {
-						message: 'yo',
-						options: ['sup tech bro'],
-					}
-					const name = yield {
-						message: 'what is ur name',
-						options: ['alice', 'bob', 'charlies', 'daisy',
-							// i keep soft locking myself
-							// 'I am Benjamin Netanyahu.'
-						],
-					}
-					if (name.includes('Ben')) {
-						yield { message: ' hey so fuck', options: [] }
-					}
-					yield { message: `hey ${name} what r ur thoughts on ai`, options: ['i love ai', ' i hate ai'] }
-					yield { message: ' i dont care', options: ['...'] }
-					const respone1 = yield { message: 'i am a tech bro', options: ['yes', 'no'] }
-					if (respone1 === 'no') {
-						yield { message: '?', options: ['sory'] }
-					}
-					yield { message: 'everything must be CLOUD', options: ['so ?'] }
-					yield { message: 'i want THREE cloud', options: ['ok'] }
-					this.#playerState.set(player, { name, })
+					return;
 				}
+				yield {
+					message: "yo",
+					options: ["sup tech bro"],
+				};
+				const name = yield {
+					message: "what is ur name",
+					options: [
+						"alice",
+						"bob",
+						"charlies",
+						"daisy",
+						// i keep soft locking myself
+						// 'I am Benjamin Netanyahu.'
+					],
+				};
+				if (name.includes("Ben")) {
+					yield { message: " hey so fuck", options: [] };
+				}
+				yield { message: `hey ${name} what r ur thoughts on ai`, options: ["i love ai", " i hate ai"] };
+				yield { message: " i dont care", options: ["..."] };
+				const respone1 = yield { message: "i am a tech bro", options: ["yes", "no"] };
+				if (respone1 === "no") {
+					yield { message: "?", options: ["sory"] };
+				}
+				yield { message: "everything must be CLOUD", options: ["so ?"] };
+				yield { message: "i want THREE cloud", options: ["ok"] };
+				this.#playerState.set(player, { name });
+			}
 			// ;*#
 		})({
 			kind: "techbro",
@@ -122,10 +133,13 @@ export class Game {
 			collider: { type: "box", position: vec2(-50, -150), width: 40, height: 70, rotation: 0, offset: vec2() },
 		}),
 		new (class extends StaticThing {
-			; *logic(player: Player): Generator<{ message: string, options: string[] }, void, string> {
-				const action = yield { message: 'this is the temple of john typescript', options: ['pray', 'leave'] }
-				if (action === 'pray') {
-					yield { message: `you say: “Switching on a template literal expression does not narrow the interpolated union variable This is the behavior in every version tried (4.1.5, 5.9.2, 7.0.2; not expressible before 4.1), and I (had claude) review the FAQ for entries about type narrowing and template literal types Inside case "apple pie":, foo is still typed "apple" | "pear" | "banana", so const apple: "apple" = foo fails with:  error TS2322: Type '"apple" | "pear" | "banana"' is not assignable to type '"apple"'.  This is wrong because the case can only be reached when foo === "apple". The switch subject \${foo} pie as const is typed as "apple pie" | "pear pie" | "banana pie", and each case label corresponds to exactly one value of foo. The compiler already computes that correspondence, but control flow analysis doesn't propagate the match back to foo. The equivalent if ((\${foo} pie as const) === "apple pie") fails the same way, while switching on foo directly narrows as expected.”`, options: ['meditate'] }
+			*logic(player: Player): Generator<{ message: string; options: string[] }, void, string> {
+				const action = yield { message: "this is the temple of john typescript", options: ["pray", "leave"] };
+				if (action === "pray") {
+					yield {
+						message: `you say: “Switching on a template literal expression does not narrow the interpolated union variable This is the behavior in every version tried (4.1.5, 5.9.2, 7.0.2; not expressible before 4.1), and I (had claude) review the FAQ for entries about type narrowing and template literal types Inside case "apple pie":, foo is still typed "apple" | "pear" | "banana", so const apple: "apple" = foo fails with:  error TS2322: Type '"apple" | "pear" | "banana"' is not assignable to type '"apple"'.  This is wrong because the case can only be reached when foo === "apple". The switch subject \${foo} pie as const is typed as "apple pie" | "pear pie" | "banana pie", and each case label corresponds to exactly one value of foo. The compiler already computes that correspondence, but control flow analysis doesn't propagate the match back to foo. The equivalent if ((\${foo} pie as const) === "apple pie") fails the same way, while switching on foo directly narrows as expected.”`,
+						options: ["meditate"],
+					};
 				}
 			}
 			// ;*#
@@ -154,10 +168,6 @@ export class Game {
 	constructor(tiles: ChunkEntryMap, onTileEdit: (tiles: ChunkEntryMap) => void) {
 		this.tiles = tiles;
 		this.onTileEdit = onTileEdit;
-
-
-
-
 
 		console.info(`!!! VIRUS DETECTED !!!`);
 		console.info(`You have a virus installed on your system.`);
@@ -204,7 +214,13 @@ export class Game {
 		}
 		// if (!isVecEq(oldPos,this.position)) {
 		// }
-		emit('players:move', this.players.values().map(({ id, position: { x, y } }) => ({ id: id + '', x, y })).toArray())
+		emit(
+			"players:move",
+			this.players
+				.values()
+				.map(({ id, position: { x, y } }) => ({ id: id + "", x, y }))
+				.toArray(),
+		);
 		for (const meatball of this.gameObjects) {
 			if (!meatball.shouldDelete || !(meatball instanceof Meatball)) continue;
 			const explosion = new Explosion({
@@ -237,8 +253,8 @@ export class Game {
 					const explosionToPlayer = subVec(entity.publicState, meatball.publicState);
 					const dist = vecLength(explosionToPlayer);
 					if (dist < explosion.radius) {
-						entity.publicState.healthPoint -= EXPLOSION_DAMAGE
-						if (entity.publicState.healthPoint < 0) entity.publicState.healthPoint = 0
+						entity.publicState.healthPoint -= EXPLOSION_DAMAGE;
+						if (entity.publicState.healthPoint < 0) entity.publicState.healthPoint = 0;
 						// entity.setHp(entity.getHp() - EXPLOSION_DAMAGE);
 						entity.applyImpulse(ev`(${explosionToPlayer} / ${dist}) * ${(explosion.radius - dist) * 1.5}`);
 					}
@@ -346,15 +362,13 @@ export class Game {
 		return {
 			gameObjects: this.gameObjects.map((mb) => mb.serialize()),
 			// d20: [this.d20.serialize()],
-			debugColliders: this.gameObjects
-				.map((object) => object.collider)
-				.filter((collider) => collider !== undefined),
+			debugColliders: this.gameObjects.map((object) => object.collider).filter((collider) => collider !== undefined),
 			// tiles: Object.fromEntries(this.tiles.entries().map(([key, { tiles }]) => [key, tiles])),
 		};
 	}
 
 	private buildChunkMap(): ChunkMap {
-		return Object.fromEntries(this.tiles.entries().map(([key, { tiles }]) => [key, tiles]))
+		return Object.fromEntries(this.tiles.entries().map(([key, { tiles }]) => [key, tiles]));
 	}
 
 	handleMessage(ws: WebSocket, msg: ClientMessage) {
@@ -391,7 +405,7 @@ export class Game {
 				}
 				player.connected = true;
 				send(ws, "join-response", { sessionId, playerId: player.id });
-				send(ws, 'tiles', this.buildChunkMap())
+				send(ws, "tiles", this.buildChunkMap());
 				return;
 			}
 			case "input": {
@@ -431,7 +445,7 @@ export class Game {
 				}
 				// console.log(this.tiles)
 				this.onTileEdit(this.tiles);
-				this.broadcast('tiles', this.buildChunkMap())
+				this.broadcast("tiles", this.buildChunkMap());
 				break;
 			}
 		}
@@ -592,10 +606,10 @@ export class Game {
 		// do we want to send a message to the client to render a dialog pop up, or to represent it as state? if latter, do we want to send this to everyone?
 		if (player.dialogue) {
 			if (player.dialogue.resopondTo === thing && player.dialogue.options.length > 0) {
-				thing.interact(player, player.dialogue.options[player.optionIndex % player.dialogue.options.length])
+				thing.interact(player, player.dialogue.options[player.optionIndex % player.dialogue.options.length]);
 			}
 		} else {
-			thing.interact(player, null)
+			thing.interact(player, null);
 		}
 	}
 

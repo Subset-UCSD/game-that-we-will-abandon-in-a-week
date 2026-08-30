@@ -53,10 +53,10 @@ export function subscribe<T extends Event["type"], V extends Extract<Event, { ty
 		registeredEvents.set(name, new Map());
 	}
 	const handlers = registeredEvents.get(name)!;
-	let id = crypto.randomUUID()
+	let id = crypto.randomUUID();
 	let n_iter = 0;
 	while (handlers.has(id)) {
-		id = crypto.randomUUID()
+		id = crypto.randomUUID();
 		if (n_iter > RAND_ATTEMPT_THRESHOLD) {
 			throw new Error(
 				`bro i tried ${RAND_ATTEMPT_THRESHOLD} times to generate a random number to let you LIKE AND SUBSCRIBE to ${name}` +

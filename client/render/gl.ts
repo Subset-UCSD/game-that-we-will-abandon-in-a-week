@@ -8,17 +8,15 @@
 // https://github.com/ucsd-cse125-sp24/group1/blob/main/client/render/engine/RenderPipeline.ts
 // https://github.com/Subset-UCSD/cave-game/blob/main/client/render/Gl.ts
 
+import { TILE_SIZE } from "@common";
 // import { SerializedCollider } from "../../common/messages";
 import { ShaderProgram } from "./ShaderProgram";
-
-import testVertShader from "./shaders/test.vert";
-import testFragShader from "./shaders/test.frag";
 import filterVertShader from "./shaders/filter.vert";
+import testFragShader from "./shaders/test.frag";
+import testVertShader from "./shaders/test.vert";
 import tilesFragShader from "./shaders/tiles.frag";
-import { TILE_SIZE } from "@common";
-import e from "express";
 
-export type TextureType = "2d" | "cubemap"|'2d-array';
+export type TextureType = "2d" | "cubemap" | "2d-array";
 
 export type Filter = {
 	shader: ShaderProgram;
@@ -92,7 +90,7 @@ class GlBase {
 			// Avoid "Two textures of different types use the same sampler location."
 			if (current.type === "2d") {
 				this.#gl.bindTexture(this.gl.TEXTURE_2D, null);
-			} else if (current.type === 'cubemap') {
+			} else if (current.type === "cubemap") {
 				this.#gl.bindTexture(this.gl.TEXTURE_CUBE_MAP, null);
 			} else {
 				this.#gl.bindTexture(this.gl.TEXTURE_2D_ARRAY, null);
@@ -100,7 +98,7 @@ class GlBase {
 		}
 		if (type === "2d") {
 			this.#gl.bindTexture(this.gl.TEXTURE_2D, texture);
-		} else if (type === 'cubemap') {
+		} else if (type === "cubemap") {
 			this.#gl.bindTexture(this.gl.TEXTURE_CUBE_MAP, texture);
 		} else {
 			this.#gl.bindTexture(this.gl.TEXTURE_2D_ARRAY, texture);
@@ -116,7 +114,7 @@ class GlBase {
 			this.#gl.activeTexture(this.gl.TEXTURE0 + +location);
 			if (texture.type === "2d") {
 				this.#gl.bindTexture(this.gl.TEXTURE_2D, null);
-			} else if (texture.type==='cubemap') {
+			} else if (texture.type === "cubemap") {
 				this.#gl.bindTexture(this.gl.TEXTURE_CUBE_MAP, null);
 			} else {
 				this.#gl.bindTexture(this.gl.TEXTURE_2D_ARRAY, null);
@@ -169,7 +167,7 @@ export class Gl extends GlBase {
 		MAX_LIGHTS: `${+this.gl.getParameter(this.gl.MAX_TEXTURE_IMAGE_UNITS) - 4}`,
 		NEAR: "0.001",
 		FAR: "100.0",
-    TILE_SIZE: `${TILE_SIZE}`,
+		TILE_SIZE: `${TILE_SIZE}`,
 	};
 
 	/** peepee (post-processing) effects */
@@ -178,21 +176,18 @@ export class Gl extends GlBase {
 	framebuffer = this.gl.createFramebuffer();
 
 	//#region  shaders here
-  #filterVertShader = this.createShader('vertex', filterVertShader, 'filter.vert')
-  testShader = new ShaderProgram(
+	#filterVertShader = this.createShader("vertex", filterVertShader, "filter.vert");
+	testShader = new ShaderProgram(
 		this,
 		this.createProgram(
 			this.createShader("vertex", testVertShader, "test.vert"),
 			this.createShader("fragment", testFragShader, "test.frag"),
 		),
-	)
-  tileShader = new ShaderProgram(
-    this,
-    this.createProgram(
-      this.#filterVertShader,
-      this.createShader('fragment', tilesFragShader, 'tiles.frag')
-    )
-  )
+	);
+	tileShader = new ShaderProgram(
+		this,
+		this.createProgram(this.#filterVertShader, this.createShader("fragment", tilesFragShader, "tiles.frag")),
+	);
 
 	/**
 	 * A helper method for compiling a shader. Useful for creating `Material`s.
@@ -214,7 +209,7 @@ export class Gl extends GlBase {
 		const gl = this.gl;
 		gl.clearColor(...color, 1);
 		gl.clear(gl.COLOR_BUFFER_BIT | gl.DEPTH_BUFFER_BIT);
-    // this is called by Canvas resize
+		// this is called by Canvas resize
 		// gl.viewport(0, 0, gl.canvas.width, gl.canvas.height);
 	}
 
