@@ -99,7 +99,7 @@ export class Game {
 	private canvas = new Canvas();
 	// TEMP
 	private vao = this.canvas.gl.gl.createVertexArray()
-	private tileRenderer = new GlTileRenderer()
+	private tileRenderer = new GlTileRenderer(this.canvas)
 
 	private camera: Camera = { x: 0, y: 0, scale: 1 };
 
@@ -349,7 +349,7 @@ export class Game {
 			gl.beginRender();
 
 
-			this.tileRenderer.renderTilesGl(canvas, this.camera, shake, this.tiles, )
+			this.tileRenderer.renderTilesGl( this.camera, shake, this.tiles, )
 
 			gl.testShader.use()
 

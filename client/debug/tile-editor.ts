@@ -129,7 +129,7 @@ export class DebugTileEditor {
 		const endY = Math.floor((bottom - TILE_SIZE / 2) / TILE_SIZE);
 		// console.log(startX,endX,startY,endY)
 
-		c.strokeStyle = "rgba(0, 0, 0, 0.1)";
+		c.strokeStyle = "rgba(255, 255, 255, 0.2)";
 		c.beginPath();
 		for (let x = startX; x <= endX; x++) {
 			c.moveTo(x * TILE_SIZE + TILE_SIZE / 2, top);

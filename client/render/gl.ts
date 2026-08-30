@@ -16,8 +16,9 @@ import testFragShader from "./shaders/test.frag";
 import filterVertShader from "./shaders/filter.vert";
 import tilesFragShader from "./shaders/tiles.frag";
 import { TILE_SIZE } from "@common";
+import e from "express";
 
-export type TextureType = "2d" | "cubemap";
+export type TextureType = "2d" | "cubemap"|'2d-array';
 
 export type Filter = {
 	shader: ShaderProgram;
@@ -91,14 +92,18 @@ class GlBase {
 			// Avoid "Two textures of different types use the same sampler location."
 			if (current.type === "2d") {
 				this.#gl.bindTexture(this.gl.TEXTURE_2D, null);
-			} else {
+			} else if (current.type === 'cubemap') {
 				this.#gl.bindTexture(this.gl.TEXTURE_CUBE_MAP, null);
+			} else {
+				this.#gl.bindTexture(this.gl.TEXTURE_2D_ARRAY, null);
 			}
 		}
 		if (type === "2d") {
 			this.#gl.bindTexture(this.gl.TEXTURE_2D, texture);
-		} else {
+		} else if (type === 'cubemap') {
 			this.#gl.bindTexture(this.gl.TEXTURE_CUBE_MAP, texture);
+		} else {
+			this.#gl.bindTexture(this.gl.TEXTURE_2D_ARRAY, texture);
 		}
 		this.#textures[location] = texture ? { type, texture } : null;
 	}
@@ -111,8 +116,10 @@ class GlBase {
 			this.#gl.activeTexture(this.gl.TEXTURE0 + +location);
 			if (texture.type === "2d") {
 				this.#gl.bindTexture(this.gl.TEXTURE_2D, null);
-			} else {
+			} else if (texture.type==='cubemap') {
 				this.#gl.bindTexture(this.gl.TEXTURE_CUBE_MAP, null);
+			} else {
+				this.#gl.bindTexture(this.gl.TEXTURE_2D_ARRAY, null);
 			}
 		}
 		this.#textures = {};

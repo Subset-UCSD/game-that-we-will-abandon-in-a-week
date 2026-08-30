@@ -1,9 +1,11 @@
+#version 300 es
+
 // https://github.com/ucsd-cse125-sp24/group1/blob/main/client/shaders/filter.vert
 
-attribute vec2 a_position;
+in vec2 a_position;
 
-varying vec2 v_position;
-varying vec2 v_texcoord;
+out vec2 v_position;
+out vec2 v_texcoord;
 
 void main() {
   gl_Position = vec4(a_position, 0, 1);

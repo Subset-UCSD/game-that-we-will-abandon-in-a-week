@@ -19,40 +19,16 @@ import { mat4, vec3 } from "gl-matrix";
 
 type TileRegistryEntry = { tile: TileId; color: string } | { bl: TileId; mid: TileId; path: string };
 
-// Register your tile textures here
+// Register your tile textures here (top has priority)
 const tileRegistry: TileRegistryEntry[] = [
+	// this must be at the top so void is rendered as black
+	{ tile: "black", color: "black" },
 	{ tile: "temp_dirt", color: "#473327" },
 	{ tile: "temp_water", color: "#23457a" },
 	{ bl: "grass", mid: "dirt", path: "assets/tilesets/grass-path/janky-grass-path.png" },
 	{ bl: "black", mid: "bad_wall", path: "assets/tilesets/wall-black.png" },
 	{ bl: "grass", mid: "bad_wall", path: "assets/tilesets/crappy-wall.png" },
-	{ tile: "black", color: "black" },
 ];
-
-type IndividualTile =
-	| { type: "color"; color: string }
-	| { type: "tilemap"; side: "bl" | "mid"; image: ImageBitmap; tileSize: number };
-const individualTileTextures = new Map<TileId, IndividualTile>();
-const pairTileTextures = new Map<TileId, Map<TileId, { image: ImageBitmap; tileSize: number }>>();
-const promises: Promise<void>[] = [];
-for (const entry of tileRegistry) {
-	promises.push(
-		(async () => {
-			if ("color" in entry) {
-				individualTileTextures.set(entry.tile, { type: "color", color: entry.color });
-				return;
-			}
-			const image = await fetch(entry.path)
-				.then((r) => r.blob())
-				.then(createImageBitmap);
-			const tileSize = 32;
-			individualTileTextures.getOrInsert(entry.bl, { type: "tilemap", side: "bl", image, tileSize });
-			individualTileTextures.getOrInsert(entry.mid, { type: "tilemap", side: "mid", image, tileSize });
-			pairTileTextures.getOrInsertComputed(entry.bl, () => new Map()).set(entry.mid, { image, tileSize });
-		})(),
-	);
-}
-await Promise.all(promises);
 
 const pairTilePositions = {
 	"':": vec2(0, 0),
@@ -73,6 +49,64 @@ const pairTilePositions = {
 	".:": vec2(3, 3),
 };
 
+
+/** width in texels */
+			const tileSize = 32;
+
+type IndividualTile =
+	| { type: "color"; color: string }
+	| { type: "tilemap"; side: "bl" | "mid"; image: ImageBitmap; tileSize: number };
+const individualTileTextures = new Map<TileId, IndividualTile>();
+const pairTileTextures = new Map<TileId, Map<TileId, { image: ImageBitmap; tileSize: number }>>();
+const promises: Promise<void>[] = [];
+const workCanvas = document.createElement('canvas')
+const wc = workCanvas.getContext('2d')
+if (!wc) throw new Error('holy dshgitt')
+	const textures : {key:string,image: Uint8ClampedArray}[] = []
+for (const entry of tileRegistry) {
+	promises.push(
+		(async () => {
+			if ("color" in entry) {
+				individualTileTextures.set(entry.tile, { type: "color", color: entry.color });
+				workCanvas.width = tileSize
+				workCanvas.height = tileSize
+				wc.fillStyle = entry.color
+				wc.fillRect(0, 0, tileSize, tileSize)
+				textures.push({key:entry.tile, image:wc.getImageData(0, 0, tileSize, tileSize).data})
+				return;
+			}
+			const image = await fetch(entry.path)
+				.then((r) => r.blob())
+				.then(createImageBitmap);
+				workCanvas.width = tileSize*4
+				workCanvas.height = tileSize*4
+				wc.drawImage(image,0, 0, )
+			individualTileTextures.getOrInsertComputed(entry.bl, () => {
+				textures.push({key:entry.bl, image:wc.getImageData(0, 3*tileSize, tileSize, tileSize).data})
+				return { type: "tilemap", side: "bl", image, tileSize }
+			});
+			individualTileTextures.getOrInsertComputed(entry.mid, () => {
+				textures.push({key:entry.mid, image:wc.getImageData(2*tileSize, tileSize, tileSize, tileSize).data})
+				return { type: "tilemap", side: "mid", image, tileSize }
+			});
+			pairTileTextures.getOrInsertComputed(entry.bl, () => new Map()).getOrInsertComputed(entry.mid,() => {
+				for (const [key, vec] of Object.entries(pairTilePositions)) {
+					if (key === '::' || key ==='  ') continue
+					textures.push({key:`${entry.bl} ${entry.mid} ${key}`, image:wc.getImageData(vec.x*tileSize,vec.y* tileSize, tileSize, tileSize).data})
+				}
+				return { image, tileSize }
+			});
+				// workCanvas.width = tileSize*4
+				// workCanvas.height = tileSize*4
+				// wc.drawImage(image,0, 0, )
+		})(),
+	);
+}
+await Promise.all(promises);
+
+
+
+
 const tileNumbers = new Map<TileId, number>([
 	['dirt', 1],
 	['grass', 2],
@@ -82,6 +116,45 @@ const tileNumbers = new Map<TileId, number>([
 export class GlTileRenderer {
 	#texture?: {size:Vec2, texture:WebGLTexture}
 	#lastData?: Uint32Array
+	#canvas: Canvas
+	#keyToTextureNum = new Map<string,number>()
+	#tileTextures: WebGLTexture
+
+	constructor (canvas: Canvas) {
+		this.#canvas = canvas
+
+		// https://archive.ph/74hHL
+		const gl = this.#canvas.gl.gl
+		this.#tileTextures = gl.createTexture();
+		this.#canvas.gl.bindTexture( 1, '2d-array' , this.#tileTextures );
+gl.texParameteri( gl.TEXTURE_2D_ARRAY , gl.TEXTURE_MIN_FILTER , gl.NEAREST );
+gl.texParameteri( gl.TEXTURE_2D_ARRAY , gl.TEXTURE_MAG_FILTER , gl.NEAREST);
+gl.texParameteri( gl.TEXTURE_2D_ARRAY , gl.TEXTURE_WRAP_S , gl.CLAMP_TO_EDGE );
+gl.texParameteri( gl.TEXTURE_2D_ARRAY , gl.TEXTURE_WRAP_T , gl.CLAMP_TO_EDGE );
+
+// gl.texStorage3D( gl.TEXTURE_2D_ARRAY , 1 , gl.RGBA8 , tileSize , tileSize , textures.length );
+// gl.pixelStorei( gl.UNPACK_ROW_LENGTH , tileSize );
+
+const fullData = new Uint8Array(tileSize * tileSize * textures.length * 4)
+for (const [i, {key,image}] of textures.entries()) {
+fullData.set(image, tileSize * tileSize *i* 4)
+this.#keyToTextureNum.set(key,i)
+if (i > 255) throw new Error('we dont support this many textures u will need to refactor sorry')
+}
+gl.texImage3D(
+gl.TEXTURE_2D_ARRAY	,  // target
+	0,  // level (mip map)
+gl.RGBA8 	,  // internalformat
+tileSize	,  // width
+	tileSize,  // height
+	textures.length,  // depth (number of layers)
+0	,  // border muist be 0
+	gl.RGBA ,  // format
+	gl.UNSIGNED_BYTE ,  // type
+fullData	 // srcData
+)
+		this.#canvas.gl.bindTexture( 1, '2d-array' , null );
+	}
 	
 	/**
 	 * shake is a separate parameter so that it doesn't rapidly unload/reload
@@ -93,7 +166,8 @@ export class GlTileRenderer {
 	 * [texture-update]:
 	 * https://dannywoodz.wordpress.com/2015/10/14/webgl-from-scratch-updating-textures/
 	 */
-	renderTilesGl (canvas: Canvas, camera: Camera, shake:Vec2, tiles: ChunkMap): void {
+	renderTilesGl ( camera: Camera, shake:Vec2, tiles: ChunkMap): void {
+		const canvas = this.#canvas
 		const gl = canvas.gl.gl
 		const screenSize = vec2(canvas.width, canvas.height)
 		// add a tile size to each dimension since we read 2x2 (i am not sure if my logic is sound but whatever)
@@ -136,14 +210,52 @@ export class GlTileRenderer {
 	for (let cy = 0; cy < minChunkSize.y; cy++) {
 		const chunk = tiles[`${chunkStart.x + cx} ${chunkStart.y + cy}`]
 		if (!chunk) continue
+		const right = tiles[`${chunkStart.x + cx + 1} ${chunkStart.y + cy}`]
+		const below = tiles[`${chunkStart.x + cx} ${chunkStart.y + cy + 1}`]
+		const belowRight = tiles[`${chunkStart.x + cx + 1} ${chunkStart.y + cy + 1}`]
 		// is it more efficient to just iterate through all the tiles in the chunks or try limiting the umbero f iterations
-		for (const [i, tile] of chunk.entries()) {
-			const num = tile && tileNumbers.get(tile)
-			if (num) {
-				const x = cx * CHUNK_SIZE + i % CHUNK_SIZE
-				const y = cy * CHUNK_SIZE + Math.floor(i / CHUNK_SIZE)
-				data[y * dataSize.x + x] = num
-			}
+		for (const [i, cornerTL] of chunk.entries()) {
+			const local = vec2(i % CHUNK_SIZE, Math.floor(i / CHUNK_SIZE))
+			const cornerTR = local.x < CHUNK_SIZE - 1 ? chunk[i + 1] : right?.[local.y * CHUNK_SIZE] ?? null
+			const cornerBL = local.y < CHUNK_SIZE - 1 ? chunk[i + CHUNK_SIZE] : below?.[local.x] ?? null
+			const cornerBR =
+				local.y < CHUNK_SIZE - 1
+					? local.x < CHUNK_SIZE - 1 ? chunk[i + CHUNK_SIZE + 1] :  right?.[(local.y + 1) * CHUNK_SIZE] ?? null
+					: local.x < CHUNK_SIZE - 1 ? below?.[local.x + 1] ?? null : belowRight?.[0] ?? null
+					const set = new Set([cornerTL, cornerTR, cornerBL, cornerBR].values().filter(x => x !== null))
+				const dataOffset = ev`${vec2(cx, cy)} * ${CHUNK_SIZE} + ${local}`
+				const index = dataOffset.y * dataSize.x + dataOffset.x
+					if (set.size === 1) {
+						const [tile] = set
+				data[index] = this.#keyToTextureNum.get(tile) ?? 0
+					} else if (set.size === 2) wow: {
+						const [tileA, tileB] = set
+						let entry = pairTileTextures.get(tileA)?.get(tileB)
+						let pair
+						if (entry) {
+							pair = {entry,bl:tileA,mid:tileB}
+						} else {
+							entry = pairTileTextures.get(tileB)?.get(tileA)
+							if (entry){
+								pair = {entry,bl:tileB,mid:tileA}
+
+							} else {
+								break wow
+							}
+						}
+						const {bl,mid} = pair
+
+						const key = `${pair.bl} ${pair.mid} ${
+								`${cornerBL === bl ? (cornerTL === bl ? ":" : ".") : cornerTL === bl ? "'" : " "}${
+										cornerBR === bl ? (cornerTR === bl ? ":" : ".") : cornerTR === bl ? "'" : " "
+									}`
+						}`
+						// if (!this.#keyToTextureNum.has(key)) throw key
+						data[index] = this.#keyToTextureNum.get(key) ?? 0
+					}
+			// const num = tile && tileNumbers.get(tile)
+			// if (set.size > 0) {
+			// }
 		}
 }
 
@@ -213,8 +325,9 @@ this.#lastData = reinterpret
 
 		// first, subtract chunkStart so that chunkStart becomes the origin
 		mat4.translate(cameraTransformation, cameraTransformation, vec3.fromValues(
-			chunkStart.x * CHUNK_SIZE * TILE_SIZE,
-			chunkStart.y * CHUNK_SIZE * TILE_SIZE,0,
+			chunkStart.x * CHUNK_SIZE * TILE_SIZE + TILE_SIZE/2,
+			chunkStart.y * CHUNK_SIZE * TILE_SIZE + TILE_SIZE/2,
+			0,
 		))
 		// then, shrink the coordinate space so that [0, dataSize * TILE_SIZE] -> [0, 1]
 		mat4.scale(cameraTransformation, cameraTransformation, vec3.fromValues(
@@ -239,6 +352,8 @@ this.#lastData = reinterpret
 		// canvas.gl.bindTexture(0, "2d", texture);
 		// 0 here is the 0 we passed into bindTexture above
 					gl.uniform1i(canvas.gl.tileShader.uniform('u_tilemap'), 0);
+					gl.uniform1i(canvas.gl.tileShader.uniform('u_tile_textures'), 1);
+		canvas.gl.bindTexture(1,"2d-array",this.#tileTextures)
 
 				gl.drawArraysInstanced(
 				gl.TRIANGLES,
@@ -250,6 +365,7 @@ this.#lastData = reinterpret
 
 			
 		canvas.gl.bindTexture(0,"2d",null)
+		canvas.gl.bindTexture(1,"2d-array",null)
 	}
 }
 
