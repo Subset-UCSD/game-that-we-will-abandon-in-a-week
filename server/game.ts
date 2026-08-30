@@ -275,7 +275,7 @@ export class Game {
 		for (const player of this.players.values()) {
 			const INTERACTION_RANGE = 30;
 			// we might want the range to change depending on object size
-			player.canInteractWith = interactiveThings
+			player.canInteractWith = player.dialogue ? [player.dialogue.resopondTo.id]: interactiveThings
 				.values()
 				.filter(
 					(thing) =>
@@ -579,6 +579,9 @@ export class Game {
 							.find((o) => o.id === target);
 						if (thing) {
 							this.handlePlayerInteractingWithThing(player, thing);
+						} else if (player.dialogue?.resopondTo.id === target) {
+							// entity was deleted, so quit dialog to avoid soft lock
+							player.dialogue = undefined
 						}
 					}
 					player.wasInteracting = true;
