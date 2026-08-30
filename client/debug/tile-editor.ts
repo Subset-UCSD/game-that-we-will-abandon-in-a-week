@@ -120,24 +120,24 @@ export class DebugTileEditor {
 
 		const left = camera.x - width / camera.scale / 2;
 		const right = camera.x + width / camera.scale / 2;
-		const startX = Math.ceil((left - TILE_SIZE / 2) / TILE_SIZE);
-		const endX = Math.floor((right - TILE_SIZE / 2) / TILE_SIZE);
+		const startX = Math.ceil((left ) / TILE_SIZE);
+		const endX = Math.floor((right ) / TILE_SIZE);
 
 		const top = camera.y - height / camera.scale / 2;
 		const bottom = camera.y + height / camera.scale / 2;
-		const startY = Math.ceil((top - TILE_SIZE / 2) / TILE_SIZE);
-		const endY = Math.floor((bottom - TILE_SIZE / 2) / TILE_SIZE);
+		const startY = Math.ceil((top ) / TILE_SIZE);
+		const endY = Math.floor((bottom ) / TILE_SIZE);
 		// console.log(startX,endX,startY,endY)
 
 		c.strokeStyle = "rgba(255, 255, 255, 0.2)";
 		c.beginPath();
 		for (let x = startX; x <= endX; x++) {
-			c.moveTo(x * TILE_SIZE + TILE_SIZE / 2, top);
-			c.lineTo(x * TILE_SIZE + TILE_SIZE / 2, bottom);
+			c.moveTo(x * TILE_SIZE , top);
+			c.lineTo(x * TILE_SIZE , bottom);
 		}
 		for (let y = startY; y <= endY; y++) {
-			c.moveTo(left, y * TILE_SIZE + TILE_SIZE / 2);
-			c.lineTo(right, y * TILE_SIZE + TILE_SIZE / 2);
+			c.moveTo(left, y * TILE_SIZE );
+			c.lineTo(right, y * TILE_SIZE );
 		}
 		c.stroke();
 	}

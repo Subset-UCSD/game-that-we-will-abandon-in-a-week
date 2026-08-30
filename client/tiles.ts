@@ -275,6 +275,7 @@ dataSize.x,		// width
 	
 	);
 	this.#lastData = reinterpret
+	console.log('sent to GPU',reinterpret.byteLength,'bytes (+ allocation)')
 } else {
 	// (we can assume lastData is already set)
 	// only send tile data if tiles have changed
@@ -294,6 +295,7 @@ if (this.#lastData?.some((n, i) => n !== reinterpret[i])) {
 	// srcOffset
 )
 this.#lastData = reinterpret
+	console.log('sent to GPU',reinterpret.byteLength,'bytes')
 }
 }
 
@@ -329,10 +331,10 @@ this.#lastData = reinterpret
 			chunkStart.y * CHUNK_SIZE * TILE_SIZE + TILE_SIZE/2,
 			0,
 		))
-		// then, shrink the coordinate space so that [0, dataSize * TILE_SIZE] -> [0, 1]
+		// then, shrink the coordinate space so that [0, TILE_SIZE] -> [0, dataSize]
 		mat4.scale(cameraTransformation, cameraTransformation, vec3.fromValues(
-			 (dataSize.x * TILE_SIZE), 
-			 (dataSize.y * TILE_SIZE),
+			 (TILE_SIZE), 
+			 (TILE_SIZE),
 			 1))
 		// and i think we did it
 
