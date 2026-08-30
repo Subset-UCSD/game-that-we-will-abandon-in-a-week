@@ -1,7 +1,7 @@
-import { ev, isVecEq, isZeroVec, normalize, randomInCircle, scaleVec, subVec, type Vec2, vec2, vecLengthSquared } from "@common";
+import { ev, isVecEq, isZeroVec, normalize, Particle, randomInCircle, scaleVec, subVec, type Vec2, vec2, vecLengthSquared } from "@common";
 import { type GameObject, KNIFE_OFFSET_Y, type Player as NetPlayer } from "@common/game";
 import { defaultInputs, type Inputs } from "@common/input";
-import { BoxCollider } from "@server/collision";
+import { BoxCollider } from "@common/colliders";
 import type { Game } from "@server/game";
 import { generateId } from "@server/id-manager";
 import { Corpse } from "./corpse";
@@ -19,7 +19,7 @@ export class Player implements GameObject {
 	max_speed: number = 5;
 	// represents player movement
 	acceleration = vec2();
-	position: Vec2 =scaleVec( randomInCircle(),1000);
+	position: Vec2 = scaleVec(randomInCircle(), 1000);
 	velocity: Vec2 = { x: 0, y: 0 };
 	id;
 	static next_id = 0;
@@ -50,9 +50,9 @@ export class Player implements GameObject {
 	private knifeState = { angle: 0, radius: 0 };
 	knivesInside = new Set<GameObject>();
 	nextFootsoundCanBePlayedAt = 0;
-	dialogue ?:{
-		messagfe:string,
-		options:string[]
+	dialogue?: {
+		messagfe: string,
+		options: string[]
 		resopondTo: StaticThing
 	}
 	optionIndex = 0
@@ -63,10 +63,14 @@ export class Player implements GameObject {
 		this.game = game;
 		this.inputs = { ...defaultInputs };
 		this.id = generateId(); //Player.next_id++;
-		this.collider = new BoxCollider(
-			{height:30,width:30,position:this.position,radians:0},
-			// this.position.x, this.position.y - 20, 30, 30, 0
-		);
+		this.collider = {
+			width: 30,
+			height: 30,
+			position: this.position,
+			offset: vec2(),
+			rotation: 0,
+			type: "box"
+		}
 	}
 
 	setPosition(x: number, y: number) {
@@ -89,7 +93,7 @@ export class Player implements GameObject {
 	}
 
 	serialize(): NetPlayer {
-		const v = vecLengthSquared(this.velocity) < 0.5 ? vec2():this.velocity
+		const v = vecLengthSquared(this.velocity) < 0.5 ? vec2() : this.velocity
 		const di = this.dialogue
 		return {
 			...this.position,
@@ -115,7 +119,7 @@ export class Player implements GameObject {
 			knifeRadius: +this.knifeState.radius.toFixed(3),
 			knifeAngle: this.knifeState.angle,
 			thought: this.thought,
-			dialogue: di&&{messagfe:di.messagfe,options:di.options.map((option,i) => ({text:option,active:(this.optionIndex%di.options.length === i) ? this.optionTimer : undefined}))},
+			dialogue: di && { messagfe: di.messagfe, options: di.options.map((option, i) => ({ text: option, active: (this.optionIndex % di.options.length === i) ? this.optionTimer : undefined })) },
 			type: "player",
 		};
 	}
@@ -165,10 +169,11 @@ export class Player implements GameObject {
 				}),
 			);
 			// TODO: respawn
-			this.position = scaleVec( randomInCircle(),1000)
+			this.position = scaleVec(randomInCircle(), 1000)
 		}
 		this.seedCooldownTicks = Math.max(this.seedCooldownTicks - 1, 0);
-		this.collider.updateLocation(subVec(this.position, { x: 0, y: 10 }));
+		this.collider.position = subVec(this.position, { x: 0, y: 10 })
+
 		const MAX_RADIUS = 30;
 		if (this.inputs.knife) {
 			this.knifeState.radius += (MAX_RADIUS - this.knifeState.radius) * 0.3;
@@ -205,6 +210,70 @@ export class Player implements GameObject {
 	}
 	getHp() {
 		return this.hp;
+	}
+
+	//this might be a todo idk
+	// TODO: MAKE KNIFE A GAMEOBJECT
+	handleKnife() {
+		// //
+		// const KNIFE_DAMAGE = 5.5; // as proclaimed by nick
+		// const knife = this.getKnifeLocation();
+		// if (knife) {
+		// 	const particle: Particle = {
+		// 		color: [6, 89, 36],
+		// 		count: 20,
+		// 		x: knife.x,
+		// 		y: knife.y,
+		// 		lifetime: 500,
+		// 		radius: 2,
+		// 		xvSpread: 100,
+		// 		yvSpread: 100,
+		// 		yvBase: -100,
+		// 		yvGravity: 500,
+		// 	};
+		// 	for (const entity of this.gameObjects) {
+		// 		if (player === entity) continue;
+		// 		if (entity instanceof Player) {
+		// 			if (entity.collider knife) {
+		// 				if (!player.knivesInside.has(entity)) {
+		// 					player.knivesInside.add(entity);
+		// 					entity.setHp(entity.getHp() - KNIFE_DAMAGE);
+		// 					this.particleQueue.push(particle);
+		// 					entity.applyImpulse(ev`${player.getKnifeVelocityDir()} * ${40}`);
+		// 					// console.log(entity.velocity)
+		// 				}
+		// 			} else {
+		// 				player.knivesInside.delete(entity);
+		// 			}
+		// 		} else if (entity instanceof StaticThing) {
+		// 			if (entity.collider) {
+		// 				if (entity.collider?.isInsideMe(knife)) {
+		// 					if (!player.knivesInside.has(entity)) {
+		// 						player.knivesInside.add(entity);
+		// 						entity.takeDamageIfPossible(KNIFE_DAMAGE);
+		// 						this.particleQueue.push(particle);
+		// 					}
+		// 				} else {
+		// 					player.knivesInside.delete(entity);
+		// 				}
+		// 			}
+		// 		} else if (entity instanceof Enemy) {
+		// 			if (entity.collider) {
+		// 				if (entity.collider?.isInsideMe(knife)) {
+		// 					if (!player.knivesInside.has(entity)) {
+		// 						player.knivesInside.add(entity);
+		// 						entity.publicState.healthPoint -= KNIFE_DAMAGE
+		// 						if (entity.publicState.healthPoint < 0) entity.publicState.healthPoint = 0
+		// 						this.particleQueue.push(particle);
+		// 						entity.applyImpulse(ev`${player.getKnifeVelocityDir()} * ${40}`);
+		// 					}
+		// 				} else {
+		// 					player.knivesInside.delete(entity);
+		// 				}
+		// 			}
+		// 		}
+		// 	}
+		// }
 	}
 
 	getKnifeLocation(): Vec2 | null {

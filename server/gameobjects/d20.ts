@@ -1,6 +1,6 @@
 import { clamp, scaleVec, type Vec2, vec2 } from "@common";
 import type { D20Schema, GameObject } from "@common/game";
-import { CircleCollider, type Collider } from "@server/collision";
+import { CircleCollider } from "@common/colliders";
 import { generateId } from "@server/id-manager";
 
 const ROTATION_SPEED = 100;
@@ -8,7 +8,7 @@ const ROTATION_SPEED = 100;
 export class D20 implements GameObject {
 	partyId = "";
 	publicState: D20Schema;
-	collider: Collider;
+	collider: CircleCollider;
 	shouldDelete: boolean = false;
 
 	#moving = false;
@@ -23,7 +23,13 @@ export class D20 implements GameObject {
 			type: "d20",
 			id: generateId(),
 		};
-		this.collider = new CircleCollider(20, vec2());
+		this.collider = {
+			type: "circle",
+			offset: vec2(),
+			position: {...this.publicState},
+			radius: 2,
+			rotation: 0,
+		}
 	}
 
 	get state() {
@@ -57,8 +63,16 @@ export class D20 implements GameObject {
 				this.publicState.y_vel = 0;
 			}
 		}
-
-		this.collider.updateLocation(vec2(this.publicState.x, this.publicState.y));
+		
+		// 👍👍👍👍👍👍👍EYAn EYANNNNN GOOD !!!!
+		this.collider.position = vec2(this.publicState.x, this.publicState.y) //GOD
+			// SINFUL, ABHORORENT, EVIL, 	
+			// TWO LEGS GOOD, 4 LEGS BAD
+			// TWO LEGS GOOD, 4 LEGS BAD
+			// TWO LEGS GOOD, 4 LEGS BAD
+			// TWO LEGS GOOD, 4 LEGS BAD
+			// TWO LEGS GOOD, 4 LEGS BAD
+		// this.collider.updateLocation(vec2(this.publicState.x, this.publicState.y)); //EVIL
 	}
 
 	serialize(): D20Schema {

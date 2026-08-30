@@ -189,6 +189,10 @@ export class Game {
 		
 	}
 
+	recieveTRiles (tiles:ChunkMap) {
+		this.tiles = tiles
+	}
+
 	updateGameState(gameState: WholeFkingGameState) {
 		const newClientState = new Map<number, RenderableObject>();
 		for (const objState of gameState.gameObjects) {
@@ -228,12 +232,6 @@ export class Game {
 				gameObjects: gameState.gameObjects.map((p) =>
 					p.type === "player" ? { ...p, lines: `... ${p.lines.length} line(s)` } : p,
 				),
-				tiles: Object.fromEntries(
-					Object.entries(gameState.tiles).map(([k, v]) => [
-						k,
-						`... ${v.reduce((cum, curr) => cum + +(curr !== null), 0)} tile(s)`,
-					]),
-				),
 			},
 			null,
 			2,
@@ -243,7 +241,7 @@ export class Game {
 			.values()
 			.flatMap((player) => (player.type === "player" ? player.lines : []))
 			.toArray();
-		this.tiles = gameState.tiles;
+		// this.tiles = gameState.tiles;
 
 		this.debugColldiers = gameState.debugColliders;
 	}
@@ -419,18 +417,18 @@ export class Game {
 				// console.log(collider.type)
 				switch (collider.type) {
 					case "box": {
-						c.strokeRect(collider.x, collider.y, collider.width, collider.height);
+						c.strokeRect(collider.position.x, collider.position.y, collider.width, collider.height);
 						break;
 					}
 					case "circle": {
 						c.beginPath();
-						c.arc(collider.x, collider.y, collider.radius, 0, 2 * Math.PI);
+						c.arc(collider.position.x, collider.position.y, collider.radius, 0, 2 * Math.PI);
 						c.closePath();
 						c.stroke();
 
 						break;
 					}
-					case "capsule": {
+					/*case "capsule": {
 						// untested
 						c.beginPath();
 						c.moveTo(collider.x + collider.width / 2, collider.y + collider.height / 2);
@@ -448,7 +446,7 @@ export class Game {
 						}
 						c.stroke();
 						break;
-					}
+					}*/
 				}
 			}
 		}

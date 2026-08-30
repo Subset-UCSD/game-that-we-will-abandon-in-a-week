@@ -7,3 +7,4 @@ export * from "./messages";
 export * from "./tiles";
 export * from "./vector";
 export * from "./utils";
+export * from "./colliders";

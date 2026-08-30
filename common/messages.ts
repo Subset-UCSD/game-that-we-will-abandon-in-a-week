@@ -1,7 +1,7 @@
 import { wholeFkingGameState } from "@common/game";
 import { inputSchema } from "@common/input";
 import z from "zod";
-import { tileSchema } from "./tiles";
+import { tileSchema,chunkMapSchema } from "./tiles";
 
 /**
  * Message schema helper. This returns a zod schema for message shape with a payload
@@ -70,6 +70,12 @@ export const partialFkingGameStateMessage = $message(
 );
 export type PartialFkingGameStateMessage = z.infer<typeof partialFkingGameStateMessage>;
 
+
+export const tileMessage = $message(
+	"tiles",
+	chunkMapSchema,
+);
+
 const particleSchema = z.object({
 	// hsl format: h(0 to 360), s(0 to 100), l(0 to 100)
 	color: z.tuple([z.number(), z.number(), z.number()]),
@@ -115,6 +121,7 @@ export type JoinResponse = z.infer<typeof joinResponse>;
 export const serverMessage = z.discriminatedUnion("type", [
 	wholeFkingGameStateMessage,
 	partialFkingGameStateMessage,
+	tileMessage,
 	particleMessage,
 	soundMessage,
 	joinResponse,

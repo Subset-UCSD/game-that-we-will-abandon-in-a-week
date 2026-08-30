@@ -29,7 +29,13 @@ class Connection {
 			console.error("Invalid JSON", event.data, error);
 			return;
 		}
-		const result = serverMessage.safeParse(jason);
+		let result
+		try {
+			result = serverMessage.safeParse(jason);
+		} catch (error) {
+			console.error('there appears to be an issue with the schema itself',jason,error)
+			return
+		}
 		if (!result.success) {
 			console.error("Schema fucky", jason, result.error);
 			return;
@@ -69,6 +75,10 @@ class Connection {
 				}
 				this.send("please-send-full-game-state", null);
 				break;
+			}
+			case 'tiles': {
+				this.game.recieveTRiles(message.value)
+				break
 			}
 			case "particles": {
 				for (const particle of message.value) {

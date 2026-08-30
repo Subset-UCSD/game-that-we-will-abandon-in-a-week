@@ -115,7 +115,7 @@ const tileNumbers = new Map<TileId, number>([
 
 export class GlTileRenderer {
 	#texture?: {size:Vec2, texture:WebGLTexture}
-	#lastData?: Uint32Array
+	#lastDataKey?: {tileRef:ChunkMap, dataOrigin: Vec2}
 	#canvas: Canvas
 	#keyToTextureNum = new Map<string,number>()
 	#tileTextures: WebGLTexture
@@ -155,21 +155,15 @@ fullData	 // srcData
 )
 		this.#canvas.gl.bindTexture( 1, '2d-array' , null );
 	}
-	
+
 	/**
-	 * shake is a separate parameter so that it doesn't rapidly unload/reload
-	 * chunks if the player is unlucky
-	 *
-	 * refs:
-	 * - [updating textures][texture-update]
-	 *
-	 * [texture-update]:
-	 * https://dannywoodz.wordpress.com/2015/10/14/webgl-from-scratch-updating-textures/
+	 * will also bind the texture
 	 */
-	renderTilesGl ( camera: Camera, shake:Vec2, tiles: ChunkMap): void {
+	#updateTileDataTextureIfNeeded (camera:Camera, tiles:ChunkMap): {chunkStart:Vec2,dataSize:Vec2} {
 		const canvas = this.#canvas
 		const gl = canvas.gl.gl
 		const screenSize = vec2(canvas.width, canvas.height)
+
 		// add a tile size to each dimension since we read 2x2 (i am not sure if my logic is sound but whatever)
 		const minChunkSize = vecMap1(screenSize, dim => Math.ceil((dim + TILE_SIZE) / (CHUNK_SIZE * TILE_SIZE)) + 1)
 		let isNew = false
@@ -188,9 +182,11 @@ fullData	 // srcData
 						gl.TEXTURE_2D, gl.TEXTURE_MAG_FILTER, gl.NEAREST);
 					gl.texParameteri(
 						gl.TEXTURE_2D, gl.TEXTURE_MIN_FILTER, gl.NEAREST);
+						// https://stackoverflow.com/a/47362259
+						gl.pixelStorei( gl.UNPACK_ALIGNMENT , 1 );
 						// allow default wrap of repeat
 						isNew = true
-						this.#lastData = undefined
+						this.#lastDataKey = undefined
 		} else {
 			canvas.gl.bindTexture(0,"2d",this.#texture.texture)         	
 		}
@@ -200,8 +196,14 @@ fullData	 // srcData
 	const chunkStart = vecMap1(screenStart, (coord) => Math.floor((coord - TILE_SIZE / 2) / (TILE_SIZE * CHUNK_SIZE)));
 	const tileStart = vecMap1(screenStart, (coord) => Math.floor((coord - TILE_SIZE / 2) / TILE_SIZE));
 	const tileEnd = vecMap1(screenEnd, (coord) => Math.ceil((coord - TILE_SIZE / 2) / TILE_SIZE));
-
 	const dataSize = scaleVec(minChunkSize, CHUNK_SIZE)
+
+	if (this.#lastDataKey?.tileRef === tiles && isVecEq(this.#lastDataKey.dataOrigin, chunkStart)) {
+		// we done here, tile data hasnt changed
+		return{chunkStart,dataSize}
+	}
+
+
 	const data = new Uint8Array(
 		// round up to multiple of 4 bytes so this can be reinterpreted as uint32 for faster diff
 		Math.ceil((dataSize.x * dataSize.y) / 4) * 4
@@ -259,7 +261,7 @@ fullData	 // srcData
 		}
 }
 
-	const reinterpret = new Uint32Array(data.buffer)
+	// const reinterpret = new Uint32Array(data.buffer)
 if (isNew) {
 	gl.texImage2D(
 		gl.TEXTURE_2D, // target
@@ -274,12 +276,11 @@ dataSize.x,		// width
 	// 0	// srcOffset
 	
 	);
-	this.#lastData = reinterpret
-	console.log('sent to GPU',reinterpret.byteLength,'bytes (+ allocation)')
+	console.log('sent to GPU',data.byteLength,'bytes (+ allocation)')
 } else {
 	// (we can assume lastData is already set)
 	// only send tile data if tiles have changed
-if (this.#lastData?.some((n, i) => n !== reinterpret[i])) {
+// if (this.#lastData?.some((n, i) => n !== reinterpret[i])) {
 	console.log('detected tile change, reuploading tile data')
 	gl.texSubImage2D(
 	gl.TEXTURE_2D, //target
@@ -294,12 +295,32 @@ if (this.#lastData?.some((n, i) => n !== reinterpret[i])) {
 	data, //srcData
 	// srcOffset
 )
-this.#lastData = reinterpret
-	console.log('sent to GPU',reinterpret.byteLength,'bytes')
+	console.log('sent to GPU',data.byteLength,'bytes')
+// }
 }
-}
+this.#lastDataKey = {tileRef: tiles,dataOrigin:chunkStart}
 
 
+return{chunkStart,dataSize}
+
+	}
+	
+	/**
+	 * shake is a separate parameter so that it doesn't rapidly unload/reload
+	 * chunks if the player is unlucky
+	 *
+	 * refs:
+	 * - [updating textures][texture-update]
+	 *
+	 * [texture-update]:
+	 * https://dannywoodz.wordpress.com/2015/10/14/webgl-from-scratch-updating-textures/
+	 */
+	renderTilesGl ( camera: Camera, shake:Vec2, tiles: ChunkMap): void {
+		const canvas = this.#canvas
+		const gl = canvas.gl.gl
+
+		// this binds tile data texture (this.#texture) at location 0 btw
+const {chunkStart,dataSize}=		this.#updateTileDataTextureIfNeeded(camera,tiles)
 
 		// now that we have uploaded the texture data we can render
 

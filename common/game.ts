@@ -1,5 +1,5 @@
 import type { Vec2 } from "@common";
-import type { Collider } from "@server/collision";
+import {colliderSchema, Collider } from "@common/colliders";
 import z from "zod";
 import { chunkMapSchema } from "./tiles";
 
@@ -95,12 +95,6 @@ export const d20schema = z.strictObject({
 	value: z.number(),
 });
 
-const colliderSchema = z.discriminatedUnion("type", [
-	z.object({ type: z.literal("box"), x: z.number(), y: z.number(), width: z.number(), height: z.number() }),
-	z.object({ type: z.literal("circle"), x: z.number(), y: z.number(), radius: z.number() }),
-	z.object({ type: z.literal("capsule"), x: z.number(), y: z.number(), width: z.number(), height: z.number() }),
-]);
-
 const allGameObjectSchemas = z.discriminatedUnion("type", [
 	playerSchema,
 	d20schema,
@@ -116,7 +110,7 @@ export type SerializedGameObject = z.infer<typeof allGameObjectSchemas>;
 export const wholeFkingGameState = z.object({
 	gameObjects: z.array(allGameObjectSchemas),
 	debugColliders: z.array(colliderSchema), //.optional(),
-	tiles: chunkMapSchema,
+	// tiles: chunkMapSchema,
 });
 
 z.object({
@@ -128,7 +122,7 @@ z.object({
 	seeds: z.array(seedSchema),
 	d20: z.array(d20schema),
 	colliders: z.array(colliderSchema), //.optional(),
-	tiles: chunkMapSchema,
+	// tiles: chunkMapSchema,
 	// add to this when you want the client to know more about the game
 });
 

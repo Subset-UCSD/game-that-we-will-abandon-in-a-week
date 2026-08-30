@@ -1,5 +1,5 @@
 import type { GameObject, SerializedGameObject, SerializedThing, Vec2 } from "@common";
-import type { Collider } from "@server/collision";
+import type { Collider } from "@common";
 import { generateId } from "@server/id-manager";
 import { Player } from "./player";
 

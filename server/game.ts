@@ -7,6 +7,8 @@ import {
 	vecLength,
 	vecLengthSquared,
 	type WholeFkingGameState,
+	scaleVec,
+	ChunkMap
 } from "@common";
 import { generateDiffPayload } from "@common/json-optimizer";
 import type {
@@ -18,7 +20,8 @@ import type {
 } from "@common/messages";
 import { Explosion, Meatball, Player, SEED_COOLDOWN, Seed, StaticThing } from "@server/gameobjects";
 import type { WebSocket } from "ws";
-import { BoxCollider, type Collider } from "./collision";
+import { BoxCollider } from "@common/colliders"
+import { collide } from "./collision"
 import { CollisionWorld } from "./collisionWorld";
 import type { Party, Room } from "./gamelogic";
 import { D20 } from "./gameobjects/d20";
@@ -54,60 +57,60 @@ export class Game {
 			// static {
 			// 	type State = 'first' | 'second'
 			// }
-			#playerState = new Map<Player, {name:string,happy?:boolean}>()
-;*				logic (player:Player): Generator<{message:string,options:string[]},void,string> {
-	const knowledge = this.#playerState.get(player)
-	if (knowledge) {
-		if (knowledge.happy!==undefined){
-if (knowledge.happy) {
-	yield {message:`hey ${knowledge.name}`,options:['hi']}
-} else {
-	yield {message:`go away ${knowledge.name}`,options:['no','ok']}
-}
-		}else
-		if (player.clouds >= 3) {
-yield {message:'WOW holy shit',options:['language']}
-yield {message:'cloud compute.',options:['sorry?']}
-player.maxHp*=2
-const response1 = yield {message:'i dont have much to reward you with so i will double your max hp',options:['thanks','um wont this make it harder for me to get clouds from myself']}
-if (response1!=='thanks') {
-	knowledge.happy = false
-	yield {message:'ok fuck off u ungrateful shit',options:['...']}
-} else {
-	knowledge.happy = true
-}
-		}else
-		if (player.clouds >0 ) {
-yield {message:`hey ${knowledge.name} so you have ${player.clouds} cloud which is not THREE cloud i think i will have to mark this on your performance review are we aligned`,options:['can we circle back']}
-		} else {
-			yield {message:`hi ${knowledge.name} where tf are my clouds i dont wish to speak to u rn sry`,options:['ok fuck you too']}
-		}
-		return
-	}
-								yield {
-									message: 'yo',
-									options:['sup tech bro'],
-								}
-								const name = yield {
-									message: 'what is ur name',
-									options:['alice','bob','charlies','daisy',
-										// i keep soft locking myself
-										// 'I am Benjamin Netanyahu.'
-									],
-								}
-								if (name.includes('Ben')) {
-									yield { message: ' hey so fuck',options:[]}
-								}
-								yield { message: `hey ${name} what r ur thoughts on ai`,options:['i love ai',' i hate ai']}
-								yield {message:' i dont care',options:['...']}
-								const respone1= yield {message:'i am a tech bro',options:['yes','no']}
-								if (respone1 === 'no') {
-									yield {message:'?',options:['sory']}
-								}
-								yield {message:'everything must be CLOUD',options:['so ?']}
-								yield {message:'i want THREE cloud',options:['ok']}
-								this.#playerState.set(player,{name,})
+			#playerState = new Map<Player, { name: string, happy?: boolean }>()
+				; *				logic(player: Player): Generator<{ message: string, options: string[] }, void, string> {
+					const knowledge = this.#playerState.get(player)
+					if (knowledge) {
+						if (knowledge.happy !== undefined) {
+							if (knowledge.happy) {
+								yield { message: `hey ${knowledge.name}`, options: ['hi'] }
+							} else {
+								yield { message: `go away ${knowledge.name}`, options: ['no', 'ok'] }
 							}
+						} else
+							if (player.clouds >= 3) {
+								yield { message: 'WOW holy shit', options: ['language'] }
+								yield { message: 'cloud compute.', options: ['sorry?'] }
+								player.maxHp *= 2
+								const response1 = yield { message: 'i dont have much to reward you with so i will double your max hp', options: ['thanks', 'um wont this make it harder for me to get clouds from myself'] }
+								if (response1 !== 'thanks') {
+									knowledge.happy = false
+									yield { message: 'ok fuck off u ungrateful shit', options: ['...'] }
+								} else {
+									knowledge.happy = true
+								}
+							} else
+								if (player.clouds > 0) {
+									yield { message: `hey ${knowledge.name} so you have ${player.clouds} cloud which is not THREE cloud i think i will have to mark this on your performance review are we aligned`, options: ['can we circle back'] }
+								} else {
+									yield { message: `hi ${knowledge.name} where tf are my clouds i dont wish to speak to u rn sry`, options: ['ok fuck you too'] }
+								}
+						return
+					}
+					yield {
+						message: 'yo',
+						options: ['sup tech bro'],
+					}
+					const name = yield {
+						message: 'what is ur name',
+						options: ['alice', 'bob', 'charlies', 'daisy',
+							// i keep soft locking myself
+							// 'I am Benjamin Netanyahu.'
+						],
+					}
+					if (name.includes('Ben')) {
+						yield { message: ' hey so fuck', options: [] }
+					}
+					yield { message: `hey ${name} what r ur thoughts on ai`, options: ['i love ai', ' i hate ai'] }
+					yield { message: ' i dont care', options: ['...'] }
+					const respone1 = yield { message: 'i am a tech bro', options: ['yes', 'no'] }
+					if (respone1 === 'no') {
+						yield { message: '?', options: ['sory'] }
+					}
+					yield { message: 'everything must be CLOUD', options: ['so ?'] }
+					yield { message: 'i want THREE cloud', options: ['ok'] }
+					this.#playerState.set(player, { name, })
+				}
 			// ;*#
 		})({
 			kind: "techbro",
@@ -116,18 +119,15 @@ yield {message:`hey ${knowledge.name} so you have ${player.clouds} cloud which i
 			interactive: true,
 			hp: 10000,
 			maxHp: 10000,
-			collider: new BoxCollider(
-				{position:vec2(-50,-150),width:40,height:70}
-				// -50, -150, 40, 70
-			),
+			collider: { type: "box", position: vec2(-50, -150), width: 40, height: 70, rotation: 0, offset: vec2() },
 		}),
 		new (class extends StaticThing {
-;*				logic (player:Player): Generator<{message:string,options:string[]},void,string> {
-const action = yield {message:'this is the temple of john typescript',options:['pray','leave']}
-if (action==='pray') {
-	yield {message:`you say: “Switching on a template literal expression does not narrow the interpolated union variable This is the behavior in every version tried (4.1.5, 5.9.2, 7.0.2; not expressible before 4.1), and I (had claude) review the FAQ for entries about type narrowing and template literal types Inside case "apple pie":, foo is still typed "apple" | "pear" | "banana", so const apple: "apple" = foo fails with:  error TS2322: Type '"apple" | "pear" | "banana"' is not assignable to type '"apple"'.  This is wrong because the case can only be reached when foo === "apple". The switch subject \${foo} pie as const is typed as "apple pie" | "pear pie" | "banana pie", and each case label corresponds to exactly one value of foo. The compiler already computes that correspondence, but control flow analysis doesn't propagate the match back to foo. The equivalent if ((\${foo} pie as const) === "apple pie") fails the same way, while switching on foo directly narrows as expected.”`,options:['meditate']}
-}
-}
+			; *logic(player: Player): Generator<{ message: string, options: string[] }, void, string> {
+				const action = yield { message: 'this is the temple of john typescript', options: ['pray', 'leave'] }
+				if (action === 'pray') {
+					yield { message: `you say: “Switching on a template literal expression does not narrow the interpolated union variable This is the behavior in every version tried (4.1.5, 5.9.2, 7.0.2; not expressible before 4.1), and I (had claude) review the FAQ for entries about type narrowing and template literal types Inside case "apple pie":, foo is still typed "apple" | "pear" | "banana", so const apple: "apple" = foo fails with:  error TS2322: Type '"apple" | "pear" | "banana"' is not assignable to type '"apple"'.  This is wrong because the case can only be reached when foo === "apple". The switch subject \${foo} pie as const is typed as "apple pie" | "pear pie" | "banana pie", and each case label corresponds to exactly one value of foo. The compiler already computes that correspondence, but control flow analysis doesn't propagate the match back to foo. The equivalent if ((\${foo} pie as const) === "apple pie") fails the same way, while switching on foo directly narrows as expected.”`, options: ['meditate'] }
+				}
+			}
 			// ;*#
 		})({
 			kind: "altar",
@@ -144,7 +144,6 @@ if (action==='pray') {
 		["base", { id: "base", x: 0, y: 0 }],
 		["test", { id: "test", x: 1900, y: 2200 }],
 	]);
-	private colliders: Collider[] = [];
 	private lastSentGameState?: { gameState: WholeFkingGameState; versionId: string };
 	private tiles: ChunkEntryMap;
 	private onTileEdit: (tiles: ChunkEntryMap) => void;
@@ -179,28 +178,33 @@ if (action==='pray') {
 
 		// colider :)
 
-		// for (const gameObj1 of this.gameObjects) {
-		// 	for (const gameObj2 of this.gameObjects) {
-		// 		if (gameObj1.id === gameObj2.id) continue;
+		for (const gameObj1 of this.gameObjects) {
+			for (const gameObj2 of this.gameObjects) {
+				if (gameObj1.id === gameObj2.id) continue;
+				if (!gameObj1.collider || !gameObj2.collider) continue;
+				const [isColliding, smallestOverlapAmount, mtvAxis] = collide(gameObj1.collider, gameObj2.collider);
+				if (isColliding) {
+					gameObj1?.hasCollidedWith?.(gameObj2, scaleVec(mtvAxis, smallestOverlapAmount));
+					gameObj2?.hasCollidedWith?.(gameObj1, scaleVec(mtvAxis, smallestOverlapAmount));
+				}
+				//CollisionWorld
 
-		// 		//CollisionWorld
-
-		// 		// if (mtv.x != 0 || mtv.y != 0) {
-		// 		// 	player1.collied = true;
-		// 		// 	player1.velocity = mtv;
-		// 		// 	// console.log(player1.id, mtv)
-		// 		// 	break;
-		// 		// }
-		// 		// player1.collied = false;
-		// 	}
-		// }
+				// if (mtv.x != 0 || mtv.y != 0) {
+				// 	player1.collied = true;
+				// 	player1.velocity = mtv;
+				// 	// console.log(player1.id, mtv)
+				// 	break;
+				// }
+				// player1.collied = false;
+			}
+		}
 
 		for (const meatball of this.gameObjects) {
 			meatball.tick();
 		}
-				// if (!isVecEq(oldPos,this.position)) {
-				// }
-				emit('players:move', this.players.values().map(({id,position:{x,y}}) =>({id:id+'',x,y}) ).toArray())
+		// if (!isVecEq(oldPos,this.position)) {
+		// }
+		emit('players:move', this.players.values().map(({ id, position: { x, y } }) => ({ id: id + '', x, y })).toArray())
 		for (const meatball of this.gameObjects) {
 			if (!meatball.shouldDelete || !(meatball instanceof Meatball)) continue;
 			const explosion = new Explosion({
@@ -233,8 +237,8 @@ if (action==='pray') {
 					const explosionToPlayer = subVec(entity.publicState, meatball.publicState);
 					const dist = vecLength(explosionToPlayer);
 					if (dist < explosion.radius) {
-									entity.publicState.healthPoint-=EXPLOSION_DAMAGE
-									if (entity.publicState.healthPoint<0)entity.publicState.healthPoint=0
+						entity.publicState.healthPoint -= EXPLOSION_DAMAGE
+						if (entity.publicState.healthPoint < 0) entity.publicState.healthPoint = 0
 						// entity.setHp(entity.getHp() - EXPLOSION_DAMAGE);
 						entity.applyImpulse(ev`(${explosionToPlayer} / ${dist}) * ${(explosion.radius - dist) * 1.5}`);
 					}
@@ -264,65 +268,6 @@ if (action==='pray') {
 				.map((thing) => thing.id)
 				.toArray();
 
-			//
-			const KNIFE_DAMAGE = 5.5; // as proclaimed by nick
-			const knife = player.getKnifeLocation();
-			if (knife) {
-				const particle: Particle = {
-					color: [6, 89, 36],
-					count: 20,
-					x: knife.x,
-					y: knife.y,
-					lifetime: 500,
-					radius: 2,
-					xvSpread: 100,
-					yvSpread: 100,
-					yvBase: -100,
-					yvGravity: 500,
-				};
-				for (const entity of this.gameObjects) {
-					if (player === entity) continue;
-					if (entity instanceof Player) {
-						if (entity.collider.isInsideMe(knife)) {
-							if (!player.knivesInside.has(entity)) {
-								player.knivesInside.add(entity);
-								entity.setHp(entity.getHp() - KNIFE_DAMAGE);
-								this.particleQueue.push(particle);
-								entity.applyImpulse(ev`${player.getKnifeVelocityDir()} * ${40}`);
-								// console.log(entity.velocity)
-							}
-						} else {
-							player.knivesInside.delete(entity);
-						}
-					} else if (entity instanceof StaticThing) {
-						if (entity.collider) {
-							if (entity.collider?.isInsideMe(knife)) {
-								if (!player.knivesInside.has(entity)) {
-									player.knivesInside.add(entity);
-									entity.takeDamageIfPossible(KNIFE_DAMAGE);
-									this.particleQueue.push(particle);
-								}
-							} else {
-								player.knivesInside.delete(entity);
-							}
-						}
-					}else if (entity instanceof Enemy) {
-						if (entity.collider) {
-							if (entity.collider?.isInsideMe(knife)) {
-								if (!player.knivesInside.has(entity)) {
-									player.knivesInside.add(entity);
-									entity.publicState.healthPoint-=KNIFE_DAMAGE
-									if (entity.publicState.healthPoint<0)entity.publicState.healthPoint=0
-									this.particleQueue.push(particle);
-								entity.applyImpulse(ev`${player.getKnifeVelocityDir()} * ${40}`);
-								}
-							} else {
-								player.knivesInside.delete(entity);
-							}
-						}
-					}
-				}
-			}
 			// for (const {knife, player: other} of knives) {
 			//   if (player === other)continue
 			//     if (player.collider.isInsideMe(knife)) {
@@ -402,10 +347,14 @@ if (action==='pray') {
 			gameObjects: this.gameObjects.map((mb) => mb.serialize()),
 			// d20: [this.d20.serialize()],
 			debugColliders: this.gameObjects
-				.map((object) => object.collider?.serialize())
+				.map((object) => object.collider)
 				.filter((collider) => collider !== undefined),
-			tiles: Object.fromEntries(this.tiles.entries().map(([key, { tiles }]) => [key, tiles])),
+			// tiles: Object.fromEntries(this.tiles.entries().map(([key, { tiles }]) => [key, tiles])),
 		};
+	}
+
+	private buildChunkMap(): ChunkMap {
+		return Object.fromEntries(this.tiles.entries().map(([key, { tiles }]) => [key, tiles]))
 	}
 
 	handleMessage(ws: WebSocket, msg: ClientMessage) {
@@ -442,6 +391,7 @@ if (action==='pray') {
 				}
 				player.connected = true;
 				send(ws, "join-response", { sessionId, playerId: player.id });
+				send(ws, 'tiles', this.buildChunkMap())
 				return;
 			}
 			case "input": {
@@ -481,6 +431,7 @@ if (action==='pray') {
 				}
 				// console.log(this.tiles)
 				this.onTileEdit(this.tiles);
+				this.broadcast('tiles', this.buildChunkMap())
 				break;
 			}
 		}
@@ -499,20 +450,21 @@ if (action==='pray') {
 			if (player.inputs.right) {
 				player.facingLeft = false;
 			}
-			if (!player.dialogue){
-			if (player.inputs.up) {
-				movementDir.y = -1;
-			}
-			if (player.inputs.down) {
-				movementDir.y = 1;
-			}
+			if (!player.dialogue) {
+				if (player.inputs.up) {
+					movementDir.y = -1;
+				}
+				if (player.inputs.down) {
+					movementDir.y = 1;
+				}
 
-			if (player.inputs.left) {
-				movementDir.x = -1;
+				if (player.inputs.left) {
+					movementDir.x = -1;
+				}
+				if (player.inputs.right) {
+					movementDir.x = 1;
+				}
 			}
-			if (player.inputs.right) {
-				movementDir.x = 1;
-			}}
 			if (vecLengthSquared(movementDir) > 0) {
 				// im so scared of touching this but i think acceleration and friction need to be equal ?
 				player.acceleration = ev`${normalize(movementDir)} * ${10}`;
@@ -638,12 +590,12 @@ if (action==='pray') {
 	handlePlayerInteractingWithThing(player: Player, thing: StaticThing): void {
 		// TODO: how should we handle dialog? should tech bro extend StaticThing and implement a method with interaction logic?
 		// do we want to send a message to the client to render a dialog pop up, or to represent it as state? if latter, do we want to send this to everyone?
-		if (player.dialogue){
-			if (player.dialogue.resopondTo===thing && player.dialogue.options.length > 0){
-				thing.interact(player,player.dialogue.options[ player.optionIndex % player.dialogue.options.length])
+		if (player.dialogue) {
+			if (player.dialogue.resopondTo === thing && player.dialogue.options.length > 0) {
+				thing.interact(player, player.dialogue.options[player.optionIndex % player.dialogue.options.length])
 			}
 		} else {
-			thing.interact(player,null)
+			thing.interact(player, null)
 		}
 	}
 
