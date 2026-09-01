@@ -22,6 +22,15 @@ const worldObjectSchema = z.object({
 	y: z.number(),
 });
 
+const itemSchema = z.literal([
+	'cloud',
+	'knife',
+	'meatball',
+	'seed',
+	'turnip',
+])
+export type ItemId = z.infer<typeof itemSchema>
+
 const playerSchema = worldObjectSchema.extend({
 	type: z.literal("player"),
 	x_vel: z.number(),
@@ -38,6 +47,7 @@ const playerSchema = worldObjectSchema.extend({
 	canInteractWith: z.number().array(),
 	knifeRadius: z.number(),
 	knifeAngle: z.number(),
+	items: z.array(z.object({item:itemSchema,count:z.number()})),
 	dialogue: z
 		.object({
 			messagfe: z.string(),
@@ -78,7 +88,7 @@ const seedSchema = worldObjectSchema.extend({
 
 const thingSchema = worldObjectSchema.extend({
 	type: z.literal("thing"),
-	kind: z.literal(["tree", "campfire", "techbro", "corpse", "corpse-left", "altar"]),
+	kind: z.literal(["tree", "campfire", "techbro", "corpse", "corpse-left", "altar",'turnip']),
 	interactive: z.boolean().optional(),
 	hp: z.number().optional(),
 	maxHp: z.number().optional(),

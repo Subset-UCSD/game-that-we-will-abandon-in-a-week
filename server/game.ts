@@ -18,9 +18,9 @@ import type {
 	ServerMessage,
 	SoundEvent,
 } from "@common/messages";
-import { Explosion, Meatball, Player, SEED_COOLDOWN, Seed, StaticThing } from "@server/gameobjects";
+import { Carrot, Explosion, Meatball, Player, SEED_COOLDOWN, Seed, StaticThing } from "@server/gameobjects";
 import type { WebSocket } from "ws";
-import { collide } from "./collision";
+import { collide, isInsideMe } from "./collision";
 import { CollisionWorld } from "./collisionWorld";
 import { emit } from "./events";
 import type { Party, Room } from "./gamelogic";
@@ -61,14 +61,16 @@ export class Game {
 			*logic(player: Player): Generator<{ message: string; options: string[] }, void, string> {
 				const knowledge = this.#playerState.get(player);
 				if (knowledge) {
+					const clouds = player.inventory.get('cloud')??0
 					if (knowledge.happy !== undefined) {
 						if (knowledge.happy) {
 							yield { message: `hey ${knowledge.name}`, options: ["hi"] };
 						} else {
 							yield { message: `go away ${knowledge.name}`, options: ["no", "ok"] };
 						}
-					} else if (player.clouds >= 3) {
+					} else if (clouds >= 3) {
 						yield { message: "WOW holy shit", options: ["language"] };
+						player.inventory.set('cloud', clouds - 3)
 						yield { message: "cloud compute.", options: ["sorry?"] };
 						player.maxHp *= 2;
 						const response1 = yield {
@@ -81,9 +83,9 @@ export class Game {
 						} else {
 							knowledge.happy = true;
 						}
-					} else if (player.clouds > 0) {
+					} else if (clouds > 0) {
 						yield {
-							message: `hey ${knowledge.name} so you have ${player.clouds} cloud which is not THREE cloud i think i will have to mark this on your performance review are we aligned`,
+							message: `hey ${knowledge.name} so you have ${clouds} cloud which is not THREE cloud i think i will have to mark this on your performance review are we aligned`,
 							options: ["can we circle back"],
 						};
 					} else {
@@ -149,10 +151,10 @@ export class Game {
 			y: -1650,
 			interactive: true,
 		}),
-		new Enemy({
-			x: -300,
-			y: -300,
-		}),
+		// new Enemy({
+		// 	x: -300,
+		// 	y: -300,
+		// }),
 	];
 	private rooms: Map<string, Room> = new Map([
 		["base", { id: "base", x: 0, y: 0 }],
@@ -221,8 +223,17 @@ export class Game {
 				.map(({ id, position: { x, y } }) => ({ id: id + "", x, y }))
 				.toArray(),
 		);
+		let enemyCount = 0
 		for (const meatball of this.gameObjects) {
-			if (!meatball.shouldDelete || !(meatball instanceof Meatball)) continue;
+			if (meatball instanceof Enemy) {
+				if (meatball.shouldDelete) {
+					const {x,y} = meatball.serialize()
+					this.gameObjects.push(new Carrot({x,y}))
+				} else {
+					enemyCount++
+				}
+			}else
+			if (meatball.shouldDelete &&(meatball instanceof Meatball)) {
 			const explosion = new Explosion({
 				duration: 20,
 				radius: 100,
@@ -259,8 +270,19 @@ export class Game {
 						entity.applyImpulse(ev`(${explosionToPlayer} / ${dist}) * ${(explosion.radius - dist) * 1.5}`);
 					}
 				}
-			}
+			}}
 		}
+
+
+		if (enemyCount < 3) {
+			const angle = Math.random() * 2 * Math.PI
+			const dist = Math.random() * 500 + 750
+			this.gameObjects.push(new Enemy({
+				x: Math.cos(angle)*dist,
+				y: Math.sin(angle)*dist,
+			}))
+		}
+
 		// should this be in StaticThing.tick? StaticThing doesn't have access to players
 		const interactiveThings = this.gameObjects
 			.values()
@@ -284,6 +306,63 @@ export class Game {
 				.map((thing) => thing.id)
 				.toArray();
 
+				const KNIFE_DAMAGE = 5.5; // as proclaimed by nick
+			const knife = player.getKnifeLocation();
+			if (knife) {
+				const particle: Particle = {
+					color: [6, 89, 36],
+					count: 20,
+					x: knife.x,
+					y: knife.y,
+					lifetime: 500,
+					radius: 2,
+					xvSpread: 100,
+					yvSpread: 100,
+					yvBase: -100,
+					yvGravity: 500,
+				};
+				for (const entity of this.gameObjects) {
+					if (player === entity) continue;
+					if (entity instanceof Player) {
+						if (isInsideMe(knife,entity.collider)) {
+							if (!player.knivesInside.has(entity)) {
+								player.knivesInside.add(entity);
+								entity.setHp(entity.getHp() - KNIFE_DAMAGE);
+								this.particleQueue.push(particle);
+								entity.applyImpulse(ev`${player.getKnifeVelocityDir()} * ${40}`);
+								// console.log(entity.velocity)
+							}
+						} else {
+							player.knivesInside.delete(entity);
+						}
+					} else if (entity instanceof StaticThing) {
+						if (entity.collider) {
+							if (entity.collider&&isInsideMe(knife,entity.collider)) {
+								if (!player.knivesInside.has(entity)) {
+									player.knivesInside.add(entity);
+									entity.takeDamageIfPossible(KNIFE_DAMAGE);
+									this.particleQueue.push(particle);
+								}
+							} else {
+								player.knivesInside.delete(entity);
+							}
+						}
+					}else if (entity instanceof Enemy) {
+						if (entity.collider) {
+							if (entity.collider&&isInsideMe(knife,entity.collider)) {
+								if (!player.knivesInside.has(entity)) {
+									player.knivesInside.add(entity);
+									entity.publicState.healthPoint-=KNIFE_DAMAGE
+									if (entity.publicState.healthPoint<0)entity.publicState.healthPoint=0
+									this.particleQueue.push(particle);
+								entity.applyImpulse(ev`${player.getKnifeVelocityDir()} * ${40}`);
+								}
+							} else {
+								player.knivesInside.delete(entity);
+							}
+						}
+					}
+				}}
 			// for (const {knife, player: other} of knives) {
 			//   if (player === other)continue
 			//     if (player.collider.isInsideMe(knife)) {
@@ -518,7 +597,9 @@ export class Game {
 			}
 			if (player.inputs.baa) {
 				if (!player.wasBaaing) {
-					const thoughts = ["baa", "hungy", "beh"];
+					const meatBallCount = player.inventory.get('meatball')??0
+					if (meatBallCount>0){
+						const thoughts = ["baa", "hungy", "beh"];
 					player.thought = thoughts[Math.floor(Math.random() * thoughts.length)];
 
 					const angle = Math.random() * 2 * Math.PI;
@@ -539,6 +620,8 @@ export class Game {
 						detectableDistance: 200,
 						playbackRate: 1 + Math.random() * 0.2,
 					});
+					player.inventory.set('meatball',(meatBallCount)-1)
+					}
 					player.wasBaaing = true;
 				}
 			} else {
@@ -559,7 +642,8 @@ export class Game {
 			} else {
 				player.wasTeleporting = false;
 			}
-			if (player.inputs.seed && player.seedCooldownTicks <= 0) {
+			const seedCount =player.inventory.get('seed')??0
+			if (player.inputs.seed && player.seedCooldownTicks <= 0&&seedCount > 0) {
 				this.addGameObject(
 					new Seed({
 						growthStage: 0,
@@ -568,6 +652,7 @@ export class Game {
 					}),
 				);
 				player.seedCooldownTicks = SEED_COOLDOWN;
+				player.inventory.set('seed',seedCount-1)
 			}
 			if (player.inputs.interact) {
 				if (!player.wasInteracting) {

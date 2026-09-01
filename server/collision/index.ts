@@ -4,6 +4,7 @@ import {
 	type Collider,
 	dot,
 	ev,
+	isZeroVec,
 	normalize,
 	ortho,
 	type PolygonCollider,
@@ -12,7 +13,9 @@ import {
 	type Vec2,
 	vec2,
 	vecLength,
+	vecLengthSquared,
 } from "@common";
+// import { error } from "console";
 
 export function collide(a: Collider, b: Collider) {
 	switch (a.type) {
@@ -203,14 +206,23 @@ export const SATSolver = (
 	return [true, smallestOverlapAmount, mtvAxis];
 };
 
-function isInsideMe(point: Vec2, collider: Collider) {
+export function isInsideMe(point: Vec2, collider: Collider):boolean {
+	// am i supposed to add offset
+	const sum = ev`${collider.position} + ${collider.offset}`
 	switch (collider.type) {
 		case "box":
-
+// TODO: rotation
+if ( collider.rotation!==0  ) throw new Error('nonzero rotation  not supported')
+		return sum.x - collider.width / 2 <= point.x && point.x <= sum.x + collider.width / 2 
+			 &&  sum.y - collider.height/ 2 <= point.y && point.y <= sum.y + collider.height/ 2 
 		// is point inside of box
 		case "circle":
 		// is point inside of circle
+// TODO: is offset after or before rotation
+if ( collider.rotation!==0 && !isZeroVec(collider.offset) ) throw new Error('nonzero rotation  not supported when combine with nonzero offset')
+return vecLengthSquared(ev`${sum} - ${point}`) <= collider.radius * collider.radius
 		case "polygon":
 		// is point inside of polygon
+		throw new Error('unimplemented polygon')
 	}
 }

@@ -26,6 +26,7 @@ import { ClientParticle } from "./render/particle";
 import type { RenderableObject } from "./render/render";
 import { Room } from "./render/room";
 import { GlTileRenderer, renderTiles } from "./tiles";
+import { renderInventory } from "./render/inventory";
 
 type Creator = () => RenderableObject;
 
@@ -397,12 +398,14 @@ export class Game {
 		if (this.__debugTileEditor != null && this.__debugTileEditor.isRenderCollider) {
 			c.strokeStyle = "red";
 			for (const collider of this.debugColldiers) {
+				// is this correct ?
+				const withOffset = addVec(collider.position,collider.offset)
 				// console.log(collider.type)
 				switch (collider.type) {
 					case "box": {
 						c.strokeRect(
-							collider.position.x - collider.width / 2,
-							collider.position.y - collider.height / 2,
+							withOffset.x - collider.width / 2,
+							withOffset.y - collider.height / 2,
 							collider.width,
 							collider.height,
 						);
@@ -410,7 +413,7 @@ export class Game {
 					}
 					case "circle": {
 						c.beginPath();
-						c.arc(collider.position.x, collider.position.y, collider.radius, 0, 2 * Math.PI);
+						c.arc(withOffset.x, withOffset.y, collider.radius, 0, 2 * Math.PI);
 						c.closePath();
 						c.stroke();
 
@@ -446,6 +449,12 @@ export class Game {
 
 		c.restore();
 
+
+		renderInventory(canvas,player?.items??[])
+		// for (const [i, {item, count}] of (player?.items ?? []).entries()) {
+		// 	//
+		// }
+
 		if (player?.dialogue) {
 			c.fillStyle = "black";
 			c.beginPath();
@@ -474,9 +483,9 @@ export class Game {
 
 		if (this.debugInfoVisible && player) {
 			c.fillStyle = "black";
-			c.fillText(`player: ${player.id}`, 10, 20);
-			c.fillText(`room: ${player.roomId}`, 10, 35);
-			c.fillText(`position: ${player.x.toFixed(1)}, ${player.y.toFixed(1)}`, 10, 50);
+			c.fillText(`player: ${player.id}`, 10, canvas.height-20);
+			c.fillText(`room: ${player.roomId}`, 10, canvas.height-35);
+			c.fillText(`position: ${player.x.toFixed(1)}, ${player.y.toFixed(1)}`, 10,canvas.height- 50);
 		}
 
 		this.lastRenderTime = now;

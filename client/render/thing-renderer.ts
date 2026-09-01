@@ -107,6 +107,22 @@ const thingsToRender = new Map<Renderable, Promise<RegisteredThing>>([
 			}),
 		),
 	],
+	[
+		"turnip",
+		Promise.all(
+			["./assets/turnip.png"].values().map((url) =>
+				fetch(url)
+					.then((r) => r.blob())
+					.then(createImageBitmap),
+			),
+		).then(
+			(frames): RegisteredThing => ({
+				frames,
+				imageSize: { width: 251, height: 245 },
+				scale: 0.2,
+			}),
+		),
+	],
 ]);
 const resolved = new Map(
 	await Promise.all(thingsToRender.entries().map(async ([key, vallue]) => [key, await vallue] as const)),

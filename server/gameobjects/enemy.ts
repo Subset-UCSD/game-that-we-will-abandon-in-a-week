@@ -1,4 +1,4 @@
-import { clamp, ev, evN, type GameObject, type Enemy as NetEnemy, normalize, type Vec2, vec2 } from "@common";
+import { clamp, ev, evN, type GameObject, type Enemy as NetEnemy, normalize, type Vec2, vec2, vecLengthSquared } from "@common";
 import type { BoxCollider } from "@common/colliders";
 import { subscribe } from "@server/events";
 import { generateId } from "@server/id-manager";
@@ -9,6 +9,9 @@ const MAX_ACCEL = 3;
 const MAX_VELOCITY = 10;
 const MAXIMUIM_HEALTH_OITNS = 50;
 type vvoid = void;
+
+// wtf what units is enemy using ??
+const MAX_SEE_DIST = 300000
 
 let nextId = 0;
 export class Enemy implements GameObject {
@@ -28,7 +31,7 @@ export class Enemy implements GameObject {
 
 	publicState: NetEnemy;
 
-	private target = vec2();
+	private target?:Vec2
 	private velocity = vec2();
 	private acceleration = vec2();
 
@@ -52,22 +55,26 @@ export class Enemy implements GameObject {
 				y: number;
 			}[],
 		) => {
+			if (this.healthPoints <= 0) return
 			// console.log('pm',players)
 			let shortestPlayer;
 			let shortestDist = Infinity;
 			for (const [i, player] of players.entries()) {
 				const dist: number = evN`${player} @ ${this.publicState}`;
-				if (dist < shortestDist) {
+				if (dist < shortestDist && dist < MAX_SEE_DIST) {
 					shortestDist = dist;
 					shortestPlayer = i;
 				}
 			}
 			// console.log('pm',this.target)
-			if (shortestPlayer === undefined) return;
+			if (shortestPlayer === undefined) {
+				this.target = undefined
+				return;
+			}
 			const selected = players[shortestPlayer];
 			this.target = vec2(selected.x, selected.y);
 		};
-		this.key = subscribe("players:move", yee);
+		this.key = subscribe("players:move", yee,this);
 		// this.youch  = () =>
 	}
 	// p;prvia
@@ -76,9 +83,12 @@ export class Enemy implements GameObject {
 
 	tick(): void {
 		this.healthPoints = this.publicState.healthPoint;
-		if (this.healthPoints <= 0) {
+		if (!this.target) {
 			this.acceleration = vec2();
 			this.velocity = ev`${this.velocity} * 0.8`;
+			if (this.healthPoints <= 0 &&vecLengthSquared(this.velocity) < 0.1) {
+				this.shouldDelete=true
+			}
 		} else {
 			const moveDirection = normalize(ev`${this.publicState} - ${this.target}`);
 			// TEMP: i changed + -> - so the enemy can stay on the screen . idk if it is right
@@ -90,8 +100,9 @@ export class Enemy implements GameObject {
 
 		this.collider.position = { ...this.publicState };
 
-		if (this.healthPoints <= 0 && this.key) {
+		if (this.healthPoints <= 0 && this.target) {
 			this.key = "";
+			this.target = undefined
 		}
 	}
 

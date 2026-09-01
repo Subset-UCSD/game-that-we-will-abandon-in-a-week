@@ -1,6 +1,6 @@
 import { ev, isZeroVec, normalize, randomInCircle, scaleVec, subVec, type Vec2, vec2, vecLengthSquared } from "@common";
 import type { BoxCollider } from "@common/colliders";
-import { type GameObject, KNIFE_OFFSET_Y, type Player as NetPlayer } from "@common/game";
+import { type GameObject, ItemId, KNIFE_OFFSET_Y, type Player as NetPlayer } from "@common/game";
 import { defaultInputs, type Inputs } from "@common/input";
 import type { Game } from "@server/game";
 import { generateId } from "@server/id-manager";
@@ -56,7 +56,13 @@ export class Player implements GameObject {
 	};
 	optionIndex = 0;
 	optionTimer = 0;
-	clouds = 0;
+	// clouds = 0;
+	// perhaps it should be Map<ItemId, {count:number}>
+	// so you can just do player.inventory.getOrInsert(item, {count:0}).count++
+	inventory = new Map<ItemId, number>([['knife',1],
+	['meatball',67],
+	['seed',1],
+])
 
 	constructor(game: Game) {
 		this.game = game;
@@ -126,6 +132,7 @@ export class Player implements GameObject {
 				})),
 			},
 			type: "player",
+			items: this.inventory.entries().filter(([k,v])=>v>0).map(([item,count])=>({item,count})).toArray(),
 		};
 	}
 
@@ -175,6 +182,10 @@ export class Player implements GameObject {
 			);
 			// TODO: respawn
 			this.position = scaleVec(randomInCircle(), 1000);
+			this.inventory.set('meatball',(this.inventory.get('meatball')??0)+42)
+		}
+		if (this.seedCooldownTicks === 1) {
+			this.inventory.set('seed', (this.inventory.get('seed')??0)+1)
 		}
 		this.seedCooldownTicks = Math.max(this.seedCooldownTicks - 1, 0);
 		this.collider.position = subVec(this.position, { x: 0, y: 10 });
