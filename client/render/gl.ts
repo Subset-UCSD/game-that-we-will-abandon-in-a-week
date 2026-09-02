@@ -176,7 +176,7 @@ export class Gl extends GlBase {
 	framebuffer = this.gl.createFramebuffer();
 
 	//#region  shaders here
-	#filterVertShader = this.createShader("vertex", filterVertShader, "filter.vert");
+	filterVertShader = this.createShader("vertex", filterVertShader, "filter.vert");
 	testShader = new ShaderProgram(
 		this,
 		this.createProgram(
@@ -186,7 +186,7 @@ export class Gl extends GlBase {
 	);
 	tileShader = new ShaderProgram(
 		this,
-		this.createProgram(this.#filterVertShader, this.createShader("fragment", tilesFragShader, "tiles.frag")),
+		this.createProgram(this.filterVertShader, this.createShader("fragment", tilesFragShader, "tiles.frag")),
 	);
 
 	/**

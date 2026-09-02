@@ -27,6 +27,7 @@ import type { RenderableObject } from "./render/render";
 import { Room } from "./render/room";
 import { GlTileRenderer, renderTiles } from "./tiles";
 import { renderInventory } from "./render/inventory";
+import { SpriteRenderer } from "./render/Sprites/sprite-render"
 
 type Creator = () => RenderableObject;
 
@@ -94,6 +95,11 @@ export class Game {
 	private camera: Camera = { x: 0, y: 0, scale: 1 };
 
 	__debugTileEditor?: DebugTileEditor;
+
+
+	TEMP_SPRITE = new SpriteRenderer(this.canvas, "TEMP", this.camera)
+
+
 
 	constructor() {
 		this.arena = new Arena(1200, 720); // small room
@@ -352,7 +358,8 @@ export class Game {
 		// this.room.render(canvas);
 		// this.arena.render(canvas);w
 
-		renderTiles(canvas, this.camera, this.tiles, this.__debugTileEditor?.isRenderCollider);
+		this.TEMP_SPRITE.render(canvas)
+		//renderTiles(canvas, this.camera, this.tiles, this.__debugTileEditor?.isRenderCollider);
 
 		if (!player) {
 			c.fillStyle = "red";
