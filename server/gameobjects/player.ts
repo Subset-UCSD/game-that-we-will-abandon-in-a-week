@@ -11,7 +11,7 @@ const MAX_HP = 67;
 const LINE_START_AGE = 5_000;
 const LINE_MAX_AGE = 10_000;
 
-const SLEEP_TIME = 6000;
+const SLEEP_TIME = 600000000000;
 
 export class Player implements GameObject {
 	inputs: Inputs;
