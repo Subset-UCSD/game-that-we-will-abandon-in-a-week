@@ -76,7 +76,6 @@ const SPRITE_WIDTH = 64
 //     return spriteTex.canvas;
 // }
 
-
 const ARRAY_BUFFER_LOCATION = 30
 
 export class SpriteRenderer implements RenderableObject {
@@ -114,8 +113,11 @@ export class SpriteRenderer implements RenderableObject {
         gl.texParameteri(gl.TEXTURE_2D_ARRAY, gl.TEXTURE_MAG_FILTER, gl.NEAREST);
         gl.texParameteri(gl.TEXTURE_2D_ARRAY, gl.TEXTURE_WRAP_S, gl.CLAMP_TO_EDGE);
         gl.texParameteri(gl.TEXTURE_2D_ARRAY, gl.TEXTURE_WRAP_T, gl.CLAMP_TO_EDGE);
+			// gl.pixelStorei(gl.UNPACK_ALIGNMENT, 1);
 
         //Store the Sprite Animations
+
+        
         gl.texImage3D(
             gl.TEXTURE_2D_ARRAY, // target
             0, // level (mip map)
@@ -129,7 +131,18 @@ export class SpriteRenderer implements RenderableObject {
             null, // srcData
         );
 
+        // temporary canvas for resizing sprite to 64by64
+        const tmpCanvas = document.createElement('canvas')
+        const tc = tmpCanvas.getContext('2d')
+        if (!tc) throw new Error('lijisfdgbsdgfsdkbgskdghdfg')
+            tmpCanvas.width = SPRITE_WIDTH
+            tmpCanvas.height = SPRITE_HEIGHT
+            // tc.imageSmoothingEnabled=false
+            const allData = new Uint8Array(SPRITE_WIDTH*SPRITE_HEIGHT*4*frames.length)
         for (let i =0; i < frames.length; i++) {
+            tc.clearRect(0,0,SPRITE_WIDTH,SPRITE_HEIGHT)
+            tc.drawImage(frames[i],0,0,SPRITE_WIDTH,SPRITE_HEIGHT)
+            // allData.set( tc.getImageData(0,0,SPRITE_WIDTH,SPRITE_HEIGHT).data,SPRITE_WIDTH*SPRITE_HEIGHT*4*i)
                 gl.texSubImage3D(
                     gl.TEXTURE_2D_ARRAY,
                     0,  // level            
@@ -138,14 +151,15 @@ export class SpriteRenderer implements RenderableObject {
                     i, //z  
                     SPRITE_WIDTH,
                     SPRITE_HEIGHT, 
-                    1,
+                    1, //depth
                     gl.RGBA,            
                     gl.UNSIGNED_BYTE,   
-                    frames[i] 
+                    tc.getImageData(0,0,SPRITE_WIDTH,SPRITE_HEIGHT).data
+                    // frames[i] 
             );
         }
         
-        // this.#canvas.gl.bindTexture(ARRAY_BUFFER_LOCATION, "2d-array", null);
+        this.#canvas.gl.bindTexture(ARRAY_BUFFER_LOCATION, "2d-array", null);
 
         this.#spriteShader = new ShaderProgram(
             this.#canvas.gl,
@@ -197,6 +211,7 @@ export class SpriteRenderer implements RenderableObject {
 		
         const cameraTransformation = mat4.create()
         mat4.scale(cameraTransformation, cameraTransformation, vec3.fromValues(2 / canvas.width, -2 / canvas.height, 1));
+		mat4.scale(cameraTransformation, cameraTransformation, vec3.fromValues(this.camera.scale, this.camera.scale, 1));
         mat4.translate(cameraTransformation, cameraTransformation, vec3.fromValues(-this.camera.x, -this.camera.y, 0));
        
         gl.uniformMatrix4fv(this.#spriteShader.uniform("u_view"), false, cameraTransformation);

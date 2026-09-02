@@ -10,6 +10,6 @@ uniform mat4 u_view;
 
 void main() {
     gl_Position = u_view * vec4(a_position, 0, 1);
-    // v_position = a_position;
-    v_position = (u_view * vec4(a_position, 0, 1)).xy;
+    v_position = a_position / 60.0 + vec2(0.5);
+    // v_position = (u_view * vec4(a_position, 0, 1)).xy;
 }
