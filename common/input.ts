@@ -14,6 +14,8 @@ export const inputSchema = z.object({
 	seed: z.boolean(),
 	teleport: z.boolean(),
 	debug: z.boolean(),
+	mouseX: z.number(),
+	mouseY: z.number(),
 });
 
 export type Inputs = z.infer<typeof inputSchema>;
@@ -32,9 +34,11 @@ export const defaultInputs: Inputs = {
 	seed: false,
 	teleport: false,
 	debug: false,
+	mouseX: 0,
+	mouseY: 0,
 } as const;
 
-export const keymap = {
+export const defaultKeymap = {
 	KeyW: "up",
 	KeyA: "left",
 	KeyS: "down",
@@ -48,4 +52,7 @@ export const keymap = {
 	F3: "debug",
 	0: "attack", // Left mouse button
 	2: "use", // Right mouse button
-} satisfies Record<string | number, keyof Inputs>;
+} satisfies Keymap;
+
+export type Keymap = Record<string | number, keyof Inputs>;
+export type InputHandler = <K extends keyof Inputs, V extends Inputs[K]>(key: K | null, value: V) => void;

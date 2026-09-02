@@ -13,7 +13,7 @@ import {
 	vecLength,
 } from "@common";
 import type { Line, Player as NetPlayer, SerializedCollider, WholeFkingGameState } from "@common/game";
-import { defaultInputs, keymap } from "@common/input";
+import { defaultInputs, defaultKeymap } from "@common/input";
 import { mat4, vec3 } from "gl-matrix";
 import type { DebugTileEditor } from "./debug/tile-editor";
 import { InputListener } from "./input-listener";
@@ -22,12 +22,12 @@ import { Canvas, ClientExplosion, ClientMeatball, ClientSeed, render, ThingRende
 import { D20 } from "./render/3dObjects/3d";
 import { Arena } from "./render/arena";
 import { Anemone } from "./render/enemy";
+import { renderInventory } from "./render/inventory";
 import { ClientParticle } from "./render/particle";
 import type { RenderableObject } from "./render/render";
 import { Room } from "./render/room";
+import { SpriteRenderer } from "./render/Sprites/sprite-render";
 import { GlTileRenderer, renderTiles } from "./tiles";
-import { renderInventory } from "./render/inventory";
-import { SpriteRenderer } from "./render/Sprites/sprite-render"
 
 type Creator = () => RenderableObject;
 
@@ -96,10 +96,7 @@ export class Game {
 
 	__debugTileEditor?: DebugTileEditor;
 
-
-	TEMP_SPRITE = new SpriteRenderer(this.canvas, "TEMP", this.camera)
-
-
+	TEMP_SPRITE = new SpriteRenderer(this.canvas, "TEMP", this.camera);
 
 	constructor() {
 		this.arena = new Arena(1200, 720); // small room
@@ -109,14 +106,15 @@ export class Game {
 
 		this.inputListener = new InputListener({
 			default: defaultInputs,
-			keymap: keymap,
-			handleInputs: (inputs) => {
+			keymap: defaultKeymap,
+			onInput: (inputs) => {
 				this.conn.send("input", inputs);
 				if (inputs.debug && !this.wasDebugKeyPressed) {
 					this.debugInfoVisible = !this.debugInfoVisible;
 				}
 				this.wasDebugKeyPressed = inputs.debug;
 			},
+			addMobileControls: true,
 			// period: SERVER_GAME_TICK,
 		});
 		this.inputListener.listen();
@@ -358,7 +356,7 @@ export class Game {
 		// this.room.render(canvas);
 		// this.arena.render(canvas);w
 
-		this.TEMP_SPRITE.render(canvas)
+		this.TEMP_SPRITE.render(canvas);
 		//renderTiles(canvas, this.camera, this.tiles, this.__debugTileEditor?.isRenderCollider);
 
 		if (!player) {
@@ -406,7 +404,7 @@ export class Game {
 			c.strokeStyle = "red";
 			for (const collider of this.debugColldiers) {
 				// is this correct ?
-				const withOffset = addVec(collider.position,collider.offset)
+				const withOffset = addVec(collider.position, collider.offset);
 				// console.log(collider.type)
 				switch (collider.type) {
 					case "box": {
@@ -456,8 +454,7 @@ export class Game {
 
 		c.restore();
 
-
-		renderInventory(canvas,player?.items??[])
+		renderInventory(canvas, player?.items ?? []);
 		// for (const [i, {item, count}] of (player?.items ?? []).entries()) {
 		// 	//
 		// }
@@ -490,9 +487,9 @@ export class Game {
 
 		if (this.debugInfoVisible && player) {
 			c.fillStyle = "black";
-			c.fillText(`player: ${player.id}`, 10, canvas.height-20);
-			c.fillText(`room: ${player.roomId}`, 10, canvas.height-35);
-			c.fillText(`position: ${player.x.toFixed(1)}, ${player.y.toFixed(1)}`, 10,canvas.height- 50);
+			c.fillText(`player: ${player.id}`, 10, canvas.height - 20);
+			c.fillText(`room: ${player.roomId}`, 10, canvas.height - 35);
+			c.fillText(`position: ${player.x.toFixed(1)}, ${player.y.toFixed(1)}`, 10, canvas.height - 50);
 		}
 
 		this.lastRenderTime = now;
