@@ -32,7 +32,7 @@ export class Corpse extends StaticThing {
 		super.interact(player, option);
 		if (!player.dialogue) {
 			// they have finished convo so give them a cloud
-			player.inventory.set('cloud', (player.inventory.get('cloud')??0)+1)
+			player.inventory.set("cloud", (player.inventory.get("cloud") ?? 0) + 1);
 			this.shouldDelete = true;
 		}
 	}

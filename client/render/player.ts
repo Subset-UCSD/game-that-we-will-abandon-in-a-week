@@ -111,7 +111,7 @@ export class Player implements RenderableObject {
 			c.drawImage(frameThought, x + SHEEP_WIDTH / 2, y - THOUGHT_HEIGHT - 42, THOUGHT_WIDTH, THOUGHT_HEIGHT);
 			c.fillStyle = "black";
 			c.fillText(realThought, x + SHEEP_WIDTH / 2 + 20, y - 25 - 42);
-		}	
+		}
 
 		c.strokeStyle = "green";
 		c.rect(x - SHEEP_WIDTH / 2, y - 42, SHEEP_WIDTH, 50);

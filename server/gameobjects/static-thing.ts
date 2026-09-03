@@ -1,4 +1,11 @@
-import { vec2, type Collider, type GameObject, type SerializedGameObject, type SerializedThing, type Vec2 } from "@common";
+import {
+	type Collider,
+	type GameObject,
+	type SerializedGameObject,
+	type SerializedThing,
+	type Vec2,
+	vec2,
+} from "@common";
 import { generateId } from "@server/id-manager";
 import type { Player } from "./player";
 
@@ -72,14 +79,20 @@ export class StaticThing implements GameObject {
 }
 
 export class Carrot extends StaticThing {
-	constructor (position:Vec2) {
-		super({...position,kind:'turnip',interactive:true,collider:{type:'circle',radius:10,position,offset:vec2(0, -10),rotation:0}})}
+	constructor(position: Vec2) {
+		super({
+			...position,
+			kind: "turnip",
+			interactive: true,
+			collider: { type: "circle", radius: 10, position, offset: vec2(0, -10), rotation: 0 },
+		});
+	}
 
-		*logic(player: Player): Generator<{ message: string; options: string[] }, void, string> {
-			const result = yield {message:'looks like it was just a caroot',options:['accept all','reject all']}
-			if (result .includes('accept')) {
-				player.inventory.set('turnip', (player.inventory.get('turnip')??0)+1)
-				this.shouldDelete = true;
-			}
+	*logic(player: Player): Generator<{ message: string; options: string[] }, void, string> {
+		const result = yield { message: "looks like it was just a caroot", options: ["accept all", "reject all"] };
+		if (result.includes("accept")) {
+			player.inventory.set("turnip", (player.inventory.get("turnip") ?? 0) + 1);
+			this.shouldDelete = true;
 		}
+	}
 }

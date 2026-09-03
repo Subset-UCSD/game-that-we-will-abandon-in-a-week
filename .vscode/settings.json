@@ -1,8 +1,8 @@
 {
-  //*
-  "editor.formatOnSave": false,
-  "biome.enabled": false,
-  /*/
+	//*
+	"editor.formatOnSave": false,
+	"biome.enabled": false,
+	/*/
 	"editor.formatOnSave": true,
 	"biome.enabled": true,
 	//*/
