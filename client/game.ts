@@ -28,6 +28,7 @@ import { Room } from "./render/room";
 import { GlTileRenderer, renderTiles } from "./tiles";
 import { renderInventory } from "./render/inventory";
 import { SpriteRenderer } from "./render/Sprites/sprite-render"
+import { Camera, CameraUpdate } from "./camera";
 
 type Creator = () => RenderableObject;
 
@@ -62,12 +63,6 @@ audio.preload({
 	],
 });
 
-export type Camera = {
-	x: number;
-	y: number;
-	scale: number;
-};
-
 export class Game {
 	private conn;
 	private inputListener;
@@ -88,15 +83,15 @@ export class Game {
 	private particles: ClientParticle[] = [];
 	private lastRenderTime = Date.now();
 	private canvas = new Canvas();
+	private camera: Camera = new Camera(this.canvas)
+
+
 	// TEMP
 	private vao = this.canvas.gl.gl.createVertexArray();
 	private tileRenderer = new GlTileRenderer(this.canvas);
-
-	private camera: Camera = { x: 0, y: 0, scale: 1 };
+	
 
 	__debugTileEditor?: DebugTileEditor;
-
-
 	TEMP_SPRITE = new SpriteRenderer(this.canvas, "TEMP", this.camera)
 
 
@@ -264,15 +259,25 @@ export class Game {
 		const now = Date.now();
 		// if (this.id == -1) return
 
+
+		// START ALWAYS WITH THE CAMERA!!
+		
 		const player = this.currPlayerState;
 		if (player) {
 			const targetZoom = player.probablyafk ? 5 : 1;
-			this.camera.x += (player.x - this.camera.x) * 0.2;
-			this.camera.y += (player.y - this.camera.y) * 0.2;
-			this.camera.scale += (targetZoom - this.camera.scale) * 0.2;
+			this.camera.update_camera(
+				{
+					"x": player.x,
+					"y": player.y,
+					"z": targetZoom
+				}
+			)
 		} else {
-			const targetZoom = 3;
-			this.camera.scale += (targetZoom - this.camera.scale) * 0.2;
+			this.camera.update_camera(
+				{
+					"z": 3
+				}
+			)
 		}
 
 		const screenShake =
@@ -302,37 +307,13 @@ export class Game {
 		// gl.clear(gl.COLOR_BUFFER_BIT | gl.DEPTH_BUFFER_BIT)
 		c.clearRect(0, 0, canvas.width, canvas.height);
 
-		//TODO add camera class to clean this up YIPPEEEE
-
-		const cameraTransformation = mat4.create();
-		// scale down [-canvas.width / 2, canvas.width / 2] to [-1, 1]
-		// also flip webgl vertically so +Y is down to match canvas2d
-		mat4.scale(cameraTransformation, cameraTransformation, vec3.fromValues(2 / canvas.width, -2 / canvas.height, 1));
-		c.save();
-		c.translate(canvas.width / 2, canvas.height / 2); //done by webgl
-		// webgl and canvas2d have same coord system at this point
-
-		c.scale(this.camera.scale, this.camera.scale);
-		mat4.scale(cameraTransformation, cameraTransformation, vec3.fromValues(this.camera.scale, this.camera.scale, 1));
-
-		// unnessary in webgl
-		// HACK align (canvas2D) camera to nearest pixel to hopefully avoid gaps in tiles
-		c.translate(
-			// 			-this.camera.x,
-			// -this.camera.y,
-			// i am not sure if this helps with
-			-Math.round(this.camera.x * (this.camera.scale * canvas.dpr)) / (this.camera.scale * canvas.dpr), // + canvas.width/ 2,
-			-Math.round(this.camera.y * (this.camera.scale * canvas.dpr)) / (this.camera.scale * canvas.dpr), // + canvas.height/ 2,
-		);
-		mat4.translate(cameraTransformation, cameraTransformation, vec3.fromValues(-this.camera.x, -this.camera.y, 0));
 		const screenShakeAngle = Math.random() * 2 * Math.PI;
 		let shake = vec2();
 		if (screenShake > 0) {
 			// const shake = scaleVec(randomInCircle(), screenShake)
 			shake = vec2(Math.cos(screenShakeAngle) * screenShake, Math.sin(screenShakeAngle) * screenShake);
-			c.translate(shake.x, shake.y);
-			mat4.translate(cameraTransformation, cameraTransformation, vec3.fromValues(shake.x, shake.y, 0));
 		}
+		const cameraTransformation = this.camera.getNewView(shake)
 
 		//TEMP HOW TO USE WEBGL
 		gl.beginRender();

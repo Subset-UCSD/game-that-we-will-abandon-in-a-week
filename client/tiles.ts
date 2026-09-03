@@ -13,7 +13,7 @@ import {
 	vecToArray,
 } from "@common";
 import { mat4, vec3 } from "gl-matrix";
-import type { Camera } from "./game";
+import type { Camera } from "./camera";
 import type { Canvas } from "./render";
 
 type TileRegistryEntry = { tile: TileId; color: string } | { bl: TileId; mid: TileId; path: string };
@@ -189,8 +189,8 @@ export class GlTileRenderer {
 			canvas.gl.bindTexture(0, "2d", this.#texture.texture);
 		}
 
-		const screenStart = ev`${camera} - ${screenSize} / 2 / ${camera.scale}`;
-		const screenEnd = ev`${camera} + ${screenSize} / 2 / ${camera.scale}`;
+		const screenStart = ev`${camera} - ${screenSize} / 2 / ${camera.z}`;
+		const screenEnd = ev`${camera} + ${screenSize} / 2 / ${camera.z}`;
 		const chunkStart = vecMap1(screenStart, (coord) => Math.floor((coord - TILE_SIZE / 2) / (TILE_SIZE * CHUNK_SIZE)));
 		const tileStart = vecMap1(screenStart, (coord) => Math.floor((coord - TILE_SIZE / 2) / TILE_SIZE));
 		const tileEnd = vecMap1(screenEnd, (coord) => Math.ceil((coord - TILE_SIZE / 2) / TILE_SIZE));
@@ -324,11 +324,7 @@ export class GlTileRenderer {
 		// To keep floats small, we should go for a coordinate system of [-1, 1] -> [0, dataSize] i think
 		// or maybe the shader can figure that out?
 		// tbh this is probably the shader's problem. but we still need to apply camera transformation
-		const cameraTransformation = mat4.create();
-		mat4.scale(cameraTransformation, cameraTransformation, vec3.fromValues(2 / canvas.width, -2 / canvas.height, 1));
-		mat4.scale(cameraTransformation, cameraTransformation, vec3.fromValues(camera.scale, camera.scale, 1));
-		mat4.translate(cameraTransformation, cameraTransformation, vec3.fromValues(-camera.x, -camera.y, 0));
-		mat4.translate(cameraTransformation, cameraTransformation, vec3.fromValues(shake.x, shake.y, 0));
+		const cameraTransformation = camera.getTransformationMatrix()
 
 		// At this point cameraTransformation is the same as constructed outside
 		// now i think we need two things:
@@ -404,19 +400,19 @@ export function renderTiles(canvas: Canvas, camera: Camera, tiles: ChunkMap, ena
 	const { width, height, c } = canvas;
 	c.imageSmoothingEnabled = false;
 
-	const left = camera.x - width / camera.scale / 2;
-	const right = camera.x + width / camera.scale / 2;
+	const left = camera.x - width / camera.z / 2;
+	const right = camera.x + width / camera.z / 2;
 	const startX = Math.floor((left - TILE_SIZE / 2) / TILE_SIZE);
 	const endX = Math.ceil((right - TILE_SIZE / 2) / TILE_SIZE);
 
-	const top = camera.y - height / camera.scale / 2;
-	const bottom = camera.y + height / camera.scale / 2;
+	const top = camera.y - height / camera.z / 2;
+	const bottom = camera.y + height / camera.z / 2;
 	const startY = Math.floor((top - TILE_SIZE / 2) / TILE_SIZE);
 	const endY = Math.ceil((bottom - TILE_SIZE / 2) / TILE_SIZE);
 
 	const screenSize = { x: width, y: height };
-	const screenStart = ev`${camera} - ${screenSize} / ${camera.scale} / 2`;
-	const screenEnd = ev`${camera} + ${screenSize} / ${camera.scale} / 2`;
+	const screenStart = ev`${camera} - ${screenSize} / ${camera.z} / 2`;
+	const screenEnd = ev`${camera} + ${screenSize} / ${camera.z} / 2`;
 	const tileStart = vecMap1(screenStart, (coord) => Math.floor((coord - TILE_SIZE / 2) / TILE_SIZE));
 	const tileEnd = vecMap1(screenEnd, (coord) => Math.ceil((coord - TILE_SIZE / 2) / TILE_SIZE));
 
@@ -567,10 +563,10 @@ export function renderTiles(canvas: Canvas, camera: Camera, tiles: ChunkMap, ena
 
 export function renderTilesOld(canvas: Canvas, camera: Camera, tiles: ChunkMap): void {
 	const { width, height } = canvas;
-	const left = camera.x - width / camera.scale / 2;
-	const right = camera.x + width / camera.scale / 2;
-	const top = camera.y - height / camera.scale / 2;
-	const bottom = camera.y + height / camera.scale / 2;
+	const left = camera.x - width / camera.z / 2;
+	const right = camera.x + width / camera.z / 2;
+	const top = camera.y - height / camera.z / 2;
+	const bottom = camera.y + height / camera.z / 2;
 
 	for (const [key, chunk] of Object.entries(tiles)) {
 		const [chunkX, chunkY] = key.split(" ").map(Number);

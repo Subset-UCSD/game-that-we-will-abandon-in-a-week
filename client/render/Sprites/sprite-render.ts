@@ -22,7 +22,7 @@ import {
 } from "@common";
 
 import { mat4, vec3 } from "gl-matrix";
-import { Camera } from "@client/game";
+import { Camera } from "../../camera";
 // sprites = asdfasdf
 
 // //We add all sprites to this list?
@@ -211,10 +211,7 @@ export class SpriteRenderer implements RenderableObject {
         // console.log(this.#spriteShader.uniform("u_sprite_fames"))
 		gl.uniform1i(this.#spriteShader.uniform("u_sprite_fames"), ARRAY_BUFFER_LOCATION);
 		
-        const cameraTransformation = mat4.create()
-        mat4.scale(cameraTransformation, cameraTransformation, vec3.fromValues(2 / canvas.width, -2 / canvas.height, 1));
-		mat4.scale(cameraTransformation, cameraTransformation, vec3.fromValues(this.camera.scale, this.camera.scale, 1));
-        mat4.translate(cameraTransformation, cameraTransformation, vec3.fromValues(-this.camera.x, -this.camera.y, 0));
+        const cameraTransformation = this.camera.getTransformationMatrix()
        
         gl.uniformMatrix4fv(this.#spriteShader.uniform("u_view"), false, cameraTransformation);
 		gl.bindVertexArray(this.vao);
