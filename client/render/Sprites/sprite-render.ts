@@ -202,8 +202,8 @@ export class SpriteRenderer implements RenderableObject {
         gl.blendFunc(gl.SRC_ALPHA, gl.ONE_MINUS_SRC_ALPHA);
 
         gl.uniform1i(this.#spriteShader.uniform("u_frame_id"), this.#frameid);
-        this.#frameid = (this.#frameid + 1) % this.spriteSheet.length
-        console.log(this.#frameid)
+        this.#frameid = Math.floor(Date.now() / 500) % this.spriteSheet.length
+        // console.log(this.#frameid)
 		// canvas.gl.bindTexture(0, "2d", texture);
 		// 0 here is the 0 we passed into bindTexture above
 		// gl.uniform1i(this.#spriteShader.uniform("u_tilemap"), 0);

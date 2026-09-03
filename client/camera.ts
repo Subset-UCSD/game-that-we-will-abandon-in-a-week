@@ -69,7 +69,7 @@ export class Camera {
         this.transformMatrix = this.createTransformationMatrix()
         this.transformMatrix = this.triggerScreenShake(shake, this.transformMatrix)
 
-        console.log(this.transformMatrix)
+        // console.log(this.transformMatrix)
         return mat4.clone(this.transformMatrix)
     }
 
