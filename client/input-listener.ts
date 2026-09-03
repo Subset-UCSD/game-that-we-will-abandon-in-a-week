@@ -1,67 +1,53 @@
-import { type Inputs, keymap } from "@common/input";
+import type { InputHandler, Inputs, Keymap } from "@common/input";
 
 export type InputListenerOptions = {
 	default: Inputs;
-	keymap: Record<string | number, keyof Inputs>;
-	handleInputs: (inputs: Inputs) => void;
+	keymap: Keymap;
+	onInput: (inputs: Inputs) => void;
 	/**
 	 * To make the listener fire at a set frequency in addition to after every
 	 * key press/release, set this number (in ms). If undefined or 0 then the
 	 * listener will only fire after key events.
 	 */
 	period?: number;
+	addMobileControls?: boolean;
 };
 
 export class InputListener {
-	public options: InputListenerOptions;
-	public enabled = true;
-
 	private inputs: Inputs;
 	private intervalID?: ReturnType<typeof setInterval>;
 
-	constructor(options: InputListenerOptions) {
-		this.options = options;
+	private mobileControls: MobileControls | undefined;
+
+	constructor(private readonly options: InputListenerOptions) {
 		this.inputs = { ...options.default };
-	}
-
-	handleInput(key: keyof Inputs | null, pressed: boolean): void {
-		if (pressed && !this.enabled) return;
-		// Don't send anything if inputs don't change (e.g. if keydown is fired
-		// multiple times while repeating a key)
-		if (!key || this.inputs[key] === pressed) return;
-		this.inputs[key] = pressed;
-		this.options.handleInputs(this.inputs);
-	}
-
-	private handleKeydown = (e: KeyboardEvent) => {
-		if (e.code === "F3") e.preventDefault();
-		this.handleInput(this.options.keymap[e.code], true);
-		if (this.touchACtive) {
-			this.touchControls.remove();
-			this.touchACtive = false;
-			addEventListener("pointerdown", this.handleFirstTouch);
+		if (options.addMobileControls) {
+			this.mobileControls = new MobileControls(this.options.keymap, this.handleInput);
 		}
+	}
+
+	private handleInput: InputHandler = (key, value) => {
+		if (!key || this.inputs[key] === value) return;
+
+		this.inputs[key] = value;
+		this.options.onInput(this.inputs);
 	};
+
+	private handleKeydown = (e: KeyboardEvent) => this.handleInput(this.options.keymap[e.code], true);
 	private handleKeyup = (e: KeyboardEvent) => this.handleInput(this.options.keymap[e.code], false);
+
 	private handleMousedown = (e: MouseEvent) => this.handleInput(this.options.keymap[e.button], true);
 	private handleMouseup = (e: MouseEvent) => this.handleInput(this.options.keymap[e.button], false);
 
-	/** When the user leaves the page, unpress all keys  */
-	private handleBlur = () => {
-		this.inputs = { ...this.options.default };
-		this.options.handleInputs(this.inputs);
+	private handleMousemove = (e: MouseEvent) => {
+		this.handleInput("mouseX", e.clientX);
+		this.handleInput("mouseY", e.clientY);
 	};
 
-	private touchACtive = false;
-	private touchControls = makeTouchControls((code, down) => this.handleInput(this.options.keymap[code], down));
-
-	private handleFirstTouch = (e: PointerEvent) => {
-		if (e.pointerType === "touch") {
-			this.touchACtive = true;
-			document.body.append(this.touchControls);
-
-			removeEventListener("pointerdown", this.handleFirstTouch);
-		}
+	/** When the user leaves the page, reset all inputs to default  */
+	private handleBlur = () => {
+		this.inputs = { ...this.options.default };
+		this.options.onInput(this.inputs);
 	};
 
 	listen() {
@@ -70,10 +56,14 @@ export class InputListener {
 		addEventListener("mousedown", this.handleMousedown);
 		addEventListener("mouseup", this.handleMouseup);
 		addEventListener("blur", this.handleBlur);
-		addEventListener("pointerdown", this.handleFirstTouch);
+		addEventListener("mousemove", this.handleMousemove);
 
 		if (this.options.period) {
-			this.intervalID = setInterval(() => this.options.handleInputs(this.inputs), this.options.period);
+			this.intervalID = setInterval(() => this.options.onInput(this.inputs), this.options.period);
+		}
+
+		if (this.mobileControls) {
+			this.mobileControls.listen();
 		}
 	}
 
@@ -83,53 +73,91 @@ export class InputListener {
 		removeEventListener("mousedown", this.handleMousedown);
 		removeEventListener("mouseup", this.handleMouseup);
 		removeEventListener("blur", this.handleBlur);
-		removeEventListener("pointerdown", this.handleFirstTouch);
-		this.touchControls.remove();
-		this.touchACtive = false;
-		// this.touchControls = undefined
+		removeEventListener("mousemove", this.handleMousemove);
 
 		if (this.intervalID !== undefined) {
 			window.clearInterval(this.intervalID);
 			this.intervalID = undefined;
 		}
-	}
-}
 
-function makeTouchControls(handle: (code: string, down: boolean) => void): HTMLElement {
-	const wrapper = Object.assign(document.createElement("div"), {
-		className: "mobile-controls",
-	});
-	//bug: it is shuffling the keys and idk why
-	for (const code of shuffle(Object.keys(keymap))) {
-		const button = Object.assign(document.createElement("button"), {
-			className: "mobile-control",
-			textContent: Number.isInteger(+code) ? `MB ${code}` : code,
-		});
-		let pid: number | undefined;
-		button.addEventListener("pointerdown", (e) => {
-			handle(code, true);
-			button.setPointerCapture((pid = e.pointerId));
-		});
-		const end = (e: PointerEvent) => {
-			if (pid === e.pointerId) {
-				handle(code, false);
-				pid = undefined;
-			}
-		};
-		button.addEventListener("pointerup", end);
-		button.addEventListener("pointercancel", end);
-		button.addEventListener("contextmenu", (e) => e.preventDefault());
-		wrapper.append(button);
-	}
-	return wrapper;
-}
-
-function shuffle(arr: string[]): string[] {
-	for (let i = arr.length; i > 0; i--) {
-		const index = Math.floor(Math.random() * i);
-		if (index !== i - 1) {
-			[arr[i - 1], arr[index]] = [arr[index], arr[i - 1]];
+		if (this.mobileControls) {
+			this.mobileControls.disconnect();
 		}
 	}
-	return arr;
+}
+
+class MobileControls {
+	private touchActive = false;
+	private touchControls: HTMLElement | undefined;
+
+	constructor(
+		private readonly keymap: Keymap,
+		private readonly handleInput: InputHandler,
+	) {}
+
+	private handleTouch = (e: PointerEvent) => {
+		if (e.pointerType === "touch") {
+			this.showTouchControls(true);
+		}
+	};
+	private handleKeydown = (e: KeyboardEvent) => {
+		if (this.touchActive) {
+			this.showTouchControls(false);
+		}
+	};
+
+	private showTouchControls(shouldShow: boolean) {
+		if (!this.touchControls) return;
+		if (shouldShow) {
+			this.touchControls.style.display = "";
+		} else {
+			this.touchControls.style.display = "none";
+		}
+		this.touchActive = shouldShow;
+	}
+
+	listen() {
+		this.touchControls = this.makeTouchControls(this.handleInput);
+		document.body.append(this.touchControls);
+		addEventListener("pointerdown", this.handleTouch);
+		addEventListener("keydown", this.handleKeydown);
+	}
+
+	disconnect() {
+		removeEventListener("pointerdown", this.handleTouch);
+		removeEventListener("keydown", this.handleKeydown);
+		// there's an event listener cleanup leak here but idrc
+		this.touchControls?.remove();
+		this.touchActive = false;
+	}
+
+	private makeTouchControls(handle: InputHandler): HTMLElement {
+		const wrapper = Object.assign(document.createElement("div"), {
+			className: "mobile-controls",
+		});
+		wrapper.style.display = "none";
+		//not bug: it is not shuffling the keys and i do know why
+		for (const code of Object.keys(this.keymap)) {
+			const button = Object.assign(document.createElement("button"), {
+				className: "mobile-control",
+				textContent: Number.isInteger(+code) ? `MB ${code}` : code,
+			});
+			let pid: number | undefined;
+			button.addEventListener("pointerdown", (e) => {
+				handle(this.keymap[code], true);
+				button.setPointerCapture((pid = e.pointerId));
+			});
+			const end = (e: PointerEvent) => {
+				if (pid === e.pointerId) {
+					handle(this.keymap[code], false);
+					pid = undefined;
+				}
+			};
+			button.addEventListener("pointerup", end);
+			button.addEventListener("pointercancel", end);
+			button.addEventListener("contextmenu", (e) => e.preventDefault());
+			wrapper.append(button);
+		}
+		return wrapper;
+	}
 }

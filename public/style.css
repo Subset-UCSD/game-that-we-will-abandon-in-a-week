@@ -31,6 +31,7 @@ canvas {
 	grid-template-rows: repeat(5, auto);
 	gap: 20px;
 	padding: 20px;
+	z-index: 1;
 }
 
 .mobile-control {
