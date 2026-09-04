@@ -14,7 +14,7 @@ import {
 } from "@common";
 import type { Line, Player as NetPlayer, SerializedCollider, WholeFkingGameState } from "@common/game";
 import { defaultInputs, defaultKeymap } from "@common/input";
-import { mat4, vec3 } from "gl-matrix";
+import { Camera } from "./camera";
 import type { DebugTileEditor } from "./debug/tile-editor";
 import { InputListener } from "./input-listener";
 import { Connection } from "./net/connection";
@@ -27,8 +27,7 @@ import { ClientParticle } from "./render/particle";
 import type { RenderableObject } from "./render/render";
 import { Room } from "./render/room";
 import { SpriteRenderer } from "./render/Sprites/sprite-render";
-import { GlTileRenderer, renderTiles } from "./tiles";
-import { Camera, CameraUpdate } from "./camera";
+import { GlTileRenderer } from "./tiles";
 
 type Creator = () => RenderableObject;
 
@@ -83,13 +82,11 @@ export class Game {
 	private particles: ClientParticle[] = [];
 	private lastRenderTime = Date.now();
 	private canvas = new Canvas();
-	private camera: Camera = new Camera(this.canvas)
-
+	private camera: Camera = new Camera(this.canvas);
 
 	// TEMP
 	private vao = this.canvas.gl.gl.createVertexArray();
 	private tileRenderer = new GlTileRenderer(this.canvas);
-	
 
 	__debugTileEditor?: DebugTileEditor;
 
@@ -259,25 +256,20 @@ export class Game {
 		const now = Date.now();
 		// if (this.id == -1) return
 
-
 		// START ALWAYS WITH THE CAMERA!!
-		
+
 		const player = this.currPlayerState;
 		if (player) {
 			const targetZoom = player.probablyafk ? 5 : 1;
-			this.camera.update_camera(
-				{
-					"x": player.x,
-					"y": player.y,
-					"z": targetZoom
-				}
-			)
+			this.camera.update_camera({
+				x: player.x,
+				y: player.y,
+				z: targetZoom,
+			});
 		} else {
-			this.camera.update_camera(
-				{
-					"z": 3
-				}
-			)
+			this.camera.update_camera({
+				z: 3,
+			});
 		}
 
 		const screenShake =
@@ -313,7 +305,7 @@ export class Game {
 			// const shake = scaleVec(randomInCircle(), screenShake)
 			shake = vec2(Math.cos(screenShakeAngle) * screenShake, Math.sin(screenShakeAngle) * screenShake);
 		}
-		const cameraTransformation = this.camera.getNewView(shake)
+		const cameraTransformation = this.camera.getNewView(shake);
 
 		//TEMP HOW TO USE WEBGL
 		gl.beginRender();

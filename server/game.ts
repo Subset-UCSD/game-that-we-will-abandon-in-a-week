@@ -61,7 +61,7 @@ export class Game {
 			*logic(player: Player): Generator<{ message: string; options: string[] }, void, string> {
 				const knowledge = this.#playerState.get(player);
 				if (knowledge) {
-					const clouds = player.inventory.get('cloud')??0
+					const clouds = player.inventory.get("cloud") ?? 0;
 					if (knowledge.happy !== undefined) {
 						if (knowledge.happy) {
 							yield { message: `hey ${knowledge.name}`, options: ["hi"] };
@@ -70,7 +70,7 @@ export class Game {
 						}
 					} else if (clouds >= 3) {
 						yield { message: "WOW holy shit", options: ["language"] };
-						player.inventory.set('cloud', clouds - 3)
+						player.inventory.set("cloud", clouds - 3);
 						yield { message: "cloud compute.", options: ["sorry?"] };
 						player.maxHp *= 2;
 						const response1 = yield {
@@ -223,64 +223,65 @@ export class Game {
 				.map(({ id, position: { x, y } }) => ({ id: id + "", x, y }))
 				.toArray(),
 		);
-		let enemyCount = 0
+		let enemyCount = 0;
 		for (const meatball of this.gameObjects) {
 			if (meatball instanceof Enemy) {
 				if (meatball.shouldDelete) {
-					const {x,y} = meatball.serialize()
-					this.gameObjects.push(new Carrot({x,y}))
+					const { x, y } = meatball.serialize();
+					this.gameObjects.push(new Carrot({ x, y }));
 				} else {
-					enemyCount++
+					enemyCount++;
 				}
-			}else
-			if (meatball.shouldDelete &&(meatball instanceof Meatball)) {
-			const explosion = new Explosion({
-				duration: 20,
-				radius: 100,
-				x: meatball.publicState.x,
-				y: meatball.publicState.y,
-			});
-			this.gameObjects.push(explosion);
-			const EXPLOSION_DAMAGE = 20;
-			for (const entity of this.gameObjects) {
-				if (entity instanceof Player) {
-					const explosionToPlayer = subVec(entity.getPosition(), meatball.publicState);
-					const dist = vecLength(explosionToPlayer);
-					if (dist < explosion.radius) {
-						entity.setHp(entity.getHp() - EXPLOSION_DAMAGE);
-						entity.applyImpulse(ev`(${explosionToPlayer} / ${dist}) * ${(explosion.radius - dist) * 1.5}`);
-					}
-					entity.lines = entity.lines.filter(
-						(x) =>
-							vecLength(subVec(x.end, meatball.publicState)) >= explosion.radius ||
-							vecLength(subVec(x.start, meatball.publicState)) >= explosion.radius,
-					);
-					// const explosionToPlayer = ev`(${entity.position} - ${explosion.publicState})\`
-				} else if (entity instanceof StaticThing) {
-					if (vecLength(subVec(entity.position, meatball.publicState)) < explosion.radius) {
-						entity.takeDamageIfPossible(EXPLOSION_DAMAGE);
-					}
-				} else if (entity instanceof Enemy) {
-					const explosionToPlayer = subVec(entity.publicState, meatball.publicState);
-					const dist = vecLength(explosionToPlayer);
-					if (dist < explosion.radius) {
-						entity.publicState.healthPoint -= EXPLOSION_DAMAGE;
-						if (entity.publicState.healthPoint < 0) entity.publicState.healthPoint = 0;
-						// entity.setHp(entity.getHp() - EXPLOSION_DAMAGE);
-						entity.applyImpulse(ev`(${explosionToPlayer} / ${dist}) * ${(explosion.radius - dist) * 1.5}`);
+			} else if (meatball.shouldDelete && meatball instanceof Meatball) {
+				const explosion = new Explosion({
+					duration: 20,
+					radius: 100,
+					x: meatball.publicState.x,
+					y: meatball.publicState.y,
+				});
+				this.gameObjects.push(explosion);
+				const EXPLOSION_DAMAGE = 20;
+				for (const entity of this.gameObjects) {
+					if (entity instanceof Player) {
+						const explosionToPlayer = subVec(entity.getPosition(), meatball.publicState);
+						const dist = vecLength(explosionToPlayer);
+						if (dist < explosion.radius) {
+							entity.setHp(entity.getHp() - EXPLOSION_DAMAGE);
+							entity.applyImpulse(ev`(${explosionToPlayer} / ${dist}) * ${(explosion.radius - dist) * 1.5}`);
+						}
+						entity.lines = entity.lines.filter(
+							(x) =>
+								vecLength(subVec(x.end, meatball.publicState)) >= explosion.radius ||
+								vecLength(subVec(x.start, meatball.publicState)) >= explosion.radius,
+						);
+						// const explosionToPlayer = ev`(${entity.position} - ${explosion.publicState})\`
+					} else if (entity instanceof StaticThing) {
+						if (vecLength(subVec(entity.position, meatball.publicState)) < explosion.radius) {
+							entity.takeDamageIfPossible(EXPLOSION_DAMAGE);
+						}
+					} else if (entity instanceof Enemy) {
+						const explosionToPlayer = subVec(entity.publicState, meatball.publicState);
+						const dist = vecLength(explosionToPlayer);
+						if (dist < explosion.radius) {
+							entity.publicState.healthPoint -= EXPLOSION_DAMAGE;
+							if (entity.publicState.healthPoint < 0) entity.publicState.healthPoint = 0;
+							// entity.setHp(entity.getHp() - EXPLOSION_DAMAGE);
+							entity.applyImpulse(ev`(${explosionToPlayer} / ${dist}) * ${(explosion.radius - dist) * 1.5}`);
+						}
 					}
 				}
-			}}
+			}
 		}
 
-
 		if (enemyCount < 3) {
-			const angle = Math.random() * 2 * Math.PI
-			const dist = Math.random() * 500 + 750
-			this.gameObjects.push(new Enemy({
-				x: Math.cos(angle)*dist,
-				y: Math.sin(angle)*dist,
-			}))
+			const angle = Math.random() * 2 * Math.PI;
+			const dist = Math.random() * 500 + 750;
+			this.gameObjects.push(
+				new Enemy({
+					x: Math.cos(angle) * dist,
+					y: Math.sin(angle) * dist,
+				}),
+			);
 		}
 
 		// should this be in StaticThing.tick? StaticThing doesn't have access to players
@@ -297,16 +298,18 @@ export class Game {
 		for (const player of this.players.values()) {
 			const INTERACTION_RANGE = 30;
 			// we might want the range to change depending on object size
-			player.canInteractWith = player.dialogue ? [player.dialogue.resopondTo.id]: interactiveThings
-				.values()
-				.filter(
-					(thing) =>
-						vecLengthSquared(subVec(thing.position, player.getPosition())) <= INTERACTION_RANGE * INTERACTION_RANGE,
-				)
-				.map((thing) => thing.id)
-				.toArray();
+			player.canInteractWith = player.dialogue
+				? [player.dialogue.resopondTo.id]
+				: interactiveThings
+						.values()
+						.filter(
+							(thing) =>
+								vecLengthSquared(subVec(thing.position, player.getPosition())) <= INTERACTION_RANGE * INTERACTION_RANGE,
+						)
+						.map((thing) => thing.id)
+						.toArray();
 
-				const KNIFE_DAMAGE = 5.5; // as proclaimed by nick
+			const KNIFE_DAMAGE = 5.5; // as proclaimed by nick
 			const knife = player.getKnifeLocation();
 			if (knife) {
 				const particle: Particle = {
@@ -324,7 +327,7 @@ export class Game {
 				for (const entity of this.gameObjects) {
 					if (player === entity) continue;
 					if (entity instanceof Player) {
-						if (isInsideMe(knife,entity.collider)) {
+						if (isInsideMe(knife, entity.collider)) {
 							if (!player.knivesInside.has(entity)) {
 								player.knivesInside.add(entity);
 								entity.setHp(entity.getHp() - KNIFE_DAMAGE);
@@ -337,7 +340,7 @@ export class Game {
 						}
 					} else if (entity instanceof StaticThing) {
 						if (entity.collider) {
-							if (entity.collider&&isInsideMe(knife,entity.collider)) {
+							if (entity.collider && isInsideMe(knife, entity.collider)) {
 								if (!player.knivesInside.has(entity)) {
 									player.knivesInside.add(entity);
 									entity.takeDamageIfPossible(KNIFE_DAMAGE);
@@ -347,22 +350,23 @@ export class Game {
 								player.knivesInside.delete(entity);
 							}
 						}
-					}else if (entity instanceof Enemy) {
+					} else if (entity instanceof Enemy) {
 						if (entity.collider) {
-							if (entity.collider&&isInsideMe(knife,entity.collider)) {
+							if (entity.collider && isInsideMe(knife, entity.collider)) {
 								if (!player.knivesInside.has(entity)) {
 									player.knivesInside.add(entity);
-									entity.publicState.healthPoint-=KNIFE_DAMAGE
-									if (entity.publicState.healthPoint<0)entity.publicState.healthPoint=0
+									entity.publicState.healthPoint -= KNIFE_DAMAGE;
+									if (entity.publicState.healthPoint < 0) entity.publicState.healthPoint = 0;
 									this.particleQueue.push(particle);
-								entity.applyImpulse(ev`${player.getKnifeVelocityDir()} * ${40}`);
+									entity.applyImpulse(ev`${player.getKnifeVelocityDir()} * ${40}`);
 								}
 							} else {
 								player.knivesInside.delete(entity);
 							}
 						}
 					}
-				}}
+				}
+			}
 			// for (const {knife, player: other} of knives) {
 			//   if (player === other)continue
 			//     if (player.collider.isInsideMe(knife)) {
@@ -597,30 +601,30 @@ export class Game {
 			}
 			if (player.inputs.baa) {
 				if (!player.wasBaaing) {
-					const meatBallCount = player.inventory.get('meatball')??0
-					if (meatBallCount>0){
+					const meatBallCount = player.inventory.get("meatball") ?? 0;
+					if (meatBallCount > 0) {
 						const thoughts = ["baa", "hungy", "beh"];
-					player.thought = thoughts[Math.floor(Math.random() * thoughts.length)];
+						player.thought = thoughts[Math.floor(Math.random() * thoughts.length)];
 
-					const angle = Math.random() * 2 * Math.PI;
-					const opts = {
-						x: player.position.x + (player.facingLeft ? -1 : 1) * 10,
-						y: player.position.y,
-						xv: Math.cos(angle) * 5,
-						yv: (Math.sin(angle) * 5) / 2,
-						height: 42 - 15 - 9,
-						inithv: 5,
-					};
-					const meatball = new Meatball(opts);
-					this.addGameObject(meatball);
-					this.soundQueue.push({
-						name: "baaa",
-						x: opts.x,
-						y: opts.y,
-						detectableDistance: 200,
-						playbackRate: 1 + Math.random() * 0.2,
-					});
-					player.inventory.set('meatball',(meatBallCount)-1)
+						const angle = Math.random() * 2 * Math.PI;
+						const opts = {
+							x: player.position.x + (player.facingLeft ? -1 : 1) * 10,
+							y: player.position.y,
+							xv: Math.cos(angle) * 5,
+							yv: (Math.sin(angle) * 5) / 2,
+							height: 42 - 15 - 9,
+							inithv: 5,
+						};
+						const meatball = new Meatball(opts);
+						this.addGameObject(meatball);
+						this.soundQueue.push({
+							name: "baaa",
+							x: opts.x,
+							y: opts.y,
+							detectableDistance: 200,
+							playbackRate: 1 + Math.random() * 0.2,
+						});
+						player.inventory.set("meatball", meatBallCount - 1);
 					}
 					player.wasBaaing = true;
 				}
@@ -642,8 +646,8 @@ export class Game {
 			} else {
 				player.wasTeleporting = false;
 			}
-			const seedCount =player.inventory.get('seed')??0
-			if (player.inputs.seed && player.seedCooldownTicks <= 0&&seedCount > 0) {
+			const seedCount = player.inventory.get("seed") ?? 0;
+			if (player.inputs.seed && player.seedCooldownTicks <= 0 && seedCount > 0) {
 				this.addGameObject(
 					new Seed({
 						growthStage: 0,
@@ -652,7 +656,7 @@ export class Game {
 					}),
 				);
 				player.seedCooldownTicks = SEED_COOLDOWN;
-				player.inventory.set('seed',seedCount-1)
+				player.inventory.set("seed", seedCount - 1);
 			}
 			if (player.inputs.interact) {
 				if (!player.wasInteracting) {
@@ -666,7 +670,7 @@ export class Game {
 							this.handlePlayerInteractingWithThing(player, thing);
 						} else if (player.dialogue?.resopondTo.id === target) {
 							// entity was deleted, so quit dialog to avoid soft lock
-							player.dialogue = undefined
+							player.dialogue = undefined;
 						}
 					}
 					player.wasInteracting = true;

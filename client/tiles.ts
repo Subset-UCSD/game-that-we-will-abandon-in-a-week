@@ -324,7 +324,7 @@ export class GlTileRenderer {
 		// To keep floats small, we should go for a coordinate system of [-1, 1] -> [0, dataSize] i think
 		// or maybe the shader can figure that out?
 		// tbh this is probably the shader's problem. but we still need to apply camera transformation
-		const cameraTransformation = camera.getTransformationMatrix()
+		const cameraTransformation = camera.getTransformationMatrix();
 
 		// At this point cameraTransformation is the same as constructed outside
 		// now i think we need two things:

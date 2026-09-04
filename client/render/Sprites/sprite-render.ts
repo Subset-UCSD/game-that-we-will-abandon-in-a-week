@@ -1,28 +1,11 @@
-import { RenderableObject } from "../render";
+import type { SerializedGameObject, Vec2 } from "@common";
+import type { Camera } from "../../camera";
+import type { Canvas } from "../canvas";
+import { loadFrames } from "../frames";
+import type { RenderableObject } from "../render";
 import { ShaderProgram } from "../ShaderProgram";
 import spriteFragShader from "../shaders/sprite.frag";
 import testVertShader from "../shaders/sprite.vert";
-import type { Canvas } from "../canvas";
-import type { MeatBall } from "@common/game";
-import type { SerializedGameObject } from "@common";
-import { loadFrames, LoadedFrames } from "../frames";
-import {
-	addVec,
-	CHUNK_SIZE,
-	type ChunkMap,
-	ev,
-	isVecEq,
-	scaleVec,
-	TILE_SIZE,
-	type TileId,
-	type Vec2,
-	vec2,
-	vecMap1,
-	vecToArray,
-} from "@common";
-
-import { mat4, vec3 } from "gl-matrix";
-import { Camera } from "../../camera";
 // sprites = asdfasdf
 
 // //We add all sprites to this list?
@@ -34,8 +17,6 @@ import { Camera } from "../../camera";
 // if (spriteTex is null) {
 //     throw new Error("wtf, why did the document not create a canvas?")
 // }
-
-
 
 //TEMP
 export const {
@@ -55,11 +36,11 @@ export const {
 
 var spriteTex = document.createElement("canvas").getContext("2d");
 
-const SPRITE_HEIGHT = 64
-const SPRITE_WIDTH = 64
+const SPRITE_HEIGHT = 64;
+const SPRITE_WIDTH = 64;
 
 // function buildSpriteSheet(images: ImageBitmap[]): HTMLCanvasElement {
-    
+
 //     if (spriteTex === null) {
 //         throw new Error("wtf, why did the document not create a canvas?")
 //     }
@@ -71,111 +52,110 @@ const SPRITE_WIDTH = 64
 //         spriteTex.drawImage(image, 0, 0)
 //     }
 
-    
-
 //     return spriteTex.canvas;
 // }
 
-const ARRAY_BUFFER_LOCATION = 30
+const ARRAY_BUFFER_LOCATION = 30;
 
 export class SpriteRenderer implements RenderableObject {
-    index: number = 1;
-    spriteSheet: ImageBitmap[]
-    #texture?: { size: Vec2; texture: WebGLTexture };
-    // #lastDataKey?: { tileRef: ChunkMap; dataOrigin: Vec2 };
-    #canvas: Canvas;
-    // #keyToTextureNum = new Map<string, number>();
-    #tileTextures: WebGLTexture;
-    #spriteShader: ShaderProgram;
-    #frameid: number;
-    private vao;
-    private camera;
-    
-    constructor(canvas: Canvas, type: string, camera: Camera) {
-        this.camera = camera
-        const frames = walking //TEMP
-        this.#frameid = 0
+	index: number = 1;
+	spriteSheet: ImageBitmap[];
+	#texture?: { size: Vec2; texture: WebGLTexture };
+	// #lastDataKey?: { tileRef: ChunkMap; dataOrigin: Vec2 };
+	#canvas: Canvas;
+	// #keyToTextureNum = new Map<string, number>();
+	#tileTextures: WebGLTexture;
+	#spriteShader: ShaderProgram;
+	#frameid: number;
+	private vao;
+	private camera;
 
-        // const keyToSpriteFrames = new Map<string, number>();
-        this.spriteSheet = frames
-        this.#canvas = canvas;
+	constructor(canvas: Canvas, type: string, camera: Camera) {
+		this.camera = camera;
+		const frames = walking; //TEMP
+		this.#frameid = 0;
 
-        const gl = this.#canvas.gl.gl;
+		// const keyToSpriteFrames = new Map<string, number>();
+		this.spriteSheet = frames;
+		this.#canvas = canvas;
 
-        this.vao = gl.createVertexArray()
-        
+		const gl = this.#canvas.gl.gl;
 
-        this.#tileTextures = gl.createTexture();
-        this.#canvas.gl.bindTexture(ARRAY_BUFFER_LOCATION, "2d-array", this.#tileTextures);
-        
-        //wtf do these do?
-        gl.texParameteri(gl.TEXTURE_2D_ARRAY, gl.TEXTURE_MIN_FILTER, gl.NEAREST);
-        gl.texParameteri(gl.TEXTURE_2D_ARRAY, gl.TEXTURE_MAG_FILTER, gl.NEAREST);
-        gl.texParameteri(gl.TEXTURE_2D_ARRAY, gl.TEXTURE_WRAP_S, gl.CLAMP_TO_EDGE);
-        gl.texParameteri(gl.TEXTURE_2D_ARRAY, gl.TEXTURE_WRAP_T, gl.CLAMP_TO_EDGE);
-			// gl.pixelStorei(gl.UNPACK_ALIGNMENT, 1);
+		this.vao = gl.createVertexArray();
 
-        //Store the Sprite Animations
+		this.#tileTextures = gl.createTexture();
+		this.#canvas.gl.bindTexture(ARRAY_BUFFER_LOCATION, "2d-array", this.#tileTextures);
 
-        
-        gl.texImage3D(
-            gl.TEXTURE_2D_ARRAY, // target
-            0, // level (mip map)
-            gl.RGBA8, // internalformat
-            SPRITE_WIDTH, // width
-            SPRITE_HEIGHT, // height
-            frames.length, // depth (number of layers)
-            0, // border muist be 0
-            gl.RGBA, // format
-            gl.UNSIGNED_BYTE, // type
-            null, // srcData
-        );
+		//wtf do these do?
+		gl.texParameteri(gl.TEXTURE_2D_ARRAY, gl.TEXTURE_MIN_FILTER, gl.NEAREST);
+		gl.texParameteri(gl.TEXTURE_2D_ARRAY, gl.TEXTURE_MAG_FILTER, gl.NEAREST);
+		gl.texParameteri(gl.TEXTURE_2D_ARRAY, gl.TEXTURE_WRAP_S, gl.CLAMP_TO_EDGE);
+		gl.texParameteri(gl.TEXTURE_2D_ARRAY, gl.TEXTURE_WRAP_T, gl.CLAMP_TO_EDGE);
+		// gl.pixelStorei(gl.UNPACK_ALIGNMENT, 1);
 
-        // temporary canvas for resizing sprite to 64by64
-        const tmpCanvas = document.createElement('canvas')
-        const tc = tmpCanvas.getContext('2d')
-        if (!tc) throw new Error('lijisfdgbsdgfsdkbgskdghdfg')
-            tmpCanvas.width = SPRITE_WIDTH
-            tmpCanvas.height = SPRITE_HEIGHT
-            // tc.imageSmoothingEnabled=false
-            const allData = new Uint8Array(SPRITE_WIDTH*SPRITE_HEIGHT*4*frames.length)
-        for (let i =0; i < frames.length; i++) {
-            tc.clearRect(0,0,SPRITE_WIDTH,SPRITE_HEIGHT)
-            tc.drawImage(frames[i],0,0,SPRITE_WIDTH,SPRITE_HEIGHT)
-            // allData.set( tc.getImageData(0,0,SPRITE_WIDTH,SPRITE_HEIGHT).data,SPRITE_WIDTH*SPRITE_HEIGHT*4*i)
-                gl.texSubImage3D(
-                    gl.TEXTURE_2D_ARRAY,
-                    0,  // level            
-                    0,  // x 
-                    0,  // y
-                    i, //z  
-                    SPRITE_WIDTH,
-                    SPRITE_HEIGHT, 
-                    1, //depth
-                    gl.RGBA,            
-                    gl.UNSIGNED_BYTE,   
-                    tc.getImageData(0,0,SPRITE_WIDTH,SPRITE_HEIGHT).data
-                    // frames[i] 
-            );
-        }
-        
-        this.#canvas.gl.bindTexture(ARRAY_BUFFER_LOCATION, "2d-array", null);
+		//Store the Sprite Animations
 
-        this.#spriteShader = new ShaderProgram(
-            this.#canvas.gl,
-            this.#canvas.gl.createProgram(
-                this.#canvas.gl.createShader("vertex", testVertShader, "test.vert"),
-                this.#canvas.gl.createShader("fragment", spriteFragShader, "sprite.frag")),
-        );
+		gl.texImage3D(
+			gl.TEXTURE_2D_ARRAY, // target
+			0, // level (mip map)
+			gl.RGBA8, // internalformat
+			SPRITE_WIDTH, // width
+			SPRITE_HEIGHT, // height
+			frames.length, // depth (number of layers)
+			0, // border muist be 0
+			gl.RGBA, // format
+			gl.UNSIGNED_BYTE, // type
+			null, // srcData
+		);
 
+		// temporary canvas for resizing sprite to 64by64
+		const tmpCanvas = document.createElement("canvas");
+		const tc = tmpCanvas.getContext("2d");
+		if (!tc) throw new Error("lijisfdgbsdgfsdkbgskdghdfg");
+		tmpCanvas.width = SPRITE_WIDTH;
+		tmpCanvas.height = SPRITE_HEIGHT;
+		// tc.imageSmoothingEnabled=false
+		const allData = new Uint8Array(SPRITE_WIDTH * SPRITE_HEIGHT * 4 * frames.length);
+		for (let i = 0; i < frames.length; i++) {
+			tc.clearRect(0, 0, SPRITE_WIDTH, SPRITE_HEIGHT);
+			tc.drawImage(frames[i], 0, 0, SPRITE_WIDTH, SPRITE_HEIGHT);
+			// allData.set( tc.getImageData(0,0,SPRITE_WIDTH,SPRITE_HEIGHT).data,SPRITE_WIDTH*SPRITE_HEIGHT*4*i)
+			gl.texSubImage3D(
+				gl.TEXTURE_2D_ARRAY,
+				0, // level
+				0, // x
+				0, // y
+				i, //z
+				SPRITE_WIDTH,
+				SPRITE_HEIGHT,
+				1, //depth
+				gl.RGBA,
+				gl.UNSIGNED_BYTE,
+				tc.getImageData(0, 0, SPRITE_WIDTH, SPRITE_HEIGHT).data,
+				// frames[i]
+			);
+		}
 
-        gl.bindVertexArray(this.vao);
+		this.#canvas.gl.bindTexture(ARRAY_BUFFER_LOCATION, "2d-array", null);
+
+		this.#spriteShader = new ShaderProgram(
+			this.#canvas.gl,
+			this.#canvas.gl.createProgram(
+				this.#canvas.gl.createShader("vertex", testVertShader, "test.vert"),
+				this.#canvas.gl.createShader("fragment", spriteFragShader, "sprite.frag"),
+			),
+		);
+
+		gl.bindVertexArray(this.vao);
 
 		// PUT VERTICES IN BUFFER
 		const buffer = gl.createBuffer(); // ?? expect("buffer");
 		gl.bindBuffer(gl.ARRAY_BUFFER, buffer);
-		gl.bufferData(gl.ARRAY_BUFFER, new Float32Array(
-            [-30, -30, 30, -30, 30, 30, -30, -30, 30, 30, -30, 30]), gl.STATIC_DRAW);
+		gl.bufferData(
+			gl.ARRAY_BUFFER,
+			new Float32Array([-30, -30, 30, -30, 30, 30, -30, -30, 30, 30, -30, 30]),
+			gl.STATIC_DRAW,
+		);
 
 		//GET ATTRIBUTE IN .VERT
 		const location = this.#spriteShader.attribMaybe("a_position");
@@ -191,29 +171,29 @@ export class SpriteRenderer implements RenderableObject {
 				0, // offset
 			);
 		}
-        gl.bindVertexArray(null);
+		gl.bindVertexArray(null);
 		gl.bindBuffer(gl.ARRAY_BUFFER, null);
-    }
+	}
 
-    render(canvas: Canvas) {
+	render(canvas: Canvas) {
 		const gl = canvas.gl.gl;
-        this.#spriteShader.use();
-        gl.enable(gl.BLEND);
-        gl.blendFunc(gl.SRC_ALPHA, gl.ONE_MINUS_SRC_ALPHA);
+		this.#spriteShader.use();
+		gl.enable(gl.BLEND);
+		gl.blendFunc(gl.SRC_ALPHA, gl.ONE_MINUS_SRC_ALPHA);
 
-        gl.uniform1i(this.#spriteShader.uniform("u_frame_id"), this.#frameid);
-        this.#frameid = Math.floor(Date.now() / 500) % this.spriteSheet.length
-        // console.log(this.#frameid)
+		gl.uniform1i(this.#spriteShader.uniform("u_frame_id"), this.#frameid);
+		this.#frameid = Math.floor(Date.now() / 500) % this.spriteSheet.length;
+		// console.log(this.#frameid)
 		// canvas.gl.bindTexture(0, "2d", texture);
 		// 0 here is the 0 we passed into bindTexture above
 		// gl.uniform1i(this.#spriteShader.uniform("u_tilemap"), 0);
-        canvas.gl.bindTexture(ARRAY_BUFFER_LOCATION, "2d-array", this.#tileTextures);
-        // console.log(this.#spriteShader.uniform("u_sprite_fames"))
+		canvas.gl.bindTexture(ARRAY_BUFFER_LOCATION, "2d-array", this.#tileTextures);
+		// console.log(this.#spriteShader.uniform("u_sprite_fames"))
 		gl.uniform1i(this.#spriteShader.uniform("u_sprite_fames"), ARRAY_BUFFER_LOCATION);
-		
-        const cameraTransformation = this.camera.getTransformationMatrix()
-       
-        gl.uniformMatrix4fv(this.#spriteShader.uniform("u_view"), false, cameraTransformation);
+
+		const cameraTransformation = this.camera.getTransformationMatrix();
+
+		gl.uniformMatrix4fv(this.#spriteShader.uniform("u_view"), false, cameraTransformation);
 		gl.bindVertexArray(this.vao);
 		gl.drawArraysInstanced(
 			gl.TRIANGLES,
@@ -224,16 +204,14 @@ export class SpriteRenderer implements RenderableObject {
 		gl.bindVertexArray(null);
 
 		// canvas.gl.bindTexture(ARRAY_BUFFER_LOCATION, "2d-array", null);
-    }
-    renderShadow(canvas: Canvas) {
+	}
+	renderShadow(canvas: Canvas) {}
 
-    }
+	update(gameObject: SerializedGameObject) {
+		throw new Error("not implementated for ${gameObject}");
+	}
 
-    update(gameObject: SerializedGameObject) {
-        throw new Error("not implementated for ${gameObject}")
-    }
-
-    shouldRemove() {
-        return false
-    }
+	shouldRemove() {
+		return false;
+	}
 }
