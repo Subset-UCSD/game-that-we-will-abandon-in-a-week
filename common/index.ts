@@ -7,4 +7,4 @@ export * from "./interpolator";
 export * from "./messages";
 export * from "./tiles";
 export * from "./utils";
-export * from "./vector";
+export * from "../gameEngine/utils/vector/vector";

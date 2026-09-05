@@ -3,9 +3,7 @@ import type { BoxCollider } from "@common/colliders";
 import { type GameObject, type ItemId, KNIFE_OFFSET_Y, type Player as NetPlayer } from "@common/game";
 import { defaultInputs, type Inputs } from "@common/input";
 import type { Game } from "@server/game";
-import { generateId } from "@server/id-manager";
-import { Corpse } from "./corpse";
-import type { StaticThing } from "./static-thing";
+import { generateId } from "../id-manager";
 
 const MAX_HP = 67;
 const LINE_START_AGE = 5_000;

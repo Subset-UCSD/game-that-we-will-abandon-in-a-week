@@ -21,7 +21,7 @@ import type {
 import { Carrot, Explosion, Meatball, Player, SEED_COOLDOWN, Seed, StaticThing } from "@server/gameobjects";
 import type { WebSocket } from "ws";
 import { collide, isInsideMe } from "./collision";
-import { CollisionWorld } from "./collisionWorld";
+import { CollisionWorld } from "../gameEngine/collisionWorld";
 import { emit } from "./events";
 import type { Party, Room } from "./gamelogic";
 import { D20 } from "./gameobjects/d20";

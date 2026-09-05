@@ -11,7 +11,7 @@ import {
 } from "@common";
 import type { BoxCollider } from "@common/colliders";
 import { subscribe } from "@server/events";
-import { generateId } from "@server/id-manager";
+import { generateId } from "../../gameEngine/logic/id-manager";
 
 export type EnemyProps = Omit<NetEnemy, "id" | "type" | `health${string}`>;
 

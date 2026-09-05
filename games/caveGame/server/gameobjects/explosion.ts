@@ -1,5 +1,5 @@
 import type { Explosion as ExplosionType, GameObject } from "@common/game";
-import { generateId } from "@server/id-manager";
+import { generateId } from "../../gameEngine/logic/id-manager";
 
 export type ExplosionProps = Omit<ExplosionType, "id" | "type"> & {
 	duration: number;

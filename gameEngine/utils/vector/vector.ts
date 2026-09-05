@@ -1,5 +1,5 @@
 import z from "zod";
-import { type Expression, parse } from "./vector/expression_parser";
+import { type Expression, parse } from "./expression_parser";
 
 export const vec2Schema = z.object({
 	x: z.number(),

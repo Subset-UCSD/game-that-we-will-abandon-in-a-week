@@ -6,7 +6,7 @@ import {
 	type Vec2,
 	vec2,
 } from "@common";
-import { generateId } from "@server/id-manager";
+import { generateId } from "../../gameEngine/logic/id-manager";
 import type { Player } from "./player";
 
 /**

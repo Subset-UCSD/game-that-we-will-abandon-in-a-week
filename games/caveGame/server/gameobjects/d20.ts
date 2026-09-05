@@ -1,7 +1,7 @@
 import { clamp, scaleVec, type Vec2, vec2 } from "@common";
 import type { CircleCollider } from "@common/colliders";
 import type { D20Schema, GameObject } from "@common/game";
-import { generateId } from "@server/id-manager";
+import { generateId } from "../../gameEngine/logic/id-manager";
 
 const ROTATION_SPEED = 100;
 
