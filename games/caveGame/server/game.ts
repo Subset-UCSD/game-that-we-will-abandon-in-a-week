@@ -1,3 +1,5 @@
+//TODO GAME-ENGINE MAKE GAME GENERIC AND EXPANDABLE
+
 import {
 	type ChunkMap,
 	ev,
@@ -9,24 +11,24 @@ import {
 	vecLength,
 	vecLengthSquared,
 	type WholeFkingGameState,
-} from "../games/caveGame/common";
-import { generateDiffPayload } from "../gameEngine/utils/json-optimizer";
+} from "../common";
+import { generateDiffPayload } from "../../../gameEngine/utils/json-optimizer";
 import type {
 	ClientMessage,
 	PartialFkingGameStateMessage,
 	Particle,
 	ServerMessage,
 	SoundEvent,
-} from "../games/caveGame/common/messages";
+} from "../common/messages";
 import { Carrot, Explosion, Meatball, Player, SEED_COOLDOWN, Seed, StaticThing } from "@server/gameobjects";
 import type { WebSocket } from "ws";
-import { collide, isInsideMe } from "./collision";
-import { CollisionWorld } from "../gameEngine/logic/collider/collisionWorld";
-import { emit } from "./events";
+import { collide, isInsideMe } from "../../../gameEngine/logic/collider";
+import { CollisionWorld } from "@gameEngine/collisionWorld";
+import { emit } from "../../../gameEngine/logic/events";
 import type { Party, Room } from "./gamelogic";
 import { D20 } from "./gameobjects/d20";
 import { Enemy } from "./gameobjects/enemy";
-import { send } from "./net/send";
+import { send } from "../../../gameEngine/net/send";
 import { type ChunkEntryMap, setTile } from "./tile-manager";
 
 // import { emit } from "cluster";
