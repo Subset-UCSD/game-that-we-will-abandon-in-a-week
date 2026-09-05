@@ -1,5 +1,7 @@
-import { wholeFkingGameState } from "@common/game";
-import { inputSchema } from "@common/input";
+//TODO SPLIT UP INTO GAME ENGINE
+
+import { wholeFkingGameState } from "./game";
+import { inputSchema } from "./input";
 import z from "zod";
 import { chunkMapSchema, tileSchema } from "./tiles";
 

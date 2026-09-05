@@ -1,5 +1,6 @@
-import { SERVER_GAME_TICK } from "@common";
-import { clientMessage } from "@common/messages";
+//TODO GAME-ENGINE Move logic into game engine
+import { SERVER_GAME_TICK } from "../common";
+import { clientMessage } from "../common/messages";
 import { Game } from "@server/game";
 import express from "express";
 import { readFile, rename, writeFile } from "fs/promises";

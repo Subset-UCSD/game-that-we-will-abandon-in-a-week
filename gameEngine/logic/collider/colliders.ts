@@ -1,5 +1,5 @@
 import z from "zod";
-import { vec2Schema } from "../gameEngine/utils/vector/vector";
+import { vec2Schema } from "../../utils/vector/vector";
 
 /**
  * This is a rework/port/cleanup of the work Sean did in collision.ts that

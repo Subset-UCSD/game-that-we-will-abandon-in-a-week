@@ -1,4 +1,4 @@
-import type { SerializedGameObject } from "@common";
+import type { SerializedGameObject } from "../../games/caveGame/common";
 import type { Canvas } from "./canvas";
 
 interface RenderableObject {

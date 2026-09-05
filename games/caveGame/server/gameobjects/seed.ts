@@ -1,4 +1,4 @@
-import type { GameObject, Seed as SeedType } from "@common/game";
+import type { GameObject, Seed as SeedType } from "../../common/game";
 import { generateId } from "../../gameEngine/logic/id-manager";
 
 export type SeedProps = Omit<SeedType, "id" | "type">;

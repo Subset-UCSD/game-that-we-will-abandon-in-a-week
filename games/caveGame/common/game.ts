@@ -1,5 +1,5 @@
-import type { Vec2 } from "@common";
-import { type Collider, colliderSchema } from "@common/colliders";
+import type { Vec2 } from ".";
+import { type Collider, colliderSchema } from "../../../gameEngine/logic/collider/colliders";
 import z from "zod";
 
 const idSchema = z.number();

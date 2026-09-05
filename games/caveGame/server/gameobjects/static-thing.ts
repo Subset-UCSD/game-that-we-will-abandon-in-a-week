@@ -1,3 +1,5 @@
+//TODO GAME-ENGINE Clean Up Creating Generic Game Objects
+
 import {
 	type Collider,
 	type GameObject,
@@ -5,7 +7,7 @@ import {
 	type SerializedThing,
 	type Vec2,
 	vec2,
-} from "@common";
+} from "../../common";
 import { generateId } from "../../gameEngine/logic/id-manager";
 import type { Player } from "./player";
 

@@ -3,7 +3,7 @@
  * larper
  */
 
-import { SERVER_GAME_TICK } from "@common";
+import { SERVER_GAME_TICK } from "../../../games/caveGame/common";
 
 /**
  * larp

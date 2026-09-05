@@ -1,8 +1,8 @@
-import { Interpolator } from "@common";
-import type { MeatBall } from "@common/game";
-import type { Canvas } from "./canvas";
-import { loadFrames } from "./frames";
-import type { RenderableObject } from "./render";
+import { Interpolator } from "../../common";
+import type { MeatBall } from "../../common/game";
+import type { Canvas } from "../../../../gameEngine/rendering/canvas";
+import { loadFrames } from "../../../../gameEngine/rendering/utils/frames";
+import type { RenderableObject } from "../../../../gameEngine/rendering/render";
 
 const frames = await loadFrames(["./assets/meatball1.png", "./assets/meatball2.png"]);
 

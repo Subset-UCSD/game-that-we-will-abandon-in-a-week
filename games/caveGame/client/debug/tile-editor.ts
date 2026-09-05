@@ -1,7 +1,7 @@
 import type { Camera } from "@client/game";
 import type { Canvas } from "@client/render";
-import { addVec, ev, type Vec2 } from "@common";
-import { TILE_SIZE, type TileId, tileSchema } from "@common/tiles";
+import { addVec, ev, type Vec2 } from "../../common";
+import { TILE_SIZE, type TileId, tileSchema } from "../../common/tiles";
 
 export class DebugTileEditor {
 	#enabled = false;

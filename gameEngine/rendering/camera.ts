@@ -1,6 +1,6 @@
-import type { Vec2 } from "@common";
+import type { Vec2 } from "../../games/caveGame/common";
 import { mat4, vec3 } from "gl-matrix";
-import type { Canvas } from "./render";
+import type { Canvas } from "../../games/caveGame/client/render";
 
 export type CameraUpdate = {
 	x?: number;

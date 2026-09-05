@@ -14,7 +14,7 @@ import {
 	vec2,
 	vecLength,
 	vecLengthSquared,
-} from "@common";
+} from "../../../games/caveGame/common";
 // import { error } from "console";
 
 export function collide(a: Collider, b: Collider) {

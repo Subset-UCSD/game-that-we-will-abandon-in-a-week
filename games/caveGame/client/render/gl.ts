@@ -8,9 +8,9 @@
 // https://github.com/ucsd-cse125-sp24/group1/blob/main/client/render/engine/RenderPipeline.ts
 // https://github.com/Subset-UCSD/cave-game/blob/main/client/render/Gl.ts
 
-import { TILE_SIZE } from "@common";
+import { TILE_SIZE } from "../../common";
 // import { SerializedCollider } from "../../common/messages";
-import { ShaderProgram } from "./ShaderProgram";
+import { ShaderProgram } from "../../../../gameEngine/rendering/ShaderProgram";
 import filterVertShader from "./shaders/filter.vert";
 import testFragShader from "./shaders/test.frag";
 import testVertShader from "./shaders/test.vert";

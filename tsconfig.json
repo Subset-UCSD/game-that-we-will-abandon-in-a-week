@@ -7,9 +7,9 @@
 		"paths": {
 			"@client/*": ["./client/*"],
 			"@server/*": ["./server/*"],
-			"@common": ["./common"],
+			"@common": ["games/caveGame/common"],
 			// should we remove this and encourage @common instead
-			"@common/*": ["./common/*"]
+			"@common/*": ["games/caveGame/common/*"]
 		},
 		"noEmit": true
 	}

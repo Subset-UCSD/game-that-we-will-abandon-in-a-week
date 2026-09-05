@@ -1,4 +1,4 @@
-import type { Explosion as ExplosionType, GameObject } from "@common/game";
+import type { Explosion as ExplosionType, GameObject } from "../../common/game";
 import { generateId } from "../../gameEngine/logic/id-manager";
 
 export type ExplosionProps = Omit<ExplosionType, "id" | "type"> & {

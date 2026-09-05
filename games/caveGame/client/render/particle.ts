@@ -1,5 +1,5 @@
-import { ev, type Particle, randomInCircle, type SerializedGameObject, type Vec2, vec2 } from "@common";
-import type { Canvas } from "./canvas";
+import { ev, type Particle, randomInCircle, type SerializedGameObject, type Vec2, vec2 } from "../../common";
+import type { Canvas } from "../../../../gameEngine/rendering/canvas";
 
 // i think particles will always render on top
 // should they be clipped when they go behind ?

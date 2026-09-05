@@ -1,8 +1,8 @@
 // this is not optimized
 // we should deduplicate textures somehow
 
-import type { ItemId, Player } from "@common";
-import type { Canvas } from "./canvas";
+import type { ItemId, Player } from "../../common";
+import type { Canvas } from "../../../../gameEngine/rendering/canvas";
 
 type Entry = [ItemId, { image: ImageBitmap; lore: string[] }];
 const itemTextures = new Map(

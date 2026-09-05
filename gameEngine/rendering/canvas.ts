@@ -1,4 +1,4 @@
-import { Gl } from "./gl";
+import { Gl } from "../../games/caveGame/client/render/gl";
 
 /**
  * The `Canvas` wrapper class handles three things:

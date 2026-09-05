@@ -1,7 +1,7 @@
-import type { SerializedGameObject, SerializedThing } from "@common";
-import type { Canvas } from "./canvas";
+import type { SerializedGameObject, SerializedThing } from "../../common";
+import type { Canvas } from "../../../../gameEngine/rendering/canvas";
 import { SHEEP_WIDTH } from "./player";
-import type { RenderableObject } from "./render";
+import type { RenderableObject } from "../../../../gameEngine/rendering/render";
 
 type RegisteredThing = {
 	frames: ImageBitmap[];

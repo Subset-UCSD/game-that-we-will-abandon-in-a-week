@@ -3,9 +3,9 @@
  * and https://www.charlespetzold.com/blog/2024/09/Die3D.js
  */
 
-import { cross_product, type D20Schema, DomPointToVec3, subVec3, type Vec3, vec3, vec3ToDomPoint } from "@common";
-import type { Canvas } from "../canvas";
-import type { RenderableObject } from "../render";
+import { cross_product, type D20Schema, DomPointToVec3, subVec3, type Vec3, vec3, vec3ToDomPoint } from "../../../common";
+import type { Canvas } from "../../../../../gameEngine/rendering/canvas";
+import type { RenderableObject } from "../../../../../gameEngine/rendering/render";
 
 export const identity = new DOMMatrix();
 

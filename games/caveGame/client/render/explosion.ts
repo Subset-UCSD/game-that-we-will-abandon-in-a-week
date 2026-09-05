@@ -1,6 +1,6 @@
-import type { Explosion, SerializedGameObject, Vec2 } from "@common";
-import type { Canvas } from "./canvas";
-import type { RenderableObject } from "./render";
+import type { Explosion, SerializedGameObject, Vec2 } from "../../common";
+import type { Canvas } from "../../../../gameEngine/rendering/canvas";
+import type { RenderableObject } from "../../../../gameEngine/rendering/render";
 
 const EXPLOSION_ANIM_MAX_AGE = 1000;
 

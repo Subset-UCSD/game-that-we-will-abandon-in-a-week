@@ -1,4 +1,4 @@
-import type { GameObject, MeatBall as PublicMeatBall } from "@common/game";
+import type { GameObject, MeatBall as PublicMeatBall } from "../../common/game";
 import { generateId } from "../../gameEngine/logic/id-manager";
 
 let nextMeatballId = 0;

@@ -1,4 +1,5 @@
-import { CHUNK_SIZE, type Chunk, type TileId, tileSchema, type Vec2 } from "@common";
+//TODO GAME-ENGINE Maybe add to game Engine
+import { CHUNK_SIZE, type Chunk, type TileId, tileSchema, type Vec2 } from "../common";
 
 export type ChunkEntry = {
 	tileChars: Map<TileId, string>;

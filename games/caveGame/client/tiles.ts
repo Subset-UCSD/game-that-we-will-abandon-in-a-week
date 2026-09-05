@@ -11,9 +11,9 @@ import {
 	vec2,
 	vecMap1,
 	vecToArray,
-} from "@common";
+} from "../common";
 import { mat4, vec3 } from "gl-matrix";
-import type { Camera } from "./camera";
+import type { Camera } from "../../../gameEngine/rendering/camera";
 import type { Canvas } from "./render";
 
 type TileRegistryEntry = { tile: TileId; color: string } | { bl: TileId; mid: TileId; path: string };

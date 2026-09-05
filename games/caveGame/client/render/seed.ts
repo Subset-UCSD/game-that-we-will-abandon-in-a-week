@@ -1,7 +1,7 @@
-import type { Seed, SerializedGameObject } from "@common";
-import type { Canvas } from "./canvas";
-import { loadFrames } from "./frames";
-import type { RenderableObject } from "./render";
+import type { Seed, SerializedGameObject } from "../../common";
+import type { Canvas } from "../../../../gameEngine/rendering/canvas";
+import { loadFrames } from "../../../../gameEngine/rendering/utils/frames";
+import type { RenderableObject } from "../../../../gameEngine/rendering/render";
 
 const frames = await loadFrames(["./assets/seed1.png", "./assets/seed2.png"]);
 

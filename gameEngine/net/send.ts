@@ -1,4 +1,4 @@
-import type { ServerMessage } from "@common/messages";
+import type { ServerMessage } from "../../games/caveGame/common/messages";
 import type WebSocket from "ws";
 export function send<T extends ServerMessage["type"], P extends Extract<ServerMessage, { type: T }>["value"]>(
 	ws: WebSocket,

@@ -1,4 +1,4 @@
-import type { Canvas } from "./canvas";
+import type { Canvas } from "../../../../gameEngine/rendering/canvas";
 import { SHEEP_WIDTH } from "./player";
 import { ThingRenderer } from "./thing-renderer";
 

@@ -8,8 +8,8 @@ import {
 	type Vec2,
 	vec2,
 	vecLengthSquared,
-} from "@common";
-import type { BoxCollider } from "@common/colliders";
+} from "../../common";
+import type { BoxCollider } from "../../../../gameEngine/logic/collider/colliders";
 import { subscribe } from "@server/events";
 import { generateId } from "../../gameEngine/logic/id-manager";
 

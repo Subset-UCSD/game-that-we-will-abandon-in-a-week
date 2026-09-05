@@ -1,7 +1,7 @@
-import type { Enemy, SerializedGameObject } from "@common/game";
-import type { Canvas } from "./canvas";
+import type { Enemy, SerializedGameObject } from "../../common/game";
+import type { Canvas } from "../../../../gameEngine/rendering/canvas";
 import { SHEEP_WIDTH } from "./player";
-import type { RenderableObject } from "./render";
+import type { RenderableObject } from "../../../../gameEngine/rendering/render";
 
 const frames = await Promise.all(
 	["./assets/enemy1.png", "./assets/enemy2.png"].map(

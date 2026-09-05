@@ -1,7 +1,7 @@
-import type { SerializedGameObject, Vec2 } from "@common";
-import type { Camera } from "../../camera";
+import type { SerializedGameObject, Vec2 } from "../../../games/caveGame/common";
+import type { Camera } from "../camera";
 import type { Canvas } from "../canvas";
-import { loadFrames } from "../frames";
+import { loadFrames } from "../utils/frames";
 import type { RenderableObject } from "../render";
 import { ShaderProgram } from "../ShaderProgram";
 import spriteFragShader from "../shaders/sprite.frag";

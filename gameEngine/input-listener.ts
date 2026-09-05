@@ -1,4 +1,4 @@
-import type { InputHandler, Inputs, Keymap } from "@common/input";
+import type { InputHandler, Inputs, Keymap } from "../games/caveGame/common/input";
 
 export type InputListenerOptions = {
 	default: Inputs;

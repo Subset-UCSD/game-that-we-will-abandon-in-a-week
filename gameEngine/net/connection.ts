@@ -1,6 +1,6 @@
 import type { Game } from "@client/game";
-import { type ClientMessage, serverMessage, type WholeFkingGameState, wholeFkingGameState } from "@common";
-import { applyDiffPayload } from "@common/json-optimizer";
+import { type ClientMessage, serverMessage, type WholeFkingGameState, wholeFkingGameState } from "../../games/caveGame/common";
+import { applyDiffPayload } from "../utils/json-optimizer";
 
 /** set by esbuild.ts */
 declare const IS_SERVING: boolean;

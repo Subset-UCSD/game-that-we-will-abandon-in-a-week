@@ -11,22 +11,22 @@ import {
 	subVec,
 	vec2,
 	vecLength,
-} from "@common";
-import type { Line, Player as NetPlayer, SerializedCollider, WholeFkingGameState } from "@common/game";
-import { defaultInputs, defaultKeymap } from "@common/input";
-import { Camera } from "./camera";
+} from "../common";
+import type { Line, Player as NetPlayer, SerializedCollider, WholeFkingGameState } from "../common/game";
+import { defaultInputs, defaultKeymap } from "../common/input";
+import { Camera } from "../../../gameEngine/rendering/camera";
 import type { DebugTileEditor } from "./debug/tile-editor";
-import { InputListener } from "./input-listener";
-import { Connection } from "./net/connection";
+import { InputListener } from "../../../gameEngine/input-listener";
+import { Connection } from "../../../gameEngine/net/connection";
 import { Canvas, ClientExplosion, ClientMeatball, ClientSeed, render, ThingRenderer } from "./render";
 import { D20 } from "./render/3dObjects/3d";
 import { Arena } from "./render/arena";
 import { Anemone } from "./render/enemy";
 import { renderInventory } from "./render/inventory";
 import { ClientParticle } from "./render/particle";
-import type { RenderableObject } from "./render/render";
+import type { RenderableObject } from "../../../gameEngine/rendering/render";
 import { Room } from "./render/room";
-import { SpriteRenderer } from "./render/Sprites/sprite-render";
+import { SpriteRenderer } from "../../../gameEngine/rendering/Sprites/sprite-render";
 import { GlTileRenderer } from "./tiles";
 
 type Creator = () => RenderableObject;

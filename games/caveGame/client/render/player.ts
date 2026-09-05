@@ -3,10 +3,10 @@
  * i will DELETE it since it should probably go in a different file or client/game.ts
  */
 
-import { Interpolator, KNIFE_OFFSET_Y, lerpAngle, type Player as NetPlayer } from "@common";
-import type { Canvas } from "./canvas";
-import { loadFrames } from "./frames";
-import type { RenderableObject } from "./render";
+import { Interpolator, KNIFE_OFFSET_Y, lerpAngle, type Player as NetPlayer } from "../../common";
+import type { Canvas } from "../../../../gameEngine/rendering/canvas";
+import { loadFrames } from "../../../../gameEngine/rendering/utils/frames";
+import type { RenderableObject } from "../../../../gameEngine/rendering/render";
 
 const {
 	base,

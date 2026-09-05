@@ -1,4 +1,6 @@
 import z from "zod";
+//TODO GAME-ENGINE Clean Up Events to be More Generic? 
+
 
 /**
  * EVENT schema helper. This returns a zod schema for EVENT shape with a payload
